@@ -81,3 +81,19 @@ What I asked for: Write the crew-spike design from the approved requirements, th
 What Kiro did: Wrote the design (spike layout, exact `app.json`, probe report format, probe order, UI read routes, three `skill://` setups, five-run agent budget, evidence capture, deletion steps) with 23 assumptions marked "Assumption (to test)". After review it removed `spike/dev`, the Correctness Properties section and the automated part of the Testing Strategy, and wrote the task list in the design's order of work with "(you)" marks on the steps that need me.
 
 What changed because of it: The design dropped its automated tests at review. The spike code is throwaway and is deleted whole, so unit and property tests would test code that does not survive. The index-bound, round-trip and verdict properties belong to the verifier and replay-runner specs (BRIEF section 11), where the code is kept. The spike is checked by observation and recorded evidence, plus `tsc --noEmit` for `ui/`.
+
+## 2026-11-07 — crew-spike plan change: command cron to script cron
+
+Surface: IDE, Crew
+
+Features: spec, mcp
+
+What I asked for: After the spike showed the cron missing from the Schedule page, find out why. Then switch the Probe_Cron to a Python script cron that launches the Node probe, update requirements, design and tasks first, and run task 5.
+
+What Kiro did: Found in the gateway and security logs that Crew 0.12.0 on Windows rejects every `command` cron for lack of a POSIX shell (E18). Revised requirement 1.1 and added 4.9 and 4.10. Updated the design: `app.json` cron, launcher section, order of work, assumptions A-01, A-04, A-05, A-09 and A-23 re-scoped, and new A-24 to A-26. Rewrote task 5. Wrote `spike/scripts/probe_cron.py` (standard library only) and pushed it with the dashboard Sync button, so no reinstall or re-trust was needed. Ran task 5 through the Schedule page with Playwright.
+
+What changed because of it: The replay job cannot be a `command` cron on a Windows gateway; the Brief now says so. On this machine a script cron works:
+- It runs as a child of the gateway, and node, npm and git are on its PATH.
+- The manifest `env` does not reach it.
+- The run limit is `timeout`, not `timeout_secs`; `timeout_secs` alone left the 30 s default in place, and must be at least `timeout + 5`.
+- The dashboard stayed responsive during runs.

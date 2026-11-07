@@ -4,8 +4,10 @@
 
 `crew-spike` is a throwaway Kiro Crew app, installed locally on this Windows machine, that answers the three open questions in `docs/BRIEF.md` section 6 by observation:
 
-1. How the `ui/` page reads a file a cron command wrote.
-2. Whether a cron command and an agent run can reach the network, clone a public repo, build it, and find `node` on the path.
+1. How the `ui/` page reads a file a cron run wrote.
+2. Whether a cron run and an agent run can reach the network, clone a public repo, build it, and find `node` on the path.
+
+Plan change (2026-11-07): Crew 0.12.0 on Windows rejects every `command` cron (E18). The Probe_Cron is a Python `script` cron, `scripts/probe_cron.py:run`, that launches the unchanged `node scripts/probe.mjs` (Requirement 1.1, 4.9, 4.10).
 3. How a skill listed in `app.json` maps into the agent's `skill://` resources.
 
 The spike writes nothing that survives. Its only lasting output is text in `docs/CREW_NOTES.md`, edits to `docs/BRIEF.md` and the steering files where an answer settles them, and an entry in `KIRO_USAGE.md`. Then `spike/` and the installed app are deleted.
@@ -25,6 +27,7 @@ The spike writes nothing that survives. Its only lasting output is text in `docs
 | Pure logic (bounded index, step wrapper, scrubber, module serialiser) is kept as small separate functions in `probe.mjs` | They keep the script readable. The spike is throwaway, so none of it gets an automated test; the spike is observation. |
 | Two UI rounds: declare nothing first, then declare what the docs list | The first round shows the documented "undeclared access throws" behaviour and the exact error. The second shows what works. |
 | Agent runs are shared between Requirements 5 and 6 | The five-run cap (Requirement 5.7) cannot cover eight independent runs. |
+| The Probe_Cron is a Python `script` cron (`scripts/probe_cron.py:run`) that launches `node scripts/probe.mjs` (plan change 2026-11-07) | Crew 0.12.0 on Windows rejects every `command` cron at registration: "No POSIX shell available to run this command cron" (E18). The gateway's own message points to a script cron. The launcher uses only the Python standard library and leaves `probe.mjs` unchanged, so the probe report format and step order stay as designed. |
 
 ## Architecture
 
@@ -43,7 +46,8 @@ spike/
       scripts/marker.mjs            Prints the marker; proves a skill's scripts/ are reachable (6.7)
       references/note.md            Holds a second marker; proves references/ is reachable (6.7)
   scripts/
-    probe.mjs                       The one cron script: ordered probes, report, bounded index, optional served copy
+    probe.mjs                       The probe: ordered probes, report, bounded index, optional served copy (unchanged by the plan change)
+    probe_cron.py                   Probe_Launcher: the script cron's `run(ctx)`; launches node scripts/probe.mjs, writes a launcher record
   ui/
     package.json                    React + Vite + TypeScript strict; SDK, React and lucide-react are externals
     tsconfig.json                   strict: true
@@ -67,7 +71,7 @@ Run output (outside the repo, in the app data directory, path recorded in round 
   agent-grimsheet/       Shallow clone made by the Probe_Agent
 ```
 
-**Assumption (to test):** the cron command's working directory is the installed app directory, so `node scripts/probe.mjs` resolves. `folder` exists as a cron field but its meaning is not documented. If the first run fails to find the script, the fallback is the absolute path from `kirocrew app info`, and the failure text is recorded.
+**Assumption (to test):** the Probe_Launcher's working directory is the installed app directory (A-01, re-scoped to the script cron). It does not depend on it: the launcher finds `scripts/probe.mjs` from its own file path and starts node with the app folder as cwd. `folder` exists as a cron field but its meaning is not documented.
 
 **Assumption (to test):** `kirocrew app install` leaves a directory the cron and the agent can read, and `kirocrew app info` reports its path. Whether the install copies `spike/` or points at it is not documented. This decides where the installed `ui/` and `skills/` live.
 
@@ -76,12 +80,14 @@ Run output (outside the repo, in the app data directory, path recorded in round 
 ```mermaid
 flowchart LR
     subgraph Host[Kiro Crew gateway]
-        Cron[Probe_Cron command]
+        Cron[Probe_Cron script]
         Agent[Probe_Agent run]
         UI[Probe_Page]
         Sched[Schedule page]
     end
-    Cron -->|node scripts/probe.mjs| Probe[probe.mjs]
+    Cron -->|script scripts/probe_cron.py:run| Launcher[probe_cron.py]
+    Launcher -->|child process: node scripts/probe.mjs| Probe[probe.mjs]
+    Launcher -->|launcher/*.json| Data
     Probe -->|runs/*.json, _index.json| Data[(app data dir)]
     Probe -->|clone, npm ci, build| Clone[(grimsheet clone)]
     Probe -.->|optional copy as .mjs| Served[(installed ui/spike-latest.mjs)]
@@ -101,13 +107,13 @@ flowchart LR
 | P0 | Read the `kirocrew-app-dev` skill if available; otherwise record it as unavailable. Query `/kirodotdev/kirocrew`, then `/websites/deepwiki_kirodotdev_kirocrew` for anything still open. Record questions and results. | 2 |
 | P1 | Write the Spike_App. Build `ui/`. Run `probe.mjs` by hand from PowerShell (no install needed) to check the script itself. | 1, 4 |
 | P2 | Record versions. `kirocrew app install <abs path>`, trust it in the dashboard, `kirocrew app enable crew-spike`. Record each command and the result. | 1, 7 |
-| P3 | Run the cron once by hand through the gateway. Record cwd, shell, `PATH`, versions, network, clone, build, and where the output appears in the Schedule page. | 3, 4 |
+| P3 | Replace the command cron with the script cron and push it with the dashboard Sync button. Find where the cron is listed and run it once by hand (wait mode), measuring dashboard response times during the run. Record the launcher record (process, PATH, timeout) and the probe report (cwd, shell, `PATH`, versions, network, clone, build), and where the output appears in the Schedule page. Then the timeout check, the detached mode if needed, and the second-run fetch check. | 3, 4 |
 | P4 | UI round 1 (nothing declared), then round 2 (declared). Then the scheduled run with `every: 120`, then disable the cron. | 3 |
 | P5 | Agent runs A1 to A5 (see the budget below). | 5, 6 |
 | P6 | Write the Notes, update Brief and steering, write `KIRO_USAGE.md`. | 7, 8 |
 | P7 | User confirms. Uninstall, delete app data, delete `spike/`, list what is left. | 10 |
 
-P1 to P6 fit the Nov 8 to Nov 9 window of Requirement 9.5. The cron command makes no model call. Only P5 spends credits, capped at five runs.
+P1 to P6 fit the Nov 8 to Nov 9 window of Requirement 9.5. The Probe_Cron (script cron) makes no model call. Only P5 spends credits, capped at five runs.
 
 ### Probe order inside `probe.mjs`
 
@@ -138,11 +144,11 @@ Rules that keep one failure from hiding the others (Requirement 4.8):
 
 **Assumption (to test):** `npm` resolves in the cron shell on Windows only through `cmd` (`npm.cmd`), so child processes use `shell: true`. The commands are fixed strings with no user input.
 
-**Assumption (to test):** the gateway does not tell the command which timeout it runs under. The same number is set in `app.json` as `timeout_secs` and mirrored into `SPIKE_TIMEOUT_SECS` in the cron `env`. Whether `timeout` or `timeout_secs` is honoured, and in which unit, is not documented. The check is that a deliberately short timeout (set once, 20 s, in P3) produces a `running` report that the next run marks `cut-short`.
+**Assumption (to test):** the gateway does not tell the script cron which timeout it runs under. The same number is set in `app.json` as `timeout_secs` and mirrored into `SPIKE_TIMEOUT_SECS` in the cron `env`. The docs give a 30 s default for script crons; whether `timeout_secs` raises it is not documented (A-25). The check is in two parts: the first by-hand run with `timeout_secs: 900` shows whether the launcher is killed near 30 s (launcher record has no `finishedAt`, probe report stays `running`); then a deliberately short `timeout_secs: 20` run shows that the setting takes effect at all. The next run marks a cut run `cut-short`.
 
 ### Output directory choice
 
-**Assumption (to test):** no env var tells a cron command the app data directory. `probe.mjs` picks its directory in this order and records `dataDir.source`:
+**Assumption (to test):** no env var tells the Probe_Cron the app data directory. `probe.mjs` picks its directory in this order and records `dataDir.source`:
 
 1. `SPIKE_DATA_DIR` if set (`source: "env"`).
 2. `<script dir>/../data` inside `spike/` (`source: "fallback"`). This is allowed by Requirement 9.2.
@@ -165,13 +171,14 @@ Round 1 runs on the fallback. The report lists env var **names** (never values) 
   "crons": [
     {
       "name": "probe",
-      "command": "node scripts/probe.mjs --trigger cron",
-      "every": 120,
-      "timeout_secs": 900,
-      "env": { "SPIKE_TIMEOUT_SECS": "900" },
+      "script": "scripts/probe_cron.py:run",
+      "every": 86400,
+      "timeout": 900,
+      "timeout_secs": 960,
+      "env": { "SPIKE_TIMEOUT_SECS": "900", "SPIKE_LAUNCH_MODE": "wait" },
       "persistent_session": false,
       "silent": false,
-      "enabled": false
+      "enabled": true
     }
   ],
   "permissions": {
@@ -194,9 +201,12 @@ Field notes. Only `displayName`, semver `version`, `agents`/`skills` as path arr
 - **Assumption (to test):** `name`, `description` and `author` are accepted. The examples always carry them; no required/optional table was returned.
 - **Assumption (to test):** `permissions.api` and `permissions.events` are arrays of strings, and `permissions.storage` takes a boolean. Only the key names are documented. The exact error text on a wrong shape is evidence.
 - **Assumption (to test):** the `icon` value `FlaskConical` is a lucide-react icon name. The documented field is `icon` or `iconUrl`; the value format is not documented. If the page does not show, drop `icon`.
-- **Assumption (to test):** `env` is an object of strings. `timeout_secs` is in seconds. `enabled: false` means the cron is listed but not scheduled, and can be run by hand from the Schedule page.
-- `persistent_session: false` and `silent: false` are documented fields. The aim is to see command output in the Schedule page (Requirement 3.8).
-- The cron is `enabled: false` for P3 and turned on only for the scheduled-run window (Requirement 3.3). How it is toggled (Schedule page, or edit and reinstall) is itself recorded.
+- The cron is a `script` cron, not a `command` cron. The `command` form was installed in round 1 and rejected on Windows (E18); it is removed. `script` takes `path.py:function`; for an app cron a relative path is joined onto the app's install folder (observed in the bundled `cron_script_paths.py`, read-only).
+- **Assumption (to test):** `env` is an object of strings and reaches the script cron's process (A-09). `timeout_secs` is in seconds and raises the 30 s script default (A-25). The launcher reads `SPIKE_LAUNCH_MODE` (`wait` or `detached`); if `env` does not reach it, it falls back to `wait` and records that.
+- Observed in P3 (E20, E21), so these are no longer assumptions. For a script cron, `timeout` (seconds) is the subprocess limit, and `timeout_secs` alone does not raise the 30 s default. `timeout_secs` is a wake budget that must be at least `timeout + 5`, or Sync fails. The manifest `env` does not reach the script's process. The launcher therefore also reads `data/launcher/control.json` (`mode`, `holdSecs`).
+- `enabled: true` with `every: 86400` (once a day) for P3, so the cron is registered and listed but does not fire on its own before the by-hand run. E18 showed `enabled: false` does not hide a cron; `enabled: true` is used because whether a disabled cron can be run by hand is still open (A-09, A-23). The short `every: 120` comes only for the scheduled-run window (Requirement 3.3), then the cron is disabled.
+- `persistent_session: false` and `silent: false` are documented fields. The aim is to see the launcher's output in the Schedule page (Requirement 3.8).
+- Changes reach the installed copy through the dashboard **Sync** button ("Sync app from its source directory", E18). Sync keeps trust and dev mode. A reinstall needs trust again (E13, E17).
 - `network` is deliberately absent. The variant for Requirement 5.5 adds `"network": true`. **Assumption (to test):** this key has no runtime effect (the sandbox RFC page says `network` is stored and shown with no runtime gate). The variant run is the test, and only happens if the first agent run is blocked from the network (Requirement 5.5, 5.6).
 - No `setup` block. Local installs skip `setup.onInstall`, so `ui/` is built before install.
 
@@ -265,6 +275,30 @@ Pure interfaces:
 Main flow: read `--trigger`; resolve data directory; read `_index.json` through `parseIndex`; call `markStaleRunning`; allocate `counter = index.nextCounter`; `insertRun` with status `running`; delete the report files of any `evicted` run ids (only files named `runs/<runId>.json` inside `dataDir`); run steps in the order above, rewriting the report after each; set status `complete`; `patchRun` the index; if `SPIKE_SERVE_DIR` is set, write `spike-latest.mjs` there with `toModuleText({ index, latest: report })`.
 
 The script writes only inside `dataDir` and, when set, `SPIKE_SERVE_DIR` (inside the installed app, i.e. inside `spike/` or the installed copy of it). It never writes into the cloned repo beyond what `npm ci` and `npm run build:play` create there (`node_modules`, `dist-play`). Exit code is 0 whenever a report was written, even if steps failed, so the Schedule page shows the run as run; failure details live in the report. It exits 1 only when it could not write a report at all.
+
+### 2a. `spike/scripts/probe_cron.py` (Probe_Launcher, plan change 2026-11-07)
+
+Python standard library only (`os`, `sys`, `json`, `time`, `shutil`, `subprocess`, `pathlib`, `datetime`). One public function, `run(ctx)`, which is the form the bundled runner calls (observed: `def run(ctx)`, `fn(ctx)`, in `cron_script.py`). It never raises the runner's `Done` (that would remove the job) or `Skip`.
+
+What `run(ctx)` does:
+
+1. Builds a launcher record and writes it at once to `<app>/data/launcher/<UTC stamp>-<pid>.json` (atomic write, `.tmp` then rename). `<app>` is the folder of `probe_cron.py`'s parent, so the record sits beside `probe.mjs`'s fallback data directory. The record holds:
+   - `pid`, `ppid`, the parent's image name (`tasklist /FI "PID eq <ppid>"`), `sys.executable`, `sys.version`, `sys.flags.isolated`, `cwd`, `__file__`;
+   - `PATH` and the names (not values) of all env vars, and the values of `SPIKE_*` vars only;
+   - `shutil.which` for `node`, `npm`, `git`;
+   - `type(ctx).__name__` and the public attribute names of `ctx`;
+   - `mode`, `startedAt`, and later `finishedAt`, `elapsedSecs`, `childExitCode`, `childPid`, `outcome`.
+2. Finds `node`: `shutil.which("node")`. If it is not on `PATH`, it records that and falls back to `%ProgramFiles%\nodejs\node.exe` if that file exists (`nodeSource: "path"` or `"fallback"`). With no node at all, it records `outcome: "no-node"` and returns.
+3. Starts `node scripts/probe.mjs --trigger cron` in the app folder, with stdin closed and `CREATE_NO_WINDOW`. The child env is the launcher's env.
+   - **`wait` mode (first):** `subprocess.run(..., timeout=LAUNCH_TIMEOUT)`, where `LAUNCH_TIMEOUT = SPIKE_TIMEOUT_SECS - 30` (default 870 s if the env var is missing). On timeout the child's tree is killed with `taskkill /PID <pid> /T /F` and `outcome: "launcher-timeout"` is recorded. The last 2000 characters of the child's stdout and stderr go into the record.
+   - **`detached` mode (only if needed):** `subprocess.Popen` with `DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_BREAKAWAY_FROM_JOB`, stdout and stderr to `<app>/data/launcher/<stamp>-child.log`; returns at once with `outcome: "started-detached"` and the child pid. If breakaway is refused (the parent's Job object forbids it), it retries without `CREATE_BREAKAWAY_FROM_JOB` and records `breakaway: false`.
+4. Rewrites the record with the end fields and prints one summary line (mode, outcome, elapsed, child exit code, record path). This goes to the run's output, for Requirement 3.8.
+
+Added during P3: the manifest `env` did not reach the script (E20), so the launcher also reads an optional `<app>/data/launcher/control.json` with `mode` and `holdSecs`. `env` wins when present. `holdSecs` (at most 600) makes the launcher sleep after the child exits, so a run can outlast a limit without changing `probe.mjs`. That is how the 30 s default was tested (E21).
+
+The probe report is still written by `probe.mjs` (Requirement 4.10). The launcher record answers the three new questions (A-24 to A-26) and never holds a token: env values are recorded only for `SPIKE_*` names.
+
+Blocking check (Requirement 4.10). During the first by-hand run in `wait` mode, a PowerShell loop times `GET http://localhost:5476/` once a second from the run's start until the launcher record shows `finishedAt` (or 15 minutes pass). Each sample records its time and latency. "Responsive" means every sample answered within 2 s. Before the run starts, 10 samples give the baseline. The bundled runner source says script crons run as a sandboxed subprocess (`run_script_sandboxed`, `sys.executable -I <launcher>`), so blocking is not expected. The observation decides. `pid` equal to the gateway pid means in-process; `ppid` equal to the gateway pid (or a sandbox wrapper whose parent is the gateway) means a child process. If the launcher runs in-process and the dashboard stops answering, the launcher is switched to `detached` (`SPIKE_LAUNCH_MODE`, Sync) and the run is repeated with the same timing loop. Both results are recorded.
 
 ### 3. UI read routes (Probe_Page)
 
@@ -485,15 +519,15 @@ One list so the tasks can close each one. Each is labelled **Assumption (to test
 
 | Id | Assumption | Tested by | Notes gap it relates to |
 |---|---|---|---|
-| A-01 | Cron command cwd is the installed app dir | P3 report `environment.cwd` | d, e |
+| A-01 | Re-scoped to the script cron: the Probe_Launcher's cwd is the installed app dir (the launcher sets the child's cwd itself, so this asks what the runner gives the launcher) | P3 launcher record `cwd`, probe report `environment.cwd` | d, e |
 | A-02 | Install leaves a readable directory; `app info` shows its path | P2 | g |
 | A-03 | No env var tells a command the app data dir | P3 `envNames` | f |
-| A-04 | `npm` needs `cmd` resolution in the cron shell | P3 step `npm-version` | e |
-| A-05 | `timeout_secs` is honoured, in seconds; gateway does not expose it | P3 short-timeout check | d |
+| A-04 | Re-scoped to the script cron: `npm` needs `cmd` resolution in the environment the Probe_Launcher passes to `probe.mjs` | P3 step `npm-version` | e |
+| A-05 | Re-scoped to the script cron: `timeout_secs` is honoured, in seconds, for a script cron; the gateway does not expose it to the script | P3 short-timeout check (`timeout_secs: 20`) | d |
 | A-06 | `name`, `description`, `author` accepted | P2 | a |
 | A-07 | Shapes of `permissions.api`, `events`, `storage` (array, array, boolean) | P4 | a, f |
 | A-08 | `icon` is a lucide icon name | P2 sidebar | a |
-| A-09 | `env` is an object of strings; `enabled: false` allows a manual run | P3 | d |
+| A-09 | Re-scoped to the script cron: `env` is an object of strings and reaches the script's process; `enabled: false` allows a manual run. Partly answered by E18: `enabled: false` does not hide a cron | P3 launcher record `SPIKE_*` values; manual-run check | d |
 | A-10 | `network` has no runtime effect | A4 only if needed | e |
 | A-11 | Entry module default export is the page component | P4 | f |
 | A-12 | SDK signatures in `sdk.d.ts` match runtime | P4 | f |
@@ -507,7 +541,10 @@ One list so the tasks can close each one. Each is labelled **Assumption (to test
 | A-20 | `kirocrew --version` exists | P2 | g |
 | A-21 | `kirocrew app uninstall crew-spike` is the uninstall command | P7 | g |
 | A-22 | Uninstall may leave the data dir | P7 | e |
-| A-23 | Cron run can be started by hand from the Schedule page | P3 | d |
+| A-23 | Re-scoped to the script cron: a script cron is listed on the Schedule page and a run can be started there by hand | P3 | d |
+| A-24 | A script cron runs in a child process of the gateway, not in the gateway process (the bundled runner source says "sandboxed subprocess") | P3 launcher record `pid`, `ppid`, parent image vs the gateway pid | d, e |
+| A-25 | `timeout_secs` raises the documented 30 s default for a script cron | P3 first run (900 s set; is the launcher killed near 30 s?) and the 20 s check | d |
+| A-26 | `node`, `npm` and `git` are on the Probe_Launcher's `PATH` (the runner builds a cleaned env) | P3 launcher record `which` and `PATH` | e |
 
 
 ## Error Handling
@@ -521,8 +558,11 @@ The spike is built to record failures, not avoid them.
 | Network blocked | `https-github` and `git-ls-remote` fail fast; the clone is still attempted so its error text is recorded |
 | Total budget used up | Remaining steps `skipped` with reason `budget` |
 | Gateway kills the run at its timeout | Report stays `running`; next run marks it `cut-short` |
-| `node` not on the cron path | No report is written. The failure text is taken from the Schedule page output (3.8) and recorded as the answer to Requirement 4. A second try uses the absolute node path found with `where node`. |
-| Cron cwd is not the app dir | Script not found; the absolute path from `kirocrew app info` is used and the first failure is recorded |
+| `node` not on the launcher's `PATH` | The launcher record says so (A-26), and the launcher falls back to `%ProgramFiles%\nodejs\node.exe` and records `nodeSource: "fallback"`. With no node at all: `outcome: "no-node"`, no probe report. |
+| A `command` cron on a Windows gateway | Rejected at registration and never listed (E18). Not used; the script cron replaces it. |
+| Script cron killed at the runner's timeout | Launcher record has no `finishedAt`; in `wait` mode the child may be killed with it, so the probe report stays `running` and the next run marks it `cut-short` (A-25) |
+| Launcher blocks the gateway | Seen in the dashboard timing loop; the launcher switches to `detached` and both results are recorded (4.10) |
+| Launcher cwd is not the app dir | The launcher uses its own file's folder, not the cwd, to find `scripts/probe.mjs`, so this cannot break the run; the cwd is recorded (A-01) |
 | `_index.json` missing or corrupt | Treated as an empty index; the old report files are left alone |
 | Install or enable fails | Command, error output and the Notes section g step followed are recorded (1.4). No workaround is hidden. |
 | `permissions` shape rejected | Error text recorded as evidence for assumption A-07; shape adjusted and the change recorded |
@@ -551,6 +591,8 @@ Install, trust, cron scheduling, UI reads, agent behaviour and `skill://` mappin
 | App appears in Library, sidebar, Schedule (1.3) | Playwright screenshots | E-ids in h.1 |
 | Each UI route R1 to R7 (3.4 to 3.7) | Probe_Page rows, screenshot before and after a run | h.3 |
 | Cron probes (4.1 to 4.7) | Copy of `runs/*.json`, `_index.json`, second-run `mode` | h.4 |
+| Script cron process, timeout and PATH (4.9) | Copy of `data/launcher/*.json`, compared with the gateway pid | h.4 |
+| Launcher does not block the gateway (4.10) | Dashboard timing samples before and during the run; detached-mode repeat only if needed | h.4 |
 | Scheduled run at `every: 120`, then disable (3.3) | Report with `trigger: "cron"`, then the Schedule page showing the cron disabled | h.4, h.7 |
 | Agent runs A1 to A5 (5, 6) | Chat screenshots and pasted answers; run ledger | h.5, h.6 |
 | Deletion (10) | `app info` output, directory listing | h.1 and the final listing shown to the user |

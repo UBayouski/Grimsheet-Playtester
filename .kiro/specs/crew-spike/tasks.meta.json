@@ -1,0 +1,311 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Read the available Crew guidance before building": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043357877
+      },
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043362030
+      },
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043564345
+      }
+    ],
+    "1.2 Create the evidence folder and index": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043357949
+      },
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043362225
+      },
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043564740
+      }
+    ],
+    "2.1 Write `app.json`, the agent file and the skill directory": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358009
+      },
+      {
+        "executionId": "26dfff39-d69a-439b-b774-6fc42c41164a",
+        "chatSessionId": "sess_9f169530-f11e-412d-9a35-0c4aade48666",
+        "timestamp": 1794043579463
+      },
+      {
+        "executionId": "26dfff39-d69a-439b-b774-6fc42c41164a",
+        "chatSessionId": "sess_9f169530-f11e-412d-9a35-0c4aade48666",
+        "timestamp": 1794043621051
+      }
+    ],
+    "2.2 Write `spike/scripts/probe.mjs`": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358074
+      },
+      {
+        "executionId": "26dfff39-d69a-439b-b774-6fc42c41164a",
+        "chatSessionId": "sess_9f169530-f11e-412d-9a35-0c4aade48666",
+        "timestamp": 1794043623282
+      },
+      {
+        "executionId": "26dfff39-d69a-439b-b774-6fc42c41164a",
+        "chatSessionId": "sess_9f169530-f11e-412d-9a35-0c4aade48666",
+        "timestamp": 1794043891971
+      }
+    ],
+    "2.3 Write and type-check the `ui/` project": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358117
+      },
+      {
+        "executionId": "26dfff39-d69a-439b-b774-6fc42c41164a",
+        "chatSessionId": "sess_9f169530-f11e-412d-9a35-0c4aade48666",
+        "timestamp": 1794043623751
+      },
+      {
+        "executionId": "26dfff39-d69a-439b-b774-6fc42c41164a",
+        "chatSessionId": "sess_9f169530-f11e-412d-9a35-0c4aade48666",
+        "timestamp": 1794043891612
+      }
+    ],
+    "2.4 Run `probe.mjs` by hand from PowerShell": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358159
+      },
+      {
+        "executionId": "26dfff39-d69a-439b-b774-6fc42c41164a",
+        "chatSessionId": "sess_9f169530-f11e-412d-9a35-0c4aade48666",
+        "timestamp": 1794043893948
+      },
+      {
+        "executionId": "26dfff39-d69a-439b-b774-6fc42c41164a",
+        "chatSessionId": "sess_9f169530-f11e-412d-9a35-0c4aade48666",
+        "timestamp": 1794044267595
+      }
+    ],
+    "3. Checkpoint - Ensure the spike code runs before installing": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358220
+      },
+      {
+        "executionId": "9dd7ec2b-dfc1-41bd-a2df-140520d02107",
+        "chatSessionId": "sess_9f169530-f11e-412d-9a35-0c4aade48666",
+        "timestamp": 1794044516973
+      }
+    ],
+    "4.1 Record the machine and Crew versions": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358261
+      },
+      {
+        "executionId": "691054ef-d7cd-403c-b157-d921364edb29",
+        "chatSessionId": "sess_63e715e4-c078-4361-9ff4-fafebb998eea",
+        "timestamp": 1794044549523
+      },
+      {
+        "executionId": "691054ef-d7cd-403c-b157-d921364edb29",
+        "chatSessionId": "sess_63e715e4-c078-4361-9ff4-fafebb998eea",
+        "timestamp": 1794044575143
+      }
+    ],
+    "4.2 Install the Spike_App, trust it and enable it (you)": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358302
+      }
+    ],
+    "4.3 Capture the dashboard views with the Playwright MCP": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358359
+      }
+    ],
+    "5.1 Run the Probe_Cron once by hand from the Schedule page": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358399
+      }
+    ],
+    "5.2 Check the cron timeout behaviour": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358445
+      }
+    ],
+    "5.3 Record the second-run fetch behaviour and the cron output location": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358501
+      }
+    ],
+    "6.1 UI round 1: nothing declared": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358539
+      }
+    ],
+    "6.2 UI round 2: declare what the docs list": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358585
+      }
+    ],
+    "6.3 Check freshness without reinstalling": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358640
+      }
+    ],
+    "6.4 Scheduled run, then disable the cron": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358681
+      }
+    ],
+    "7.1 Create the agent run ledger": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358720
+      }
+    ],
+    "7.2 Run A1: setup S1 and the full network and clone checks (you)": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358783
+      }
+    ],
+    "7.3 Run A2 and A3: skill setups S2 and S3 (you)": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358824
+      }
+    ],
+    "7.4 Use reserve runs A4 and A5 only where needed (you)": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358866
+      }
+    ],
+    "7.5 Write the agent run ledger to Notes section h.5": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358923
+      }
+    ],
+    "8.1 Write the findings into `docs/CREW_NOTES.md` section h": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043358964
+      }
+    ],
+    "8.2 Replace the \"not documented\" markers in sections a to g": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043359001
+      }
+    ],
+    "8.3 Update `docs/BRIEF.md` and the steering files": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043359064
+      }
+    ],
+    "8.4 Check the assumption table and evidence index": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043359104
+      }
+    ],
+    "9. Checkpoint - Ensure Notes and Brief are complete": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043359152
+      }
+    ],
+    "10.1 Ask the user to confirm before any deletion (you)": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043359196
+      }
+    ],
+    "10.2 Uninstall the app and delete its app data directory": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043359250
+      }
+    ],
+    "10.3 Delete `spike/` and list what remains": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043359287
+      }
+    ],
+    "11.1 Write the crew-spike entry": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043359330
+      }
+    ],
+    "1. P0: Read the docs and prepare evidence capture": [
+      {
+        "executionId": "a3043e34-1d35-4819-9704-718c4204c180",
+        "chatSessionId": "sess_88c8eba8-cc4d-4fad-8f04-00124d738c95",
+        "timestamp": 1794043564791
+      }
+    ],
+    "2. P1: Write the Spike_App": [
+      {
+        "executionId": "26dfff39-d69a-439b-b774-6fc42c41164a",
+        "chatSessionId": "sess_9f169530-f11e-412d-9a35-0c4aade48666",
+        "timestamp": 1794044267648
+      }
+    ]
+  }
+}

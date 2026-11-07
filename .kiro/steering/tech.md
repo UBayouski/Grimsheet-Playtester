@@ -24,7 +24,9 @@ A pure function from (level id, action list, `play.mjs` output) to a verdict, un
 - On Windows PowerShell inline JSON arguments lose their quotes: always use `--actions-file`.
 
 ## Kiro CLI name
-The Crew docs use the `kirocrew` CLI, not `kiro-cli`. No `kiro-cli` app command was found.
+The Crew docs use the `kirocrew` CLI, not `kiro-cli`. On this machine `kirocrew` (0.12.0) is bundled with the KiroCrew desktop app and is not on PATH, so call it by full path:
+`& "C:\Program Files\KiroCrew\resources\backend-dist\kirocrew-backend\bin\kirocrew.cmd" <args>`.
+Do not install or build Kiro Crew. `kiro-cli crew` only forwards to the Crew CLI and needs it on PATH. `kirocrew app uninstall` preserves app data by default.
 
 ## Hooks (planned)
 Run Vitest on save for `scripts/**` and `ui/src/**`; type-check and lint before the agent finishes a task.

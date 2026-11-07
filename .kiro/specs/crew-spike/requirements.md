@@ -11,10 +11,13 @@ The three questions:
 
 All spike code lives in `spike/` at the repo root (`spike/app.json`, `spike/agents/`, `spike/skills/`, `spike/scripts/`, `spike/ui/`). The spike proves answers only. It is not the replay runner, the verifier or the dashboard, and none of its code is reused.
 
+Plan change (2026-11-07, approved by the developer): Crew 0.12.0 on Windows rejects every `command` cron at registration because the gateway has no POSIX shell (evidence E18). The Probe_Cron is therefore a Python `script` cron that launches the unchanged Node probe. Where the questions above say "cron command", read "the Probe_Cron".
+
 ## Glossary
 
 - **Spike_App**: the throwaway Crew app built by this spec.
-- **Probe_Cron**: a cron in Spike_App that runs a `command` with no model call.
+- **Probe_Cron**: a Python `script` cron in Spike_App (`spike/scripts/probe_cron.py`, function `run`) that launches `node scripts/probe.mjs` as a child process, with no model call.
+- **Probe_Launcher**: `spike/scripts/probe_cron.py`, the Python file the Probe_Cron runs.
 - **Probe_Agent**: the agent in Spike_App, run on request.
 - **Probe_Skill**: the skill in Spike_App, listed in `app.json` `skills`.
 - **Probe_Page**: the `ui/` page of Spike_App.
@@ -31,7 +34,7 @@ All spike code lives in `spike/` at the repo root (`spike/app.json`, `spike/agen
 
 #### Acceptance Criteria
 
-1. THE Spike_App SHALL contain only `app.json`, one agent file, one skill directory, one Node probe script (`spike/scripts/probe.mjs`) run by a cron command, and a `ui/` project with one page, all inside `spike/`. THE Spike_App SHALL NOT use the Python cron `script` form.
+1. THE Spike_App SHALL contain only `app.json`, one agent file, one skill directory, one Node probe script (`spike/scripts/probe.mjs`), one Probe_Launcher (`spike/scripts/probe_cron.py`, function `run`) run by a Python `script` cron, and a `ui/` project with one page, all inside `spike/`. THE Probe_Launcher SHALL use only the Python standard library and SHALL launch `node scripts/probe.mjs` as a child process. THE `probe.mjs` script SHALL stay unchanged by this plan change. THE `app.json` SHALL NOT declare a `command` cron (rejected on Windows, evidence E18).
 2. THE `app.json` SHALL declare `displayName`, a semver `version`, `agents`, `skills`, `crons`, `permissions` with `cron: true`, and `ui`, following `docs/CREW_NOTES.md` section a.
 3. WHEN the Spike_App is installed with `kirocrew app install` using an absolute local path, trusted as a third-party app (dashboard Settings, Security, Third-party apps, as in `docs/CREW_NOTES.md` section g) and then enabled, THE Spike_App SHALL appear in the Library tab, the sidebar and the Schedule page. THE spike SHALL record the exact steps taken, including the trust step.
 4. IF installation or enabling fails, THEN THE spike SHALL record the exact command, error output and the step of `docs/CREW_NOTES.md` section g that was followed.
@@ -77,6 +80,8 @@ All spike code lives in `spike/` at the repo root (`spike/app.json`, `spike/agen
 6. THE Probe_Cron SHALL record the cron `timeout` it ran under and whether any step was cut short by it.
 7. WHEN a clone already exists in the app data directory, THE Probe_Cron SHALL fetch and reset instead of cloning, and record that the second run did so.
 8. THE probe report SHALL be written even when individual steps fail, so that one failure does not hide the others.
+9. WHEN the Probe_Cron runs, THE spike SHALL record whether the Probe_Launcher runs inside the gateway process or in a child process of it, whether `timeout_secs` raises the 30 second default for a script cron, and whether `node`, `npm` and `git` are on the Probe_Launcher's `PATH`.
+10. THE Probe_Launcher SHALL first run `probe.mjs` and wait for it with a timeout, and THE spike SHALL record how long the dashboard stays responsive during that run. IF the Probe_Launcher runs inside the gateway process and blocks it, THEN THE Probe_Launcher SHALL be switched to start `probe.mjs` detached and return at once, and THE spike SHALL record the results of both modes. In both modes the probe report SHALL be written by `probe.mjs`.
 
 ### Requirement 5: Question 2, network, clone and node from an agent run
 

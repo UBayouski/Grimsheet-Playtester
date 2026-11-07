@@ -15,8 +15,8 @@ Rules that apply to every task:
 
 ## Tasks
 
-- [ ] 1. P0: Read the docs and prepare evidence capture
-  - [ ] 1.1 Read the available Crew guidance before building
+- [x] 1. P0: Read the docs and prepare evidence capture
+  - [x] 1.1 Read the available Crew guidance before building
     - If the `kirocrew-app-dev` skill is available in the session, read it and note which guidance is used. If it is not available, note that and continue.
     - Query Context7 `/kirodotdev/kirocrew` for: the paths that serve app files and storage, cron output and completion events, `permissions.api` and `permissions.events` shapes, `tools` and `allowedTools` values, and the `skill://` glob form.
     - Where `/kirodotdev/kirocrew` does not answer, query `/websites/deepwiki_kirodotdev_kirocrew`. Keep each question and result as a draft for Notes section h.2.
@@ -24,21 +24,21 @@ Rules that apply to every task:
     - Closes no assumption by itself. It settles the inputs that A-07, A-12, A-14 and A-17 are tested against.
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 7.4_
 
-  - [ ] 1.2 Create the evidence folder and index
+  - [x] 1.2 Create the evidence folder and index
     - Create `spike/evidence/INDEX.md` with the columns `id`, `requirement`, `date`, `what it shows`, `file`, `redaction checked`.
     - Add a short redaction check procedure at the top: pass text through the `scrub()` pattern and search for `token` before an index row is added.
     - Confirm the Playwright MCP server is listed in `.kiro/settings/mcp.json`. Screenshots are named `E<nn>-<slug>.png` with no token text in the name.
     - _Requirements: 7.1, 7.5, 7.6_
 
-- [ ] 2. P1: Write the Spike_App
-  - [ ] 2.1 Write `app.json`, the agent file and the skill directory
+- [x] 2. P1: Write the Spike_App
+  - [x] 2.1 Write `app.json`, the agent file and the skill directory
     - Create `spike/app.json` with the round 1 content from the design: `displayName`, `version` 0.0.1, one agent, one skill, one cron (`enabled: false`, `every: 120`, `timeout_secs: 900`, `env.SPIKE_TIMEOUT_SECS`), `permissions` with `cron: true`, empty `api` and `events`, `storage: true`, and the `ui` entry and page.
     - Create `spike/agents/probe-agent.json` with setup S1 (`resources: []`, no `tools`, no `allowedTools`, no `network`).
     - Create `spike/skills/probe-skill/SKILL.md` with `name`, `description`, `license`, `metadata` and the marker `lantern-kettle-4821`. Add `scripts/marker.mjs` (prints `SCRIPT-MARKER: kettle-orchard-7730`) and `references/note.md` (holds `REFERENCE-MARKER: orchard-lantern-1159`).
     - The files are written in this task. Install and load results come later, so A-06, A-07, A-08, A-09 and A-19 are tested in tasks 4.2, 6.2 and 7.2.
     - _Requirements: 1.1, 1.2, 1.5, 6.1, 9.2_
 
-  - [ ] 2.2 Write `spike/scripts/probe.mjs`
+  - [x] 2.2 Write `spike/scripts/probe.mjs`
     - ESM with `// @ts-check` and JSDoc types, Node built-ins only. Export `parseIndex`, `insertRun`, `patchRun`, `markStaleRunning`, `runStep`, `scrub`, `tailText` and `toModuleText`. Run `main()` only when the file is the entry point.
     - Implement the 11 steps in the design's probe order, with the step limits, the total budget (`SPIKE_TIMEOUT_SECS - 60`), `taskkill /PID <pid> /T /F` on timeout, and `shell: true` for child processes.
     - Rewrite the report atomically after each step. A failed step never stops the next one. Skip rules follow the design: the clone is skipped only when `git` is missing; steps 9 to 11 run whenever the clone succeeded.
@@ -46,7 +46,7 @@ Rules that apply to every task:
     - Write only inside `dataDir` and `SPIKE_SERVE_DIR`. Exit 0 whenever a report was written.
     - _Requirements: 3.1, 3.2, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 9.1, 9.2_
 
-  - [ ] 2.3 Write and type-check the `ui/` project
+  - [x] 2.3 Write and type-check the `ui/` project
     - Create `spike/ui/package.json`, `tsconfig.json` (`strict: true`), `vite.config.ts` (library build to `dist/index.mjs`, with `@kirocrew/app-sdk`, React, ReactDOM and lucide-react as externals), `src/sdk.d.ts`, `src/routes.ts` and `src/index.tsx`.
     - Do not `npm install @kirocrew/app-sdk`. The local `sdk.d.ts` declares only the calls the page uses.
     - The page runs routes R1 to R7 on mount and on a Refresh button. Each row shows the route id, status (`data`, `empty` or `error`) and the first 300 characters of the result or error. It never hides a failure.
@@ -54,67 +54,91 @@ Rules that apply to every task:
     - Writes the code for A-11 and A-12; they are tested in task 6.1.
     - _Requirements: 3.4, 3.6, 3.7, 1.1_
 
-  - [ ] 2.4 Run `probe.mjs` by hand from PowerShell
+  - [x] 2.4 Run `probe.mjs` by hand from PowerShell
     - Run `node scripts/probe.mjs --trigger manual` from `spike/` with `SPIKE_DATA_DIR` unset, so the fallback directory is used. Check the report has all 11 steps, the index holds at most 5 runs, and a run repeated more than 5 times evicts the oldest report file.
     - Run it once with a bad step (for example a PATH without `git`) to confirm a failure does not hide later steps.
     - Save the report and `_index.json` as evidence with scrubbed `INDEX.md` rows. This checks the script itself only. It does not answer A-01 or A-04, which depend on the gateway shell.
     - _Requirements: 4.1, 4.8, 3.2, 7.5_
 
-- [ ] 3. Checkpoint - Ensure the spike code runs before installing
+- [x] 3. Checkpoint - Ensure the spike code runs before installing
   - Ensure `tsc --noEmit` passes, the hand run produced a full report, and no evidence row is missing. Ask the user if questions arise.
 
-- [ ] 4. P2: Record versions, install, trust and enable
-  - [ ] 4.1 Record the machine and Crew versions
+- [x] 4. P2: Record versions, install, trust and enable
+  - [x] 4.1 Record the machine and Crew versions
     - Capture the Windows caption and version with `Get-CimInstance Win32_OperatingSystem`.
     - Run `kirocrew --version`. If the flag does not exist, record the error and take the version text from `kirocrew app info`, or "not available".
     - Save both as evidence. They go in the header of Notes section h.
     - Closes A-20.
+    - Done 2026-11-07: Crew CLI run by full path (bundled with the KiroCrew desktop app, not on PATH). `kirocrew --version` = 0.12.0 (E05). `kirocrew app --help` (E06) settles A-21 (`kirocrew app uninstall <name>`) and states uninstall preserves app data by default (bears on A-22; 10.2 still checks the directory). Read-only look at the installed ops-mission-control app recorded as E07.
     - _Requirements: 7.1, 1.4_
 
-  - [ ] 4.2 Install the Spike_App, trust it and enable it (you)
+  - [x] 4.2 Install the Spike_App, trust it and enable it (you)
     - Run `kirocrew app install <absolute path to spike>` and save the exact command and output. If it fails, record the command, the error text and the Notes section g step followed, and stop and report.
     - (you) Open the dashboard, go to Settings, Security, Third-party apps, and trust the app. Tell the assistant when done. Do not paste the token URL anywhere.
+    - Progress 2026-11-07: install done (E08), exit 0 with "registration blocked by execution policy" until trusted. The user trusted the app in the dashboard and it showed enabled in the sidebar; `kirocrew app enable` was not run (E09). First page load failed on a missing `setAppConfig` export (E09); page rewritten (E10). Updating the installed copy is blocked: the CLI cannot reach the desktop gateway (E11). The dashboard has no Update button for a local app; the user uninstalled from the dashboard, which kept the data folder (E12). Reinstalled with `kirocrew app install` (E13); the user trusted and enabled it again from the dashboard. Install copies `spike/` to `~\.kiro\crew\apps\crew-spike` and drops every `.git` and `node_modules` (E08, E17). No manifest field was rejected; `license` and `metadata` in SKILL.md raised no install error (E08). A-02 confirmed, A-06 confirmed (E08). Then CLI uninstall and reinstall at 10:12:55Z to ship the probe.mjs clone fix (E17): this copy is not yet trusted, so the user must trust and enable it again before 5.1.
     - Run `kirocrew app enable crew-spike` and `kirocrew app info crew-spike`. Record the on-disk install path, whether `spike/` was copied or pointed at, and the exact error text for any rejected manifest field.
     - Closes A-02 (install path readable and shown by `app info`). Tests A-06 (`name`, `description`, `author` accepted), A-08 (the `icon` value), A-07 for the round 1 shapes, and A-19 for install-time acceptance of `license` and `metadata`. If the install rejects `license` or `metadata`, reinstall without them and keep the rejection text.
     - _Requirements: 1.3, 1.4, 1.5, 6.2, 6.6, 7.1, 9.2_
 
-  - [ ] 4.3 Capture the dashboard views with the Playwright MCP
+  - [x] 4.3 Capture the dashboard views with the Playwright MCP
     - Open the dashboard through the Playwright MCP server using the token URL from `kirocrew token`. Do not record the URL.
     - Screenshot the Library tab, the sidebar and the Schedule page. Check each page does not display the token before saving. Describe each screenshot in words in its `INDEX.md` row.
     - If the Playwright MCP cannot reach the dashboard, (you) take the screenshots by hand and save them under `spike/evidence/` with the same naming rule.
     - Confirms A-08 (sidebar icon appears or is dropped).
+    - Done 2026-11-07 with a 30-minute token (not recorded): Library (E15) lists Crew Spike under Enabled, "In sidebar"; sidebar entry present with an icon (A-08 supported, glyph not confirmed); Schedule page (E16) shows "No scheduled jobs yet" and does not list the `probe` cron. The Probe_Page round 1 was captured at the same time (E14): A-11 confirmed, A-12 refuted for getAppDataDir, getAppConfig, setAppConfig.
     - _Requirements: 1.3, 7.5, 7.6_
 
-- [ ] 5. P3: Run the cron command through the gateway
-  - [ ] 5.1 Run the Probe_Cron once by hand from the Schedule page
-    - Start the `probe` cron from the Schedule page (`enabled: false`). Use the Playwright MCP; if it cannot start the run, (you) press Run and tell the assistant.
-    - Copy the new `runs/*.json` and `_index.json`. From the report record: `environment.cwd`, user, `PATH`, `envNames`, the shell and parent image, the `node`, `npm` and `git` versions, the HTTPS status, the clone mode, commit and duration, `npm ci` and `build:play` exit codes, `headlessJsExists`, and the `--list` output.
-    - If `node scripts/probe.mjs` fails because the script or `node` is not found, record the failure text from the Schedule page, then retry with the absolute path from `kirocrew app info` or `where node`.
-    - Record the full path where the file was actually written on this machine, and compare it with the data directory from `kirocrew app info`.
-    - Closes A-01 (cwd), A-03 (`envNames` shows no data directory variable, or shows one), A-04 (`npm-version` result under `shell: true`), A-09 (`env` reaches the command; `enabled: false` allows a manual run) and A-23 (a run can be started by hand from the Schedule page).
-    - _Requirements: 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.8, 9.1_
+- [x] 5. P3: Run the Probe_Cron (script cron) through the gateway
+  - Plan change 2026-11-07: Crew 0.12.0 on Windows rejects every `command` cron at registration ("No POSIX shell available to run this command cron ... Use a script cron or an LLM `message` cron on this platform, or run the gateway under POSIX", E18). The Probe_Cron is now the Python script cron `scripts/probe_cron.py:run`, which launches the unchanged `node scripts/probe.mjs`. Earlier blocked attempt with the command cron: E16, E18. Dev mode is on (E19).
 
-  - [ ] 5.2 Check the cron timeout behaviour
-    - Edit `app.json` to set `timeout_secs` and `SPIKE_TIMEOUT_SECS` to 20, then reinstall (or apply the change by the method the app info shows, and record which one was needed). Run the cron once. The clone and build steps cannot finish in 20 s, so the report should stay `running`.
-    - Run the cron again and check the older run is now `cut-short` with `inferredBy: "next-run"`. Record whether `timeout` or `timeout_secs` was honoured and in which unit.
-    - Restore the 900 s value and reinstall. Record that the restore worked.
-    - Closes A-05.
-    - _Requirements: 4.6, 4.8_
+  - [x] 5.0 Write the Probe_Launcher and replace the command cron
+    - Done 2026-11-07 (E20): launcher written and hand-checked in both modes with the bundled Python; command cron replaced; Sync at 10:34:29Z registered the script cron as job a471b9f5 (vetted, allowed). No reinstall or re-trust needed.
+    - Write `spike/scripts/probe_cron.py` as in design section 2a: standard library only, `run(ctx)`, a launcher record in `<app>/data/launcher/`, `wait` mode first (`subprocess.run` with a timeout, tree kill on timeout), `detached` mode behind `SPIKE_LAUNCH_MODE`. Leave `probe.mjs` unchanged.
+    - Hand check from PowerShell with the gateway's own Python (`sys.executable` of the bundled backend) and a stub `ctx`, against a throwaway data folder in %TEMP%: the record is written and `probe.mjs` runs. Delete the throwaway folder afterwards.
+    - In `spike/app.json`, replace the command cron with the script cron entry from design section 1 (`script`, `every: 86400`, `timeout_secs: 900`, `env` with `SPIKE_TIMEOUT_SECS` and `SPIKE_LAUNCH_MODE: wait`, `enabled: true`).
+    - Push with the dashboard Sync button on the app's Details page (Playwright). Check that the installed `app-crons.json` shows the script entry, and read the gateway log and the security log for the cron's vetting and registration result. If Sync is refused or a reinstall is needed, stop and tell the user (re-trust).
+    - _Requirements: 1.1, 4.9, 9.2_
 
-  - [ ] 5.3 Record the second-run fetch behaviour and the cron output location
+  - [x] 5.1 Run the Probe_Cron once by hand (wait mode) and check the gateway stays responsive
+    - Done 2026-11-07 (E20): listed on Schedule → List with a Run button; run at 10:36:01Z. Launcher pid 31472, ppid 63920 = gateway (A-24 confirmed: child process). cwd C:\Program Files\KiroCrew (A-01 refuted). node, npm, git on PATH (A-26 confirmed). No SPIKE_* in its env (A-09 refuted: manifest env does not reach a script cron). Probe r0010 complete, all 11 steps ok, clone-after-delete. Dashboard latency unchanged (baseline max 60 ms, during run max 53 ms). Run finished in 12.7 s, so A-25 was settled in 5.3.
+    - Find where the `probe` cron is listed (Schedule page List, Executions, app Details) and record it. Start one run by hand from there with the Playwright MCP; if it cannot start the run, (you) press Run and tell the assistant.
+    - Before the run, take 10 baseline samples of `GET http://localhost:5476/` latency. During the run, sample once a second until the launcher record has `finishedAt` (at most 15 minutes). Record every sample. Responsive means every sample answered within 2 s.
+    - From the launcher record: `pid`, `ppid`, the parent image, `sys.executable`, `cwd`, `PATH`, `which` for node, npm and git, `SPIKE_*` values, `ctx` type and attributes, mode, outcome, elapsed, child exit code. Compare `pid` and `ppid` with the gateway pid.
+    - From the probe report: `environment.cwd`, user, `PATH`, `envNames`, the shell and parent image, the `node`, `npm` and `git` versions, the HTTPS status, the clone mode (expect `clone-after-delete`, E17), commit and duration, `npm ci` and `build:play` exit codes, `headlessJsExists`, and the `--list` output. Record the full path where the report was written and compare it with the app folder.
+    - Closes A-24 (in-process or child process), A-26 (node, npm, git on the launcher's PATH), A-01 (cwd), A-03 (`envNames`), A-04 (`npm-version`), A-09 (`env` reaches the script's process) and A-23 (listed and runnable by hand). Gives the first reading of A-25: with 900 s set, is the launcher killed near 30 s?
+    - _Requirements: 3.1, 3.2, 4.1, 4.2, 4.3, 4.4, 4.5, 4.8, 4.9, 4.10, 9.1_
+
+  - [x] 5.2 Detached mode, only if the launcher runs in-process and blocks the gateway
+    - Not needed (2026-11-07): the launcher is a child process and the dashboard stayed responsive (E20); the long-run case was solved by the `timeout` field (E21). Detached mode was hand-checked only (returns in 0.6 s, child completes; E20).
+    - Only if 5.1 shows `pid` equal to the gateway pid and the dashboard stopped answering: set `SPIKE_LAUNCH_MODE` to `detached`, Sync, and repeat 5.1 with the same timing loop. Record both results side by side. Otherwise record that it was not needed and why.
+    - Also run this mode if the 30 s default killed the wait-mode launcher (A-25), since a detached probe is the only way a long run can finish then. Record whether the child survived the launcher's exit (breakaway allowed or not).
+    - _Requirements: 4.10, 4.9_
+
+  - [x] 5.3 Check the script cron timeout behaviour
+    - Done 2026-11-07 (E21): with `timeout_secs: 900` and a 45 s hold the run was killed at 30 s (A-25 refuted). `timeout: 120` let a 58.5 s run finish; `timeout: 5` killed launcher and node at 5 s, probe report r0013 left running, then marked cut-short by r0014 (A-05 answered: `timeout` in seconds). `timeout_secs` is a wake budget that must be at least `timeout + 5` (Sync refused 900/900). Restored to `timeout: 900`, `timeout_secs: 960`.
+    - Set `timeout_secs` and `SPIKE_TIMEOUT_SECS` to 20, Sync, run once by hand. The clone and build steps cannot finish in 20 s. Record whether the launcher was killed (no `finishedAt`), and whether the probe report stays `running`.
+    - Run again and check the older run is now `cut-short` with `inferredBy: "next-run"`. Record whether `timeout_secs` was honoured and in which unit.
+    - Restore 900, Sync, and record that the restore worked.
+    - Closes A-05 (re-scoped to the script cron) and A-25 (does `timeout_secs` raise or lower the 30 s default).
+    - _Requirements: 4.6, 4.8, 4.9_
+
+  - [x] 5.4 Record the second-run fetch behaviour and the cron output location
+    - Done 2026-11-07 (E21, E22, E23): r0014 used fetch-reset (556 ms, same commit 6372d9a). Output: Schedule → Executions (status, duration, trigger, error summary; empty summary on success), backed by ~\.kiro\crew\cron-history\a471b9f5.jsonl.
     - Run the cron again with the 900 s timeout. Check the `clone-or-update` step reports `mode: "fetch-reset"` and the same or newer commit.
-    - Use the Playwright MCP to open the Schedule page for the run. Record where the command output appears (path, view or log), and describe the screenshot.
+    - Use the Playwright MCP to open the run in the dashboard. Record where the launcher's output appears (path, view or log), and describe the screenshot.
     - Closes the "output location not documented" gap in Notes section d. No assumption id maps only here; it supports A-01 and A-23.
     - _Requirements: 4.7, 3.8, 7.2_
 
 - [ ] 6. P4: UI rounds, freshness and the scheduled run
   - [ ] 6.1 UI round 1: nothing declared
+    - Partly done early (E14, 2026-11-07, before any cron run): rows R0 to R7 recorded, A-11 and A-12 closed. Still to do here: repeat after a cron run so R4 can see a written file, and look at `useAppInfo` as the replacement for the missing getAppDataDir (R2).
     - Open the Probe_Page with the Playwright MCP, with `permissions.api` and `permissions.events` empty. Record the row for each route R1 to R7, with the exact error text for each failure.
     - Check that the entry module's default export renders as the page, that the SDK calls in `sdk.d.ts` exist at runtime, and what R2 `getAppDataDir()` returns. Compare that value with `dataDir.path` from the report.
     - Closes A-11 (default export is the page component) and A-12 (SDK signatures match runtime). Tests A-07 for the undeclared case (R1).
     - _Requirements: 3.4, 3.5, 3.6, 3.3, 7.6_
 
   - [ ] 6.2 UI round 2: declare what the docs list
+    - Note (2026-11-07): Notes h.2 Q1 lists `GET/PUT /api/apps/{name}/config` as a documented route. Declare `/api/apps/crew-spike/config` in `permissions.api` and try it (GET, then PUT and GET back) in place of the missing getAppConfig/setAppConfig (R7). Test `useAppInfo` (exported in 0.12.0, E14) as the replacement for the missing getAppDataDir (R2) and record its return shape. Push manifest and UI changes with the dashboard Sync button (E18), not a reinstall; dev mode is on (E19).
     - Edit `app.json` to version 0.0.2 with the `permissions.api` and `permissions.events` values fixed in task 1.1, and add `SPIKE_DATA_DIR` (the path from `kirocrew app info`) and `SPIKE_SERVE_DIR` (the installed `ui/` directory) to the cron `env`. Reinstall and run the cron once.
     - Record for each route R1 to R7: the result, the `permissions` entries it needed, and the response shape. If a route has no documented path, record "no documented path" and do not guess one.
     - If no documented route returns the cron's file, record every route tried with its error and test the Brief section 6 fallback (R4, the `spike-latest.mjs` module).
@@ -128,6 +152,7 @@ Rules that apply to every task:
     - _Requirements: 3.7, 3.5_
 
   - [ ] 6.4 Scheduled run, then disable the cron
+    - Note (2026-11-07, from task 5): push the `every: 120` change with Sync, not a reinstall. Keep `timeout` below the interval (for example `timeout: 100`, `timeout_secs: 110`), since `timeout_secs` must be at least `timeout + 5` (E21). A by-hand Run is recorded as `trigger: manual` in cron-history, while the probe report says `trigger: cron` for both; tell a scheduled run apart by its cron-history `trigger` value.
     - Enable the cron with `every: 120` by the Schedule page or an edit and reinstall. Record which method toggles it. Wait for one run with `trigger: "cron"` and copy the report.
     - Disable the cron again and use the Playwright MCP to capture the Schedule page showing it disabled. Record the toggle method.
     - Adds to A-09 and A-05. No assumption id closes only here.
@@ -225,7 +250,7 @@ Rules that apply to every task:
 
 - Tasks marked "(you)" need the user: trusting the app, answering approval prompts, starting an agent run when the Playwright MCP cannot, and confirming before deletion.
 - There are no test, property-test, Vitest or fast-check tasks, and no `spike/dev` task. The spike is observation. `tsc --noEmit` for `ui/` is the only automated check.
-- Assumption coverage: A-01, A-03, A-04, A-09, A-23 (5.1); A-02, A-06, A-07, A-08, A-19 (4.2); A-05 (5.2); A-11, A-12 (6.1); A-07, A-13 (6.2); A-14, A-15, A-16 (7.2); A-17, A-18, A-19 (7.3); A-10 (7.4); A-20 (4.1); A-21, A-22 (10.2). Task 8.4 checks the full table.
+- Assumption coverage: A-01, A-03, A-04, A-09, A-23, A-24, A-26 (5.1, re-scoped to the script cron); A-02, A-06, A-07, A-08, A-19 (4.2); A-05, A-25 (5.3; first reading of A-25 in 5.1); A-11, A-12 (6.1); A-07, A-13 (6.2); A-14, A-15, A-16 (7.2); A-17, A-18, A-19 (7.3); A-10 (7.4); A-20 (4.1); A-21, A-22 (10.2). Task 8.4 checks the full table.
 - Evidence lives in `spike/evidence/` until task 10.3 deletes it, so Notes describe each screenshot in words.
 - The agent run ledger is capped at five runs (Requirement 5.7).
 
@@ -241,26 +266,28 @@ Rules that apply to every task:
     { "id": 4, "tasks": ["4.1"] },
     { "id": 5, "tasks": ["4.2"] },
     { "id": 6, "tasks": ["4.3"] },
-    { "id": 7, "tasks": ["5.1"] },
-    { "id": 8, "tasks": ["5.2"] },
-    { "id": 9, "tasks": ["5.3"] },
-    { "id": 10, "tasks": ["6.1"] },
-    { "id": 11, "tasks": ["6.2"] },
-    { "id": 12, "tasks": ["6.3"] },
-    { "id": 13, "tasks": ["6.4"] },
-    { "id": 14, "tasks": ["7.1"] },
-    { "id": 15, "tasks": ["7.2"] },
-    { "id": 16, "tasks": ["7.3"] },
-    { "id": 17, "tasks": ["7.4"] },
-    { "id": 18, "tasks": ["8.1"] },
-    { "id": 19, "tasks": ["7.5"] },
-    { "id": 20, "tasks": ["8.2"] },
-    { "id": 21, "tasks": ["8.3"] },
-    { "id": 22, "tasks": ["8.4"] },
-    { "id": 23, "tasks": ["10.1"] },
-    { "id": 24, "tasks": ["10.2"] },
-    { "id": 25, "tasks": ["10.3"] },
-    { "id": 26, "tasks": ["11.1"] }
+    { "id": 7, "tasks": ["5.0"] },
+    { "id": 8, "tasks": ["5.1"] },
+    { "id": 9, "tasks": ["5.2"] },
+    { "id": 10, "tasks": ["5.3"] },
+    { "id": 11, "tasks": ["5.4"] },
+    { "id": 12, "tasks": ["6.1"] },
+    { "id": 13, "tasks": ["6.2"] },
+    { "id": 14, "tasks": ["6.3"] },
+    { "id": 15, "tasks": ["6.4"] },
+    { "id": 16, "tasks": ["7.1"] },
+    { "id": 17, "tasks": ["7.2"] },
+    { "id": 18, "tasks": ["7.3"] },
+    { "id": 19, "tasks": ["7.4"] },
+    { "id": 20, "tasks": ["8.1"] },
+    { "id": 21, "tasks": ["7.5"] },
+    { "id": 22, "tasks": ["8.2"] },
+    { "id": 23, "tasks": ["8.3"] },
+    { "id": 24, "tasks": ["8.4"] },
+    { "id": 25, "tasks": ["10.1"] },
+    { "id": 26, "tasks": ["10.2"] },
+    { "id": 27, "tasks": ["10.3"] },
+    { "id": 28, "tasks": ["11.1"] }
   ]
 }
 ```

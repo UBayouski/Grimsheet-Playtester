@@ -92,6 +92,13 @@ From `docs/CREW_NOTES.md`, not documented:
 If the spike shows the UI cannot read run output, the fallback is for the replay script to write its results where
 the documented API can serve them, and the brief is updated before the specs are written.
 
+Found by the spike (2026-11-07, Crew 0.12.0, Windows): `command` crons need a POSIX gateway. A Windows gateway
+rejects every `command` cron at registration ("No POSIX shell available to run this command cron"), so it is never
+listed or run. The replay job's cron form is therefore not settled by section 4 and is decided by the `crew-spike`
+findings in `docs/CREW_NOTES.md`. On this machine a Python `script` cron that launches Node works. For a script cron,
+`timeout` is the run limit (default 30 s), `timeout_secs` must be at least `timeout + 5`, and the manifest `env`
+does not reach the script.
+
 ## 7. Technical choices
 
 - Node 22.12+ and git on the host; the README says so. Plain ESM JavaScript with JSDoc types and `// @ts-check` for
