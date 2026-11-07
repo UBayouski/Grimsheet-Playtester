@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Play sound when the agent finishes",
+      "trigger": "Stop",
+      "description": "Plays the Windows Asterisk system sound each time the agent stops, so you know the task is done.",
+      "action": {
+        "type": "command",
+        "command": "powershell -NoProfile -Command \"[System.Media.SystemSounds]::Asterisk.Play(); Start-Sleep -Milliseconds 800\"",
+        "timeout": 10
+      }
+    }
+  ]
+}
