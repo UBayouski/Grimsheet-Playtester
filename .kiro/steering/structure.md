@@ -10,7 +10,8 @@ skills/
   play-level/SKILL.md     build and run the command, read the result
   find-exploits/SKILL.md  three exploit classes, attempt budget, candidate file format
 scripts/                  ESM JS with JSDoc and // @ts-check; no build step
-  replay.mjs              nightly replay entry point (cron command)
+  replay_cron.py          Python launcher for the nightly cron (script cron; starts replay.mjs)
+  replay.mjs              nightly replay entry point
 ui/                       React + Vite + TypeScript strict dashboard
 tests/                    Vitest and fast-check; no network
 docs/
@@ -25,10 +26,10 @@ KIRO_USAGE.md             Kiro usage log
 ## Conventions
 - Skill folders hold a required `SKILL.md`; optional `scripts/`, `references/`, `assets/`.
 - Agents are JSON files listed in `app.json` `agents`; skills are directory paths listed in `app.json` `skills`.
-- Run output (result files and bounded index) lives in the app data directory, not in the repo. How the UI reads it is an open question (spec 1, `crew-spike`).
+- Run output (result files and bounded index) lives in the app data directory, not in the repo. The page reads results from a key in `data\config.json` through `GET /api/apps/<app>/config`; it never PUTs it (spike, Notes h.3). Launcher settings are in `data\launcher\control.json`. The Grimsheet clone is outside the app folder, in `%LOCALAPPDATA%\<app>`.
 
 ## Spec order
-1. crew-spike (throwaway; findings go to `docs/CREW_NOTES.md`, code deleted)
+1. crew-spike (done: findings are in `docs/CREW_NOTES.md` section h; the spike code is deleted in its last task)
 2. verifier
 3. replay-runner
 4. exploit-hunt

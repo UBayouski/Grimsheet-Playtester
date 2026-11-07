@@ -12,7 +12,7 @@ The developer of a puzzle game who needs to know after every change: do all leve
 Pitch: an agent proposes exploits, a deterministic engine checks every claim before it is recorded. No finding reaches the dashboard unless replaying its action list reproduces it.
 
 ## Two jobs
-- Replay (nightly, no model call): a cron `command` fetches Grimsheet `main` into the app data directory, records the commit hash, builds it, plays every stored solution, writes one result file per run and updates a bounded index (last 30 runs).
+- Replay (nightly, no model call): a Python launcher run by a `script` cron (a `command` cron fails on Windows) fetches Grimsheet `main` into a per-user local folder outside the app folder, records the commit hash, builds it, plays every stored solution, writes one result file per run and updates a bounded index (last 30 runs).
 - Hunt (weekly and on request, agent run): the `playtester` agent with the `find-exploits` skill studies each level and proposes action lists. The verifier replays each one. Only verified candidates are recorded; rejected ones are counted, not shown. The attempt budget per level is fixed in the skill.
 
 ## Level colours

@@ -1,0 +1,36 @@
+date: 2026-11-07 (install at 09:48:05Z)
+CLI: bundled kirocrew 0.12.0, run by full path. Paths under the user profile are written with ~.
+
+> kirocrew app install d:\Projects\Kiroween\grimsheet-playtester\spike
+✅ installed crew-spike v0.0.1
+   ⚠  registration blocked by execution policy: third-party app execution is disabled; trust this app alone from the dashboard's App Store, whose install, update and enable prompts ask for it (agent.apps_trusted), or set agent.apps_allow_third_party=true to allow every third-party app's Python, backend, and manifest shell code
+   Run: kirocrew app enable crew-spike
+stderr: WARNING kiro_crew.apps.bridges: App crew-spike: skipping executable resource registration (resource_register): third-party app execution is disabled; trust this app alone from the dashboard's App Store, whose install, update and enable prompts ask for it (agent.apps_trusted), or set agent.apps_allow_third_party=true to allow every third-party app's Python, backend, and manifest shell code
+exit: 0
+
+> kirocrew app info crew-spike   (excerpt)
+enabled: false
+source: D:\Projects\Kiroween\grimsheet-playtester\spike
+origin: registry, resources: gateway, lifecycle: gateway, schemaVersion: 2, dev: false
+approvedGrantsStored: true, approvedGrants: { api: [], events: [] }
+manifest as stored (normalised):
+  name, version 0.0.1, displayName, description, author: kept
+  agents ["agents/probe-agent.json"], skills ["skills/probe-skill"]: kept
+  crons[0]: name probe, every 120, command "node scripts/probe.mjs --trigger cron", env {SPIKE_TIMEOUT_SECS: "900"}, timeout_secs 900, persistent_session false, enabled false
+            -> "silent": false is absent from the stored manifest (dropped, likely as the default)
+  ui: entry dist/index.mjs, pages [{route /apps/crew-spike, label Crew Spike, icon FlaskConical}]: kept
+  permissions: {storage: true, cron: true}
+            -> the empty "api": [] and "events": [] are absent from the stored manifest; the grants appear instead under approvedGrants
+
+Install directory: ~\.kiro\crew\apps\crew-spike
+- The install COPIES spike/ (it does not point at it). Copied: app.json, agents/, skills/, scripts/, ui/ (src, dist, package files; no node_modules), and also spike/data/ (including data/grimsheet and data/runs) and spike/evidence/.
+- Added by the install: installed.json, approved-grants.json, .app_secret (not read).
+- approved-grants.json lists empty arrays for api, events, linkPreviewHosts, linkPreviewTextPatterns, linkPreviewFullUrl, messageActions, linkOpenHosts, linkOpenFullUrl, composerActions, selectionActions.
+
+Readings:
+- A-02: install leaves a readable directory at ~\.kiro\crew\apps\crew-spike, and app info reports the source path (not the install path). The install path is the apps folder + name, by observation. Confirmed with that refinement.
+- A-06: name, description, author accepted (kept in the stored manifest). Confirmed.
+- A-07 (round 1 part): empty api/events arrays accepted without error; storage boolean accepted. Shapes of non-empty arrays: still to test in 6.2.
+- A-19 (install-time part): no error on SKILL.md license/metadata at install. Load-time behaviour: 7.3.
+- New finding: a third-party (local) app's executable resources are not registered until it is trusted (agent.apps_trusted from the dashboard App Store prompts) or agent.apps_allow_third_party=true. The trust step is in the dashboard App Store install/update/enable prompts.
+- Side effect to handle at deletion: the copy holds spike/data (the grimsheet clone and runs) and spike/evidence, so uninstall plus the data directory check in 10.2 must cover ~\.kiro\crew\apps\crew-spike as well.

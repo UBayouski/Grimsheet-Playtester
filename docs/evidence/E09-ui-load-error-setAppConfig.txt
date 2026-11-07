@@ -1,0 +1,16 @@
+date: 2026-11-07
+Crew: KiroCrew desktop app, kirocrew 0.12.0
+Reported by the user (observed in the dashboard, not captured by Playwright).
+
+Trust and enable: done from the dashboard by the user. After trusting crew-spike, it showed as enabled in the sidebar under Apps. `kirocrew app enable crew-spike` was NOT run.
+
+The user opened the Crew Spike page once. It failed to load with:
+
+  The requested module '@kirocrew/app-sdk' does not provide an export named 'setAppConfig'
+
+Cause: ui/src/routes.ts used named imports (`import { getAppConfig, getAppDataDir, setAppConfig } from "@kirocrew/app-sdk"`). In ESM, a missing named export is a link-time SyntaxError, so the whole module fails to load before any code runs. No route (R1 to R7) ran, and nothing about the other exports can be read from this failure.
+
+Readings:
+- A-12 (SDK signatures in sdk.d.ts match runtime): refuted for setAppConfig. Crew 0.12.0 does not export setAppConfig from @kirocrew/app-sdk.
+- A-11 (default export is the page component): not tested; the module did not load.
+- Follow-up: the page now imports the SDK as a namespace and checks typeof before every call (E10).

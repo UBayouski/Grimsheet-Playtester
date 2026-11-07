@@ -264,7 +264,7 @@ Pure interfaces:
 // markStaleRunning(index: RunIndex): RunIndex
 /** Runs def.fn within def.limitMs; always resolves with a StepResult. */
 // runStep(def: StepDef, ctx: RunCtx): Promise<StepResult>
-/** Replaces the value after token=, Authorization: and similar with REDACTED. */
+/** Replaces the value after the token query value, Authorization: and similar with REDACTED. */
 // scrub(text: string): string
 /** Returns at most `max` trailing characters, prefixed with a marker if cut. */
 // tailText(text: string, max: number): string

@@ -1,0 +1,44 @@
+date: 2026-11-07
+CLI: bundled kirocrew 0.12.0 by full path. Paths under the user profile are written with ~.
+
+## Install exclusions (matter for the real app)
+
+Compared on the same files, source spike\ against the installed copy ~\.kiro\crew\apps\crew-spike (install at 10:12:55Z):
+  spike\data\grimsheet\.git          source: present   installed: absent
+  spike\data\grimsheet\node_modules  source: present   installed: absent
+  spike\ui\node_modules              source: present   installed: absent
+Everything else in spike\ (app.json, agents, skills, scripts, ui\src, ui\dist, data\runs, data\_index.json, data\grimsheet working tree, evidence) was copied.
+Reading: `kirocrew app install` copies the app directory but drops every `.git` and `node_modules` folder, at any depth. Consequences for the real app: a git checkout placed in the app folder at install time arrives as a plain folder, and anything in node_modules must be rebuilt after install. Keep run output and clones out of the app source tree.
+
+## probe.mjs change (clone-or-update step only)
+
+Before: `<dataDir>\grimsheet` without `.git` -> mode fetch-reset was not chosen, but `git clone` into an existing non-empty folder would fail.
+After: if `<dataDir>\grimsheet` exists without `.git`, the step deletes it (only if it is exactly <dataDir>\grimsheet), clones fresh, and records
+  detail.mode = "clone-after-delete", detail.replaced = { reason: "folder without .git", entriesRemoved, removed }.
+Nothing else in probe.mjs or ui\ was changed or rebuilt.
+
+Hand check (temporary data dir under %TEMP%, deleted afterwards), SPIKE_DATA_DIR set, a fake grimsheet\ with 2 entries and no .git:
+  clone-or-update  ok  {"mode":"clone-after-delete","repo":"https://github.com/UBayouski/Grimsheet","branch":"main","commit":"6372d9a27ae81a6ab75e9f8ae45d1d70ccebe50b","replaced":{"reason":"folder without .git","entriesRemoved":2,"removed":true}}
+  npm-ci ok, build-play ok, play-list ok; all 11 steps ok; exit 0; .git present afterwards.
+Type check of probe.mjs alone with tsc --checkJs could not run: @types/node is not installed in spike\ui (TS2688). Not added, since the spike has no test tooling. The hand run is the check.
+
+## Reinstall to ship the new probe.mjs
+
+The installed probe.mjs had to change, and `app update` cannot reach the gateway (E11), so: uninstall then install.
+
+> kirocrew app uninstall crew-spike
+   ⚠ left crew-spike's conversation pointers in place: a running gateway owns session_map.json, and a second writer would drop rows it has not flushed. Reinstalling under this name may resume the removed app's transcript. Stop the gateway and run `kirocrew app uninstall crew-spike` again to clear them.
+✅ uninstalled crew-spike
+exit 0. Left behind: ~\.kiro\crew\apps\crew-spike\data (same as the dashboard uninstall, E12).
+
+> kirocrew app install d:\Projects\Kiroween\grimsheet-playtester\spike
+WARNING Removing orphaned partial install at ~\.kiro\crew\apps\crew-spike
+WARNING ... skipping executable resource registration ... third-party app execution is disabled; trust this app alone from the dashboard's App Store ...
+✅ installed crew-spike v0.0.1
+exit 0. app info: enabled false, installedAt 2026-11-07T10:12:55Z.
+Installed scripts\probe.mjs contains the clone-after-delete branch: yes.
+
+Readings:
+- A-21: `kirocrew app uninstall <name>` works from the CLI while the desktop gateway runs (unlike `app update`, E11). It warns that conversation pointers are kept while a gateway runs.
+- A-22: CLI uninstall also keeps <app dir>\data.
+- After this reinstall the app needs to be trusted and enabled again in the dashboard.

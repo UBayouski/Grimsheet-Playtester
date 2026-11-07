@@ -97,3 +97,26 @@ What changed because of it: The replay job cannot be a `command` cron on a Windo
 - The manifest `env` does not reach it.
 - The run limit is `timeout`, not `timeout_secs`; `timeout_secs` alone left the 30 s default in place, and must be at least `timeout + 5`.
 - The dashboard stayed responsive during runs.
+
+## 2026-11-07 - crew-spike: the Crew spike, from install to deletion
+
+Surface: IDE, CLI, Crew
+
+Features: spec, steering, agent, mcp, power, vibe
+
+What I asked for: Run the throwaway `crew-spike` spec: build a small Crew app, install it on Windows, and answer the three open questions in `docs/BRIEF.md` section 6 by observation (how the page reads a file a cron wrote, whether a cron or an agent run can reach the network, clone, build and find Node, and how a skill reaches an agent). Then write the answers into the Notes, the Brief and the steering, and delete the spike.
+
+What Kiro did:
+- Read the Crew docs through the Context7 power and recorded what they did not say. Wrote the spike app (a Node probe, a Python cron launcher, a probe agent and skill, a React page) and installed it with the Crew CLI; the user trusted it in the dashboard.
+- Drove the dashboard with the Playwright MCP: Library, Schedule, the probe page, the Sync button, the cron's Run, and read the gateway and security logs to explain each result.
+- Ran the cron by hand and on a schedule, tested the timeout fields, the results route and freshness, and repaired two failed Syncs (a run held read-only git files while a Sync moved `data\`).
+- Ran five agent runs out of five (A1 to A5), after three false starts that ran nothing and are not counted: A1 had no tools, A4 added `"tools": ["execute_bash"]` and passed every check, A2 and A3 and A5 tested three `skill://` forms. About 1.5 credits in total.
+- Wrote `docs/CREW_NOTES.md` section h (h.1 to h.9, A-01 to A-26), updated `BRIEF.md` and five steering files, copied the evidence to `docs/evidence/` without the Windows user name and without the screenshots that showed a local path, then uninstalled the app and deleted its data, the agent's clone, the generated files and `spike/`.
+
+What changed because of it:
+- The replay job is a Python `script` cron that launches Node, not a `command` cron (a Windows gateway rejects those); the limit is `timeout`, and `timeout_secs` must be at least `timeout + 5`.
+- The Grimsheet clone lives outside the app folder (`%LOCALAPPDATA%`), because a Sync moved `data\` and failed twice on a run's read-only git files.
+- Results go into a key in `data\config.json`, read with `GET /api/apps/<app>/config`; the page never PUTs it (a PUT replaces the whole object) and polls, because no event marks a finished run.
+- The agent declares `"tools": ["execute_bash"]`, uses the `skill://~/.kiro/crew/apps/<app>/skills/*/SKILL.md` glob (project-relative globs are not loaded on Windows), and its skills follow shell-agnostic rules because its shell is PowerShell 5.1.
+- The README will say only Windows was tested. The spec plan changed for `replay-runner`, `exploit-hunt`, `dashboard` and `packaging`.
+- Mistakes worth keeping: three of the first four agent chats were spent before checking the gateway log, which names the missing `tools` list at once; a Sync was started with a leftover temp folder present; two evidence files were first written to the wrong folder and moved. At the end an empty `spike\ui` folder could not be deleted because another process (probably an open editor) held it.

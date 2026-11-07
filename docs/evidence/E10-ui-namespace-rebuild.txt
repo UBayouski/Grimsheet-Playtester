@@ -1,0 +1,20 @@
+date: 2026-11-07
+Change to the Probe_Page (spike/ui/src):
+- routes.ts imports the SDK as a namespace (`import * as sdkModule from "@kirocrew/app-sdk"`) typed loosely as Readonly<Record<string, unknown>>. Every export is checked with typeof before it is called; a missing one gives the route status "not exported".
+- New row R0 lists Object.keys(sdk) with each export's typeof (the real export list).
+- index.tsx calls useAppApi / useAppEvents only if they are functions (looked up once at module load, so hook order is stable); a throw from useAppApi() is shown as a note, not a page failure.
+- sdk.d.ts now declares the module with no members.
+
+> npx tsc --noEmit   (strict: true)
+exit 0
+
+> npx vite build
+dist/index.mjs  6.24 kB (gzip 2.21 kB), exit 0
+
+Imports in the built bundle (dist/index.mjs):
+  import { jsxs as c, jsx as o } from "react/jsx-runtime";
+  import { useRef as $, useState as g, useCallback as A, useEffect as C } from "react";
+  import * as j from "@kirocrew/app-sdk";
+The SDK stays a namespace import, so no named SDK export is linked at load time.
+
+Real export list (R0): pending; needs the updated copy served by the dashboard (see E11).

@@ -1,0 +1,39 @@
+date: 2026-11-07
+> kirocrew app --help   (kirocrew = full path to the bundled kirocrew.cmd, version 0.12.0)
+
+usage: kirocrew app [-h]
+                    {install,import,list,enable,update,disable,mcp,uninstall,info,dev,init}
+                    ...
+Manage Kiro Crew apps
+positional arguments:
+  {install,import,list,enable,update,disable,mcp,uninstall,info,dev,init}
+    install             Install an app from a local directory
+    import              Convert a manifest-declared plugin package into an app
+                        directory
+    list                List installed apps
+    enable              Enable an installed app
+    update              Update an installed app to its newest published
+                        version (needs a running gateway)
+    disable             Disable an installed app
+    mcp                 Run an app's MCP server on stdio (spawned by kiro-cli,
+                        not for humans)
+    uninstall           Uninstall an app (preserves app data by default)
+    info                Show app details
+    dev                 Toggle dev mode (no-store UI serving + live reload on
+                        file change)
+    init                Scaffold a new app
+options:
+  -h, --help            show this help message and exit
+Examples:
+  kirocrew app install /path/to/oncall-watchtower
+  kirocrew app list
+  kirocrew app enable oncall-watchtower
+  kirocrew app update oncall-watchtower
+  kirocrew app update oncall-watchtower --source /path/to/oncall-watchtower
+  kirocrew app disable oncall-watchtower
+  kirocrew app info oncall-watchtower
+  kirocrew app uninstall oncall-watchtower
+
+Reading:
+- A-21: the uninstall command is `kirocrew app uninstall <name>` (settled by the help text).
+- A-22: the help text says uninstall "preserves app data by default". So the app data directory is expected to remain after uninstall. Whether a flag removes it, and what the directory holds, is not shown here; task 10.2 still checks the directory after uninstall.

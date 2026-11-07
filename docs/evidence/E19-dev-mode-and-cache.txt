@@ -1,0 +1,15 @@
+date: 2026-11-07, about 10:17Z
+CLI: bundled kirocrew 0.12.0 by full path.
+
+> kirocrew app dev crew-spike
+✅ crew-spike is now in dev mode
+   UI files served with no-store; edits under ui/ trigger a live reload
+   in the dashboard within ~1s (picked up by the gateway watcher).
+   Tip: symlink the installed ui/ to your source tree for zero-copy edits.
+   Turn off with: kirocrew app dev crew-spike --off
+exit 0. app info / installed.json now show "dev": true. Dev mode stays on for the rest of the spike.
+
+User report: the KiroCrew desktop window kept a cached copy of the failed module (the bundle that failed on the missing setAppConfig export, E09) until the window was reloaded. With dev mode off, the UI bundle is served cacheably, so an updated bundle may not show until a reload.
+Reading: for the freshness checks (task 6.3), keep dev mode on and still note whether a reload is needed. The live reload watches the installed ui/ (not the source tree), so a source edit needs a Sync first.
+
+Also observed: the dashboard Sync at 10:21:43Z (E18) kept dev mode on (installed.json "dev": true afterwards).

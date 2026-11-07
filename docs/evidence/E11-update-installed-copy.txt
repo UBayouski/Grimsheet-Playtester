@@ -1,0 +1,29 @@
+date: 2026-11-07
+Goal: get the rebuilt ui/dist into the installed copy at ~\.kiro\crew\apps\crew-spike.
+CLI: bundled kirocrew 0.12.0 by full path. The KiroCrew desktop app is running; its process listens on 127.0.0.1:5476 and [::1]:5476.
+
+1) > kirocrew app install <spike>   (second time)
+   app 'crew-spike' is already installed (v0.0.1). Update it in place instead (from the app's page, or `kirocrew app update crew-spike`), or uninstall first.
+   exit 1. Installed bundle unchanged.
+
+2) > kirocrew app update --help
+   usage: kirocrew app update [-h] [--source SOURCE] name
+   --source SOURCE  App directory to update from; it becomes the app's recorded source (default: the recorded source, where it was installed or last updated from)
+
+3) > kirocrew app update crew-spike --source <spike>
+   No running gateway answered, so nothing was updated. Start it (kirocrew gateway) and run this again, or press Update on the app's page.
+   exit 1.
+
+4) Same, with KIROCREW_PORT=5476 set for the CLI process:
+   same message, exit 1.
+
+5) > kirocrew app dev --help
+   usage: kirocrew app dev [-h] [--off] [--confirm-out-of-install-root] name
+   Dev mode serves the app's installed ui root with no-store and live reload; it does not copy from the source. Not used: it would not bring the new bundle into the install.
+
+Not tried: starting a second gateway with `kirocrew gateway` (would compete with the desktop app's gateway and scheduler).
+
+Readings:
+- A local app cannot be reinstalled over itself; the documented way to refresh it is update in place, via `kirocrew app update <name> [--source <dir>]` or the Update button on the app's page.
+- The bundled CLI does not find the desktop app's running gateway (also with KIROCREW_PORT=5476). Gateway-dependent CLI commands (update) do not work from this shell. Cause: not documented.
+- Also seen in `app info` after the dashboard trust: enabled true, updatedAt 09:53:15Z (the dashboard trust and enable).

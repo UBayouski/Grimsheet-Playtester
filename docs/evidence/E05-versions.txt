@@ -1,0 +1,13 @@
+﻿date: 2026-11-07
+Get-CimInstance Win32_OperatingSystem: Caption Microsoft Windows 11 Pro | Version 10.0.26300 | BuildNumber 26300 | 64-bit
+
+Kiro Crew is installed as the KiroCrew desktop app. Its CLI is bundled with the app and is not on PATH.
+CLI path: C:\Program Files\KiroCrew\resources\backend-dist\kirocrew-backend\bin\kirocrew.cmd
+
+> kirocrew --version   (run by the full path above)
+kirocrew 0.12.0
+
+Earlier attempt (superseded): "kirocrew" by bare name fails with CommandNotFoundException because the bundled CLI is not on PATH.
+"kiro-cli crew --version" reports "Kiro Crew is not installed" when the CLI is not on PATH. "kiro-cli crew" is a forwarder: it launches the Kiro Crew CLI and forwards arguments to it, so it needs that CLI on PATH.
+
+Result: Crew version 0.12.0 (observed). A-20: the --version flag exists.

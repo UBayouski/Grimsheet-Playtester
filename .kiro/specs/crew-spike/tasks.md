@@ -100,7 +100,7 @@ Rules that apply to every task:
     - _Requirements: 1.1, 4.9, 9.2_
 
   - [x] 5.1 Run the Probe_Cron once by hand (wait mode) and check the gateway stays responsive
-    - Done 2026-11-07 (E20): listed on Schedule → List with a Run button; run at 10:36:01Z. Launcher pid 31472, ppid 63920 = gateway (A-24 confirmed: child process). cwd C:\Program Files\KiroCrew (A-01 refuted). node, npm, git on PATH (A-26 confirmed). No SPIKE_* in its env (A-09 refuted: manifest env does not reach a script cron). Probe r0010 complete, all 11 steps ok, clone-after-delete. Dashboard latency unchanged (baseline max 60 ms, during run max 53 ms). Run finished in 12.7 s, so A-25 was settled in 5.3.
+    - Done 2026-11-07 (E20): listed on Schedule â†’ List with a Run button; run at 10:36:01Z. Launcher pid 31472, ppid 63920 = gateway (A-24 confirmed: child process). cwd C:\Program Files\KiroCrew (A-01 refuted). node, npm, git on PATH (A-26 confirmed). No SPIKE_* in its env (A-09 refuted: manifest env does not reach a script cron). Probe r0010 complete, all 11 steps ok, clone-after-delete. Dashboard latency unchanged (baseline max 60 ms, during run max 53 ms). Run finished in 12.7 s, so A-25 was settled in 5.3.
     - Find where the `probe` cron is listed (Schedule page List, Executions, app Details) and record it. Start one run by hand from there with the Playwright MCP; if it cannot start the run, (you) press Run and tell the assistant.
     - Before the run, take 10 baseline samples of `GET http://localhost:5476/` latency. During the run, sample once a second until the launcher record has `finishedAt` (at most 15 minutes). Record every sample. Responsive means every sample answered within 2 s.
     - From the launcher record: `pid`, `ppid`, the parent image, `sys.executable`, `cwd`, `PATH`, `which` for node, npm and git, `SPIKE_*` values, `ctx` type and attributes, mode, outcome, elapsed, child exit code. Compare `pid` and `ppid` with the gateway pid.
@@ -123,21 +123,30 @@ Rules that apply to every task:
     - _Requirements: 4.6, 4.8, 4.9_
 
   - [x] 5.4 Record the second-run fetch behaviour and the cron output location
-    - Done 2026-11-07 (E21, E22, E23): r0014 used fetch-reset (556 ms, same commit 6372d9a). Output: Schedule → Executions (status, duration, trigger, error summary; empty summary on success), backed by ~\.kiro\crew\cron-history\a471b9f5.jsonl.
+    - Done 2026-11-07 (E21, E22, E23): r0014 used fetch-reset (556 ms, same commit 6372d9a). Output: Schedule â†’ Executions (status, duration, trigger, error summary; empty summary on success), backed by ~\.kiro\crew\cron-history\a471b9f5.jsonl.
     - Run the cron again with the 900 s timeout. Check the `clone-or-update` step reports `mode: "fetch-reset"` and the same or newer commit.
     - Use the Playwright MCP to open the run in the dashboard. Record where the launcher's output appears (path, view or log), and describe the screenshot.
     - Closes the "output location not documented" gap in Notes section d. No assumption id maps only here; it supports A-01 and A-23.
     - _Requirements: 4.7, 3.8, 7.2_
 
-- [ ] 6. P4: UI rounds, freshness and the scheduled run
-  - [ ] 6.1 UI round 1: nothing declared
+- [x] 6. P4: UI rounds, freshness and the scheduled run
+  - Status 2026-11-07: 6.1 to 6.4 done (E24, E25). The Sync failed in 6.4 was repaired (E26): leftover temp folder deleted, Sync with `enabled: false` succeeded, `app-crons.json` back, job Paused, probe-skill registered. R3b (E24 addendum) done.
+  - Note for the real app's design (from tasks 5 and 6):
+    - Keep the Grimsheet clone outside the app folder. A Sync moves `data\` aside and back, and a run holding git's read-only pack files in `data\` made it fail twice (E25). Where Crew lets an app keep files outside `data\` is not documented; Sync worked when no run was active (E26).
+    - No event fires when a run finishes (E24), so the page polls or has a Refresh button.
+    - Results route, supported by R3b (E24 addendum, E26): the cron writes a small pointer such as `{reportId, counter, finishedAt}` into `data\config.json` and the page reads it with `GET /api/apps/<name>/config`. The page must not PUT that object (PUT replaces it). The fallback is a `.mjs` module under the installed `ui\`, rewritten at the start of each run, since Sync deletes it (E24).
+
+  - [x] 6.1 UI round 1: nothing declared
+    - Done: E14 (round 1); the leftover items (R4 after a run, `useAppInfo` for R2) were done in round 2 (E24).
     - Partly done early (E14, 2026-11-07, before any cron run): rows R0 to R7 recorded, A-11 and A-12 closed. Still to do here: repeat after a cron run so R4 can see a written file, and look at `useAppInfo` as the replacement for the missing getAppDataDir (R2).
     - Open the Probe_Page with the Playwright MCP, with `permissions.api` and `permissions.events` empty. Record the row for each route R1 to R7, with the exact error text for each failure.
     - Check that the entry module's default export renders as the page, that the SDK calls in `sdk.d.ts` exist at runtime, and what R2 `getAppDataDir()` returns. Compare that value with `dataDir.path` from the report.
     - Closes A-11 (default export is the page component) and A-12 (SDK signatures match runtime). Tests A-07 for the undeclared case (R1).
     - _Requirements: 3.4, 3.5, 3.6, 3.3, 7.6_
 
-  - [ ] 6.2 UI round 2: declare what the docs list
+  - [x] 6.2 UI round 2: declare what the docs list
+    - Note (2026-11-07): R3b added in E24 (cron writes `spikeLastRun` into `data\config.json`; the config route returns it, Refresh shows it, a page PUT drops it). Repair of the failed Sync is E26.
+    - Done 2026-11-07 (E24): 0.0.2 pushed by Sync. Declared api `/api/apps/crew-spike/config`, `/api/crons`, `/api/crons/a471b9f5`; events `refresh`, `notification` (first `crons`, unknown to the gateway). R2 `useAppInfo` gives no path; config GET/PUT works (PUT replaces); `/api/crons` has run state, no output; `GET /api/crons/{id}` 405; R4 served after a run (A-13 confirmed; Sync deletes the file); `ctx.notify` reaches only the notification feed; `ctx.crew_log_append` 404; `useAppEvents` never fired. `SPIKE_SERVE_DIR` reached `probe.mjs` through the launcher control file, since the manifest `env` does not arrive (E20).
     - Note (2026-11-07): Notes h.2 Q1 lists `GET/PUT /api/apps/{name}/config` as a documented route. Declare `/api/apps/crew-spike/config` in `permissions.api` and try it (GET, then PUT and GET back) in place of the missing getAppConfig/setAppConfig (R7). Test `useAppInfo` (exported in 0.12.0, E14) as the replacement for the missing getAppDataDir (R2) and record its return shape. Push manifest and UI changes with the dashboard Sync button (E18), not a reinstall; dev mode is on (E19).
     - Edit `app.json` to version 0.0.2 with the `permissions.api` and `permissions.events` values fixed in task 1.1, and add `SPIKE_DATA_DIR` (the path from `kirocrew app info`) and `SPIKE_SERVE_DIR` (the installed `ui/` directory) to the cron `env`. Reinstall and run the cron once.
     - Record for each route R1 to R7: the result, the `permissions` entries it needed, and the response shape. If a route has no documented path, record "no documented path" and do not guess one.
@@ -145,35 +154,40 @@ Rules that apply to every task:
     - Closes A-07 (shapes of `permissions.api`, `events`, `storage`, with the accepted values or error text) and A-13 (a `.mjs` written after install under `ui/` is served and imported).
     - _Requirements: 3.1, 3.4, 3.5, 3.6, 3.7_
 
-  - [ ] 6.3 Check freshness without reinstalling
+  - [x] 6.3 Check freshness without reinstalling
+    - Done 2026-11-07 (E24), dev mode off: nothing updates without an action; Refresh updates HTTP routes and the `?t=` import; the import without `?t=` stays stale until a reload; no event fires when a run finishes.
     - Follow the design's freshness procedure: load the page and note the latest `counter` per route, let a new run finish, press Refresh and note any change, reload and note again, and compare R4 with and without the `?t=` cache-buster.
     - Record whether `useAppEvents` fired when the run finished and which event name. Record the answer to "needs `useAppEvents`, Refresh or a reload".
     - Adds to A-12 and A-13. No assumption id closes only here.
     - _Requirements: 3.7, 3.5_
 
-  - [ ] 6.4 Scheduled run, then disable the cron
+  - [x] 6.4 Scheduled run, then disable the cron
+    - Done 2026-11-07 (E25): `every: 120`, `timeout: 100`, `timeout_secs: 110` by Sync; three `trigger: scheduled` runs, all success. `enabled: false` + Sync failed twice (WinError 5 while a run held `data\`), leaving `~\.kiro\crew\apps\.crew-spike-data-tmp` and no installed `app-crons.json`. Paused with `POST /api/crons/a471b9f5/enable {"enabled": false}`; the Schedule page shows Paused. Installed copy not repaired: needs the user.
     - Note (2026-11-07, from task 5): push the `every: 120` change with Sync, not a reinstall. Keep `timeout` below the interval (for example `timeout: 100`, `timeout_secs: 110`), since `timeout_secs` must be at least `timeout + 5` (E21). A by-hand Run is recorded as `trigger: manual` in cron-history, while the probe report says `trigger: cron` for both; tell a scheduled run apart by its cron-history `trigger` value.
     - Enable the cron with `every: 120` by the Schedule page or an edit and reinstall. Record which method toggles it. Wait for one run with `trigger: "cron"` and copy the report.
     - Disable the cron again and use the Playwright MCP to capture the Schedule page showing it disabled. Record the toggle method.
     - Adds to A-09 and A-05. No assumption id closes only here.
     - _Requirements: 3.3, 3.2, 4.6_
 
-- [ ] 7. P5: Agent runs A1 to A5 (at most five in total)
-  - [ ] 7.1 Create the agent run ledger
+- [x] 7. P5: Agent runs A1 to A5 (at most five in total)
+  - [x] 7.1 Create the agent run ledger
     - Create `spike/evidence/agent-runs.md` as the working ledger with one row per run A1 to A5: run id, setup, date, what was asked, outcome and `unused` where a run was not needed.
     - Update the ledger after every run so the count is always visible. Stop at five.
     - Prepares task 7.5.
     - _Requirements: 5.7, 7.1_
 
-  - [ ] 7.2 Run A1: setup S1 and the full network and clone checks (you)
+  - [x] 7.2 Run A1: setup S1 and the full network and clone checks (you)
+    - Change 2026-11-07 (E25, E27): the agent clones outside the app folder, into `%LOCALAPPDATA%\crew-spike\agent-grimsheet` (`%LOCALAPPDATA%/crew-spike/agent-grimsheet` in the agent file and the prompt), not `<DATA_DIR>/agent-grimsheet`. Reason: git's read-only pack files inside `data\` made two Syncs fail, and a Sync moves `data\`. Whether the agent can write there is part of the A1 result. `<DATA_DIR>` in `probe-agent.json` is replaced by this path.
+    - Done 2026-11-07: A1 answered, and the retry A4 ran with a working shell (all Requirement 5.1 checks passed, 12 approvals, no block; A-10, A-14, A-15, A-16 settled; see agent-runs.md). Original result: A1 answered without a successful run. S1 has no `tools`, so Crew mounts no tool (gateway log "declares no usable 'tools' list ... no tool access"; three false starts, not counted). A-14 closed: no usable command tool. The agent edit reached the installed copy and `~\.kiro\agents` by Sync alone (A-15 part: no reinstall). The retry is A4 (setup S1 plus `"tools": ["execute_bash"]`, no `allowedTools`), see 7.4.
     - Replace `<DATA_DIR>` in `probe-agent.json` with the recorded data directory. Record whether the agent edit needed a reinstall or took effect directly.
     - Start the agent from the dashboard chat. The Playwright MCP may start it; if it cannot, (you) start the Probe_Agent and send the prompt. (you) Answer any approval prompts and tell the assistant the exact prompt text.
-    - Ask for the Requirement 5.1 checks: `PATH`, `node --version`, `npm --version`, `git --version`, HTTPS to `github.com`, shallow clone into `<DATA_DIR>/agent-grimsheet`, `node scripts/play.mjs --list` (with `npm ci` and `npm run build:play` first if `dist-play` is missing), then "list your tools", then the S1 skill question.
+    - Ask for the Requirement 5.1 checks: `PATH`, `node --version`, `npm --version`, `git --version`, HTTPS to `github.com`, shallow clone into the agent clone folder above, `node scripts/play.mjs --list` (with `npm ci` and `npm run build:play` first if `dist-play` is missing), then "list your tools", then the S1 skill question.
     - Record the tools it had and used, any block (message and the setting involved), and the difference from the cron result for each check.
     - Closes A-14 (default toolset without `tools` or `allowedTools`), A-15 (agent edits need a reinstall or not) and A-16 (the agent is started from the dashboard chat). Tests A-10 by showing whether the network was blocked.
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 6.3, 6.4, 7.5_
 
-  - [ ] 7.3 Run A2 and A3: skill setups S2 and S3 (you)
+  - [x] 7.3 Run A2 and A3: skill setups S2 and S3 (you)
+    - Done 2026-11-07 (agent-runs.md): A2 (docs glob `skill://.kiro/skills/*/SKILL.md`): skill not visible; gateway log says project skills are not loaded on this platform, so A-17 is refuted here. A3 (absolute install-path glob `skill://~/.kiro/crew/apps/crew-spike/skills/*/SKILL.md`): visible, marker `lantern-kettle-4821` quoted, `references/note.md` and `scripts/marker.mjs` reachable through the shell; A-18 confirmed. Both runs kept `"tools": ["execute_bash"]` and changed only `resources`. No result was ambiguous, so A5 was not used.
     - A2: set `resources` to `["skill://.kiro/skills/*/SKILL.md"]` and ask the agent to list visible skills and quote the marker. The result is `visible` only if the quote is `lantern-kettle-4821`. If A1 was blocked from the shell, also repeat the checks it could not do.
     - A3: set `resources` to the glob matching the install path recorded in task 4.2 (forward slashes first) and ask the same question. Then ask the agent to read `references/note.md` and run `node scripts/marker.mjs` from the skill folder, and record both markers.
     - (you) Answer approval prompts and start each run from the dashboard chat if the Playwright MCP cannot.
@@ -181,21 +195,24 @@ Rules that apply to every task:
     - Closes A-17 (the docs glob), A-18 (the install-path glob) and A-19 (`license` and `metadata` at load time).
     - _Requirements: 6.3, 6.4, 6.5, 6.6, 6.7, 5.3_
 
-  - [ ] 7.4 Use reserve runs A4 and A5 only where needed (you)
+  - [x] 7.4 Use reserve runs A4 and A5 only where needed (you)
+    - Done 2026-11-07: A4 was the `tools` fix rerun (shell mounted, all 5.1 checks pass, no network block). A5 tested `~` in the `skill://` glob: it worked (`kas_skill_scope_denied ... every skill denied except 1: probe-skill`), so `skill://~/.kiro/crew/apps/<app>/skills/*/SKILL.md` is portable. Five runs used; none left. The namespaced path `skill://~/.kiro/crew/skills/crew-spike/*/SKILL.md` stays untested.
+    - Note 2026-11-07: A4 is the retry of A1 with `"tools": ["execute_bash"]` added (the `tools` fix; the field and value come from the Crew docs `agent-spec-fields.md` and the bundled agents). It was needed because A1 had no tool access, not for a network comparison. A2 and A3 need the same `tools` line. Only A5 stays in reserve.
     - A4: if A1 was blocked from the network, add `"network": true` and repeat the checks, and record whether any result changed. If A1 was not blocked, do not run A4 for the network comparison and record why. If a `tools` or `allowedTools` fix was needed, rerun the failed checks and record the field names and values taken from the docs.
     - A5: use it for the one result that is still ambiguous (for example a backslash `skill://` form, or a result that disagreed with the cron). Mark any unused run `unused` in the ledger.
     - (you) Answer approval prompts and start runs from the dashboard chat if the Playwright MCP cannot.
     - Closes A-10 (`network` has no runtime effect, or the observed effect), or records it as not needed with the reason.
     - _Requirements: 5.5, 5.6, 5.7, 6.5_
 
-  - [ ] 7.5 Write the agent run ledger to Notes section h.5
+  - [x] 7.5 Write the agent run ledger to Notes section h.5
+    - Done 2026-11-07: `docs/CREW_NOTES.md` section h created with its header block and h.5 (ledger, tools, blocks, differences from the cron). The other subsections are task 8.1.
     - Copy the ledger (run id, setup, date, what was asked, outcome, unused runs) into `docs/CREW_NOTES.md` section h.5. Check the total is at most five.
     - State in Notes the tools the agent had, any block and its setting, and each difference from the cron result.
     - If section h does not exist yet, create it first as described in task 8.1.
     - _Requirements: 5.2, 5.3, 5.4, 5.7, 7.1_
 
-- [ ] 8. P6: Notes, Brief and steering
-  - [ ] 8.1 Write the findings into `docs/CREW_NOTES.md` section h
+- [x] 8. P6: Notes, Brief and steering
+  - [x] 8.1 Write the findings into `docs/CREW_NOTES.md` section h
     - Add `## h. Spike findings (crew-spike)` after section g with a header block: date, Windows version, Crew version, and the legend (Observed, Context7).
     - Add subsections h.1 Install and trust, h.2 Docs and skill consulted, h.3 UI data path, h.4 Cron: node, network, clone, build, h.5 Agent (written by task 7.5), h.6 Skill mapping, h.7 Cron output location, h.8 Still not documented.
     - Each subsection has four lines: Question, Answer, Basis, Evidence. Evidence lists the ids and describes each screenshot in words, with no links to screenshot files.
@@ -203,31 +220,32 @@ Rules that apply to every task:
     - Include no secrets, tokens or the dashboard token URL.
     - _Requirements: 7.1, 7.3, 7.4, 7.5, 5.2, 5.4_
 
-  - [ ] 8.2 Replace the "not documented" markers in sections a to g
-    - For each gap that an answer settles, keep the original sentence word for word and append ` → answered in section h.N (observed <date>)`.
+  - [x] 8.2 Replace the "not documented" markers in sections a to g
+    - For each gap that an answer settles, keep the original sentence word for word and append ` â†’ answered in section h.N (observed <date>)`.
     - Do the same in `.kiro/steering/crew-app.md` and `.kiro/steering/dashboard.md`.
     - _Requirements: 7.2, 8.3_
 
-  - [ ] 8.3 Update `docs/BRIEF.md` and the steering files
+  - [x] 8.3 Update `docs/BRIEF.md` and the steering files
     - Apply the design's Downstream edits table to the Brief: the result-reading route (or the Brief section 6 fallback), the replay clone and build constraints, the hunt's network and `node` constraint, and the working `skill://` glob.
     - If the UI cannot read run output through a documented route, apply the Brief section 6 fallback before any later spec, and update `dashboard.md` "Data access", and `tech.md` where the clone or build result changes a statement.
     - List each changed Brief statement with the Notes section that justifies it.
     - _Requirements: 8.1, 8.2, 8.3_
 
-  - [ ] 8.4 Check the assumption table and evidence index
+  - [x] 8.4 Check the assumption table and evidence index
     - Check every assumption id A-01 to A-23 is marked in Notes as confirmed, refuted or still not documented. A-21 and A-22 stay open until task 10.2, so mark them "pending deletion" and update them there.
     - Check every `INDEX.md` row has `redaction checked` set, and search `docs/`, `.kiro/` and `spike/evidence/` for the token URL. Fix any hit.
     - _Requirements: 7.1, 7.3, 7.5_
 
-- [ ] 9. Checkpoint - Ensure Notes and Brief are complete
+- [x] 9. Checkpoint - Ensure Notes and Brief are complete
+  - Done 2026-11-07: all three questions answered (Notes h.3 to h.6), the rest recorded as not documented (h.8); A-01 to A-26 marked in h.9 (A-21 and A-22 pending deletion); the Brief (sections 4 to 7, 10) and the steering files match the Notes; `INDEX.md` has E01 to E29 with files on disk; no user name or token in docs/, .kiro/ or KIRO_USAGE.md. Waiting for the user before task 10.
   - Ensure every question is answered or recorded as not documented, the Brief and steering match the Notes, and no evidence row is missing. Ask the user if questions arise.
 
 - [ ] 10. P7: Delete the spike
-  - [ ] 10.1 Ask the user to confirm before any deletion (you)
+  - [x] 10.1 Ask the user to confirm before any deletion (you)
     - (you) Review the Notes and Brief changes. Show the list of what will be deleted: the installed app, `<dataDir>` with the clones, and `spike/`. Wait for an explicit yes. Do not delete anything before it.
     - _Requirements: 10.2_
 
-  - [ ] 10.2 Uninstall the app and delete its app data directory
+  - [x] 10.2 Uninstall the app and delete its app data directory
     - Run `kirocrew app --help` to find the real uninstall command, and use it; `kirocrew app disable crew-spike` first if that command exists. Record the commands and output. Check with `kirocrew app info crew-spike` that the app is gone.
     - Before deleting `<dataDir>`, check the path is non-empty, absolute, and its last segment contains `crew-spike`. Record whether the directory was still there after uninstall. Remove it with `Remove-Item -LiteralPath <path> -Recurse -Force`. If a long path blocks it, record the error and retry with `cmd /c rmdir /s /q`.
     - Update Notes h.1 with the uninstall command and the data directory result.
@@ -235,13 +253,14 @@ Rules that apply to every task:
     - _Requirements: 10.1, 9.2_
 
   - [ ] 10.3 Delete `spike/` and list what remains
+    - Status 2026-11-07: everything under `spike/` is deleted except an empty folder `spike\ui`, which another process holds ("being used by another process"; `rmdir` fails the same way). The user needs to close the editor or window that holds it, then `Remove-Item -LiteralPath <repo>\spike -Recurse -Force` finishes the task. The remaining files are listed in the session report: `.gitignore`, `LICENSE`, `KIRO_USAGE.md`, `docs/` (with `docs/evidence/`), `.kiro/` (settings, specs, steering).
     - Copy any remaining Notes updates first, since `spike/evidence/` is deleted with the folder. Delete `spike/` whole with `Remove-Item -LiteralPath d:\Projects\Kiroween\grimsheet-playtester\spike -Recurse -Force`, including `node_modules`, `ui/dist` and screenshots. Confirm it is gone.
     - List the remaining files with `Get-ChildItem -Recurse -File` excluding `.git`. Show the user that only `.gitignore`, `LICENSE`, `KIRO_USAGE.md`, `docs/` and `.kiro/` remain, and that `.kiro/specs/crew-spike/` is still there.
     - Run no git write command.
     - _Requirements: 10.3, 10.4, 10.5, 9.4_
 
-- [ ] 11. Update `KIRO_USAGE.md`
-  - [ ] 11.1 Write the crew-spike entry
+- [x] 11. Update `KIRO_USAGE.md`
+  - [x] 11.1 Write the crew-spike entry
     - Add an entry for this spec: what Kiro did during the spike (docs read, app built, installs, cron and agent runs, Notes and Brief edits, deletion), the number of agent runs used out of five, and each decision that changed because of the answers.
     - Name no AI tool other than Kiro.
     - _Requirements: 8.4_
@@ -251,7 +270,7 @@ Rules that apply to every task:
 - Tasks marked "(you)" need the user: trusting the app, answering approval prompts, starting an agent run when the Playwright MCP cannot, and confirming before deletion.
 - There are no test, property-test, Vitest or fast-check tasks, and no `spike/dev` task. The spike is observation. `tsc --noEmit` for `ui/` is the only automated check.
 - Assumption coverage: A-01, A-03, A-04, A-09, A-23, A-24, A-26 (5.1, re-scoped to the script cron); A-02, A-06, A-07, A-08, A-19 (4.2); A-05, A-25 (5.3; first reading of A-25 in 5.1); A-11, A-12 (6.1); A-07, A-13 (6.2); A-14, A-15, A-16 (7.2); A-17, A-18, A-19 (7.3); A-10 (7.4); A-20 (4.1); A-21, A-22 (10.2). Task 8.4 checks the full table.
-- Evidence lives in `spike/evidence/` until task 10.3 deletes it, so Notes describe each screenshot in words.
+- Evidence was copied to `docs/evidence/` before task 10.3 (user names replaced, screenshots that showed a local path left out), so Notes still describe each screenshot in words.
 - The agent run ledger is capped at five runs (Requirement 5.7).
 
 ## Task Dependency Graph
@@ -291,3 +310,4 @@ Rules that apply to every task:
   ]
 }
 ```
+

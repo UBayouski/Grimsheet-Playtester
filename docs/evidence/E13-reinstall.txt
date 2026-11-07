@@ -1,0 +1,24 @@
+date: 2026-11-07 (install at 10:06:33Z)
+CLI: bundled kirocrew 0.12.0 by full path. Paths under the user profile are written with ~.
+
+> kirocrew app install d:\Projects\Kiroween\grimsheet-playtester\spike
+WARNING kiro_crew.apps.manager: Removing orphaned partial install at ~\.kiro\crew\apps\crew-spike
+WARNING kiro_crew.apps.bridges: App crew-spike: skipping executable resource registration (resource_register): third-party app execution is disabled; trust this app alone from the dashboard's App Store, whose install, update and enable prompts ask for it (agent.apps_trusted), or set agent.apps_allow_third_party=true to allow every third-party app's Python, backend, and manifest shell code
+✅ installed crew-spike v0.0.1
+   ⚠ registration blocked by execution policy: (same text as above)
+   Run: kirocrew app enable crew-spike
+exit 0
+
+> kirocrew app info crew-spike   (excerpt)
+version 0.0.1, enabled false, installedAt 2026-11-07T10:06:33Z, source D:\Projects\Kiroween\grimsheet-playtester\spike, origin registry
+
+Checks on the installed copy ~\.kiro\crew\apps\crew-spike:
+- ui\dist\index.mjs contains `import * as <x> from "@kirocrew/app-sdk"`: yes (the rebuilt bundle from E10).
+- Top level: agents, data, evidence, scripts, skills, ui, .app_secret (not read), app.json, approved-grants.json, installed.json.
+- data\: grimsheet, runs, _index.json (nextCounter 10), .kirocrew-deps.lock. The lock file keeps its 10:03:24Z timestamp from before the reinstall, so at least that file of the left-behind data folder survived the reinstall, even though the install logged "Removing orphaned partial install". Whether the rest of data\ was kept or recopied from spike\data cannot be told apart (same content and timestamps).
+- data\grimsheet\.git: not present.
+
+Readings:
+- The install treats a folder holding only data\ as an "orphaned partial install".
+- A-22: the data directory left by uninstall is not cleared by a later reinstall, at least not entirely (the host lock file survived).
+- Trust is needed again after reinstall (same execution-policy warning as E08).

@@ -41,13 +41,23 @@ The Playtester never changes Grimsheet. It reads a fresh checkout and runs its c
 
 ## 4. Two jobs
 
-**Replay (nightly, no model call).** A cron `command` runs `node scripts/replay.mjs`:
-1. Fetch Grimsheet `main` into the app data directory (shallow clone the first time, fetch and reset after), record
-   the commit hash.
+**Replay (nightly, no model call).** A Python `script` cron (`scripts/replay_cron.py:run`, standard library only) starts
+`node scripts/replay.mjs` and waits. A `command` cron cannot be used: a Windows gateway rejects it (spike E18, Notes h.4).
+The launcher finds its files relative to itself, because the cron runs in the KiroCrew install folder and the manifest
+`env` does not reach it (E20), and reads its settings (repo URL, branch) from a control file `data\launcher\control.json`.
+The cron sets `timeout` (seconds) high enough for the clone, `npm ci`, `build:play` and every replay, and `timeout_secs`
+at least `timeout + 5` (E21). The replay script:
+1. Fetch Grimsheet `main` into a per-user local folder outside the app folder, `%LOCALAPPDATA%\<app>` (shallow clone
+   the first time, fetch and reset after), and record the commit hash. The clone is never inside the app folder or
+   `data\`: the install drops `.git` and `node_modules`, and a Sync moves `data\`, which failed on a run's read-only git
+   files (E17, E25, E27).
 2. `npm ci` and `npm run build:play` in that checkout.
 3. Play every stored solution. For each level record: won, end HP, ink spent, `minimalInk`, and the first step where
    the status changed.
-4. Write one result file per run and update a bounded index (the last 30 runs).
+4. Write one result file per run, update a bounded index (the last 30 runs), and write a results key into
+   `data\config.json` that holds what the dashboard needs: the latest run, the trend of the last 30 runs and the
+   verified findings, kept compact. The page can read no other file (E24 R3b, Notes h.3). If the config route fails, the
+   fallback is a `.mjs` results module under `ui/`, rewritten at the start of each run, because a Sync deletes it.
 
 A level is **green** when its solution still wins with ink spent equal to `minimalInk`, **red** when it no longer
 wins, and **amber** when it wins with a different ink count.
@@ -67,42 +77,71 @@ run stays bounded.
 
 - `app.json`: `displayName`, semver `version`, `agents`, `skills`, `crons` (with `permissions.cron: true`), `ui`.
   Exact field use follows `docs/CREW_NOTES.md` section a.
-- Agent `agents/playtester.json`: reads levels, writes candidate action lists, never edits Grimsheet files. Tied to its
-  skills through `skill://` resources.
+- Agent `agents/playtester.json`: reads levels, writes candidate action lists, never edits Grimsheet files. It declares
+  `"tools": ["execute_bash"]` (no `tools` means nothing is mounted, E29) and no `allowedTools`, so the user approves each
+  shell command and the skill load (3 to 12 prompts per run in the spike). Tied to its skills through
+  `"resources": ["skill://~/.kiro/crew/apps/<app>/skills/*/SKILL.md"]`; project-relative globs are not loaded on
+  Windows and `~` works (E29, Notes h.6).
 - Skills: `skills/play-level` (how to build and run the command and read the result; adapted from the
-  `grimsheet-playtest` Kiro power's `play-level` skill in the Grimsheet repo, rewritten for a checkout in the app
-  data directory) and `skills/find-exploits` (the three classes, the attempt budget, the candidate file format).
-- Crons: `replay` nightly (`cron_expr`, a fixed timezone, `strict_schedule`), `hunt` weekly. Both can also be run by
-  hand.
-- Config: the Grimsheet repo URL and branch, defaulting to the values in section 3.
+  `grimsheet-playtest` Kiro power's `play-level` skill in the Grimsheet repo, rewritten for a checkout in the local
+  folder outside the app) and `skills/find-exploits` (the three classes, the attempt budget, the candidate file
+  format). Both follow the shell-agnostic rules in `tech.md`: the agent runs only `node scripts/<name>.mjs <args>`, no
+  `&&`, pipes, `$env:`, redirects, `cd` or inline JSON; candidates go to files and are replayed with `--actions-file`;
+  success is the exit code and the printed JSON, never stderr; paths are built in Node.
+- Crons: `replay` nightly (a `script` cron with `cron_expr`, a fixed timezone, `strict_schedule`), `hunt` weekly. Both
+  can also be run by hand.
+- Config: the Grimsheet repo URL and branch, defaulting to the values in section 3, in the launcher's control file.
 - `ui/` dashboard (React and Vite as the Crew docs require; the host provides `@kirocrew/app-sdk`, React and
   lucide-react, so they are build externals): one card per level with its colour, last result and trend over the
   last runs; a findings list with a copyable action list and the command that replays it; the commit hash and time of
-  the last replay and hunt.
+  the last replay and hunt. It reads the results key through `GET /api/apps/<app>/config` and never PUTs it, since a
+  PUT replaces the whole object. No event marks a finished run, so it polls on a timer and has a Refresh button
+  (E24). The header uses `GET /api/crons` for run state (last run, status, running, failures).
 
-## 6. Open questions (answer first)
+## 6. Open questions (answered by the `crew-spike` spike, 2026-11-07)
 
-From `docs/CREW_NOTES.md`, not documented:
-- How the UI reads files that a cron or agent wrote. This decides the result storage format. Answer it with a small
-  spike before any other spec: the bundled `kirocrew-app-dev` skill, the `/websites/deepwiki_kirodotdev_kirocrew`
-  Context7 library, and a throwaway app installed locally.
-- Whether an agent or cron run can reach the network and clone a public repo, and whether Node is on its path on
-  Windows. The spike checks both on this machine.
-- How a skill listed in `app.json` maps into the agent's `skill://` glob.
-If the spike shows the UI cannot read run output, the fallback is for the replay script to write its results where
-the documented API can serve them, and the brief is updated before the specs are written.
+Answered on Windows 11 with Kiro Crew 0.12.0 (the KiroCrew desktop app). Facts are in `docs/CREW_NOTES.md` section h; evidence ids (E01 to E29) are indexed in `docs/evidence/INDEX.md`. **Only Windows was tested**; the README says so unless a WSL check is done.
 
-Found by the spike (2026-11-07, Crew 0.12.0, Windows): `command` crons need a POSIX gateway. A Windows gateway
-rejects every `command` cron at registration ("No POSIX shell available to run this command cron"), so it is never
-listed or run. The replay job's cron form is therefore not settled by section 4 and is decided by the `crew-spike`
-findings in `docs/CREW_NOTES.md`. On this machine a Python `script` cron that launches Node works. For a script cron,
-`timeout` is the run limit (default 30 s), `timeout_secs` must be at least `timeout + 5`, and the manifest `env`
-does not reach the script.
+1. **How the UI reads a file a cron or agent wrote.** There is no documented route for a file. The working route is
+   the config: the cron writes a results key into `data\config.json`, and the page reads it with
+   `GET /api/apps/<app>/config` (declared in `permissions.api`). A PUT replaces the whole object, so the page never
+   PUTs. No event marks a finished run, so the page polls and has a Refresh button. Fallback: a `.mjs` results module
+   under `ui/`, rewritten at the start of each run (a Sync deletes it). (h.3; E24, E26)
+2. **Network, clone, build and Node.** A cron run and an agent run can both reach github.com, clone, `npm ci`, run
+   `build:play` and `play.mjs --list`, with `node`, `npm` and `git` on the PATH. A `command` cron is rejected on a
+   Windows gateway ("No POSIX shell available to run this command cron"), so the replay job is a Python `script` cron
+   that launches Node. The cron's working folder is the KiroCrew install folder and the manifest `env` does not reach
+   it, so the launcher finds its files from itself and reads a control file. `timeout` (seconds, default 30) is the
+   limit; `timeout_secs` must be at least `timeout + 5`. The agent needs `"tools": ["execute_bash"]` and asks for an
+   approval for each shell command. (h.4, h.5; E18, E20, E21, E29)
+3. **How a skill listed in `app.json` maps into the agent's `skill://` glob.** It is installed at
+   `~\.kiro\crew\apps\<app>\skills\<skill>`, and the glob `skill://~/.kiro/crew/apps/<app>/skills/*/SKILL.md` makes it
+   visible with `scripts/` and `references/` reachable. The project-relative glob does not work on Windows. (h.6; E29)
 
+Findings that changed the plan: the clone moves out of the app folder (a Sync moves `data\` and failed twice on a
+run's read-only git files, so never Sync during a run); results go through the config key and not a file; skills obey
+shell-agnostic rules because the agent shell is PowerShell 5.1.
+
+Brief statements changed by the spike, with the Notes section and evidence that justify each:
+
+| Brief section | Change | Notes, evidence |
+|---|---|---|
+| 4 Replay | `command` cron replaced by a Python `script` cron launching Node; `timeout` and `timeout_secs` rules; control file; clone outside the app folder; results key in `data\config.json`; `.mjs` fallback | h.1, h.3, h.4; E17, E18, E20, E21, E24, E25, E26, E27 |
+| 5 Crew app parts | agent `tools` and no `allowedTools`; `~` skill glob; shell-agnostic skills; control file for config; page reads the config route, polls, never PUTs; header from `/api/crons` | h.3, h.5, h.6; E24, E28, E29 |
+| 6 Open questions | all three answered; still-open list | h.3 to h.8 |
+| 7 Technical choices | Python launcher; Windows only tested | h.4; E18, E20 |
+| 10 Spec plan | `replay-runner`, `exploit-hunt`, `dashboard`, `packaging` scopes changed | this section |
+
+Still open (Notes h.8): the config route's size limit (the results key must stay compact; test it in `replay-runner`);
+`allowedTools` and `network` effects (not set); the gateway warning that `node`, `npm` and `git` "do not resolve under
+the trusted system directories" (watch item; the commands still ran); behaviour on macOS, Linux and WSL; a judge
+install from a git URL.
 ## 7. Technical choices
 
-- Node 22.12+ and git on the host; the README says so. Plain ESM JavaScript with JSDoc types and `// @ts-check` for
-  the scripts, so a cron runs them with no build step. TypeScript strict for `ui/`.
+- Node 22.12+ and git on the host; the README says so, and says that only Windows was tested. Plain ESM JavaScript
+  with JSDoc types and `// @ts-check` for the scripts, so a cron runs them with no build step. TypeScript strict for
+  `ui/`. The one Python file is the cron launcher (standard library only), because a Windows gateway runs `script`
+  crons in Python and rejects `command` crons.
 - The verifier is a pure function from (level id, action list, `play.mjs` output) to a verdict, so it is unit-tested
   without Grimsheet.
 - Tests: Vitest for the verifier, the result index and the replay script (with a fake play command); fast-check for
@@ -128,15 +167,22 @@ does not reach the script.
 
 ## 10. Spec plan (in order)
 
-1. `crew-spike`: a throwaway app proving the UI data path, network, Node on the path, and skill mapping. Findings go
-   into `docs/CREW_NOTES.md`; the spike code is deleted.
-2. `verifier`: action list and play output to verdict; the three exploit classes; green, amber, red.
-3. `replay-runner`: fetch, build, replay all solutions, result files and bounded index, the `replay` cron.
-4. `exploit-hunt`: the agent, the `find-exploits` skill, candidate files, verification, the `hunt` cron.
-5. `dashboard`: the `ui/` pages over the stored results.
-6. `packaging`: `app.json` final, install and trust steps for a judge (clone, build `ui/`, `kirocrew app install`,
-   trust, enable), README.
-
+1. `crew-spike`: done 2026-11-07. A throwaway app proved the UI data path, network, Node on the path, and skill
+   mapping. Findings are in `docs/CREW_NOTES.md` section h; the spike code is deleted in its last task.
+2. `verifier`: action list and play output to verdict; the three exploit classes; green, amber, red. Unchanged.
+3. `replay-runner`: the Python launcher and control file, the clone outside the app folder, fetch, build, replay all
+   solutions, result files and bounded index, the results key in `data\config.json` (with a size test and a shared
+   write module that takes a lock), the `timeout` and `timeout_secs` values, the `replay` script cron. Changed: it
+   now includes the launcher and the results key.
+4. `exploit-hunt`: the agent with `"tools": ["execute_bash"]`, the `find-exploits` skill under the `~` glob, the
+   shell-agnostic rules, candidate files, verification, the `hunt` cron. Changed: the approval prompts and the shell
+   rules are part of the design, and verified findings reach the page through the same results key.
+5. `dashboard`: the `ui/` page over the results key (`GET` only), a timer and a Refresh button, run state from
+   `/api/crons`. Changed: no PUT, no event.
+6. `packaging`: `app.json` final, install and trust steps for a judge (clone, build `ui/` first because the install
+   skips `setup.onInstall` and drops `node_modules`, `kirocrew app install`, trust in the dashboard, enable), README
+   (says only Windows was tested, and which gateway warning to expect). Changed: build `ui/` before install, and the
+   README states the platform limit.
 ## 11. Kiro plan (what to use and why)
 
 - **Steering** (always): `product.md`, `tech.md`, `structure.md`. Conditional: `crew-app.md` on `app.json`,

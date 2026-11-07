@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "max": 5,
+  "nextCounter": 10,
+  "runs": [
+    {
+      "runId": "r0009-20261107T093650Z",
+      "counter": 9,
+      "startedAt": "2026-11-07T09:36:50.281Z",
+      "finishedAt": "2026-11-07T09:37:01.543Z",
+      "trigger": "manual",
+      "status": "complete",
+      "file": "runs/r0009-20261107T093650Z.json",
+      "steps": {
+        "ok": 11,
+        "failed": 0,
+        "skipped": 0,
+        "timeout": 0
+      }
+    },
+    {
+      "runId": "r0008-20261107T093606Z",
+      "counter": 8,
+      "startedAt": "2026-11-07T09:36:06.636Z",
+      "finishedAt": "2026-11-07T09:36:07.453Z",
+      "trigger": "manual",
+      "status": "complete",
+      "file": "runs/r0008-20261107T093606Z.json",
+      "steps": {
+        "ok": 3,
+        "failed": 4,
+        "skipped": 4,
+        "timeout": 0
+      }
+    },
+    {
+      "runId": "r0007-20261107T093321Z",
+      "counter": 7,
+      "startedAt": "2026-11-07T09:33:21.217Z",
+      "finishedAt": "2026-11-07T09:33:37.559Z",
+      "trigger": "manual",
+      "status": "complete",
+      "file": "runs/r0007-20261107T093321Z.json",
+      "steps": {
+        "ok": 11,
+        "failed": 0,
+        "skipped": 0,
+        "timeout": 0
+      }
+    },
+    {
+      "runId": "r0006-20261107T093304Z",
+      "counter": 6,
+      "startedAt": "2026-11-07T09:33:04.443Z",
+      "finishedAt": "2026-11-07T09:33:21.153Z",
+      "trigger": "manual",
+      "status": "complete",
+      "file": "runs/r0006-20261107T093304Z.json",
+      "steps": {
+        "ok": 11,
+        "failed": 0,
+        "skipped": 0,
+        "timeout": 0
+      }
+    },
+    {
+      "runId": "r0005-20261107T093252Z",
+      "counter": 5,
+      "startedAt": "2026-11-07T09:32:52.137Z",
+      "finishedAt": "2026-11-07T09:33:04.402Z",
+      "trigger": "manual",
+      "status": "complete",
+      "file": "runs/r0005-20261107T093252Z.json",
+      "steps": {
+        "ok": 11,
+        "failed": 0,
+        "skipped": 0,
+        "timeout": 0
+      }
+    }
+  ]
+}

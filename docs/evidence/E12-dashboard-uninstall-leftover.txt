@@ -1,0 +1,31 @@
+date: 2026-11-07
+Crew: KiroCrew desktop app, kirocrew 0.12.0. Paths under the user profile are written with ~.
+
+Reported by the user (dashboard, not captured by Playwright):
+- The dashboard shows no Update button for a locally installed app (crew-spike, origin "registry", source = spike/).
+- The user uninstalled crew-spike from the dashboard.
+
+Observed after the dashboard uninstall:
+> kirocrew app info crew-spike
+App 'crew-spike' is not installed.
+exit 1
+
+~\.kiro\crew\apps\crew-spike now holds only:
+  data\   (everything else from the install is gone: app.json, installed.json, approved-grants.json, .app_secret, agents\, skills\, scripts\, ui\, evidence\)
+
+Contents of ~\.kiro\crew\apps\crew-spike\data (238 files, 3,236,737 bytes):
+  _index.json           1971 B   2026-11-07T09:37:01Z  (schema 1, max 5, nextCounter 10, runs r0005..r0009, all trigger "manual")
+  .kirocrew-deps.lock      0 B   2026-11-07T10:03:24Z  (created by the host, not by probe.mjs; not present in spike/data)
+  runs\r0005-20261107T093252Z.json  11270 B
+  runs\r0006-20261107T093304Z.json  11272 B
+  runs\r0007-20261107T093321Z.json  11272 B
+  runs\r0008-20261107T093606Z.json   7247 B
+  runs\r0009-20261107T093650Z.json  11174 B
+  grimsheet\  top level: .kiro, dist-play, docs, public, scripts, src, tests, .gitattributes, .gitignore, eslint.config.js, index.html, KIRO_USAGE.md, LICENSE, package-lock.json, package.json, playwright.config.ts, README.md, render.yaml, tsconfig.json, vite.config.ts, vite.play.config.ts
+              no .git and no node_modules (the source spike/data/grimsheet has both; the install copy skipped them)
+
+Readings:
+- Every run file and the index are the ones the hand runs in task 2.4 wrote into spike/data, copied in by the install. No cron has run.
+- A-22 (uninstall may leave the data directory): supported. A dashboard uninstall removed the app but kept <app dir>\data, which matches the CLI help "uninstall preserves app data by default" (E06).
+- Lead, not a conclusion: the app data directory may be <app dir>\data (~\.kiro\crew\apps\<name>\data). The host-created .kirocrew-deps.lock inside it supports that. To confirm with getAppDataDir() in route R2.
+- Side effect: spike/data happens to be named data, so the install copied it into what may be the app data directory. A grimsheet copy there has no .git, so a cron clone-or-update step would see a folder that is not a git repo. Record what probe.mjs does with it in task 5.1.
