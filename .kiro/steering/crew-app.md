@@ -66,3 +66,6 @@ Only Windows was tested. Nothing was checked on macOS, Linux or WSL; the README 
 
 ## Evidence ids
 Evidence ids (E01 to E29) refer to `docs/evidence/INDEX.md`; the files are in `docs/evidence/`.
+
+## Open before exploit-hunt
+Two hunt gaps are untested: G1 (unattended approvals; `allowedTools` was never set) and G2 (a cron that starts an agent run). See Notes h.8. The checks C1 and C2 and the decision rule are in Brief section 10, item 4.

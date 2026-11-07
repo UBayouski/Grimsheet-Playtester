@@ -73,6 +73,11 @@ candidates are recorded as findings, each with the level, the class, the commit 
 result. Rejected candidates are counted, not shown. The agent's attempt budget per level is fixed in the skill so a
 run stays bounded.
 
+The weekly trigger depends on two checks the spike did not make: whether an agent run can go unattended without
+approval prompts (G1), and whether a cron can start the app agent (G2). See Notes h.8 and section 10, item 4. If
+either fails, the hunt is on request only: the user starts it from chat, and the nightly replay stays the only
+scheduled job.
+
 ## 5. Crew app parts
 
 - `app.json`: `displayName`, semver `version`, `agents`, `skills`, `crons` (with `permissions.cron: true`), `ui`.
@@ -88,8 +93,9 @@ run stays bounded.
   format). Both follow the shell-agnostic rules in `tech.md`: the agent runs only `node scripts/<name>.mjs <args>`, no
   `&&`, pipes, `$env:`, redirects, `cd` or inline JSON; candidates go to files and are replayed with `--actions-file`;
   success is the exit code and the printed JSON, never stderr; paths are built in Node.
-- Crons: `replay` nightly (a `script` cron with `cron_expr`, a fixed timezone, `strict_schedule`), `hunt` weekly. Both
-  can also be run by hand.
+- Crons: `replay` nightly (a `script` cron with `cron_expr`, a fixed timezone, `strict_schedule`), and `hunt` weekly,
+  conditional on checks C1 and C2 (section 10, item 4): if either fails, the manifest has no `hunt` cron. A cron can
+  also be run by hand.
 - Config: the Grimsheet repo URL and branch, defaulting to the values in section 3, in the launcher's control file.
 - `ui/` dashboard (React and Vite as the Crew docs require; the host provides `@kirocrew/app-sdk`, React and
   lucide-react, so they are build externals): one card per level with its colour, last result and trend over the
@@ -133,9 +139,11 @@ Brief statements changed by the spike, with the Notes section and evidence that 
 | 10 Spec plan | `replay-runner`, `exploit-hunt`, `dashboard`, `packaging` scopes changed | this section |
 
 Still open (Notes h.8): the config route's size limit (the results key must stay compact; test it in `replay-runner`);
-`allowedTools` and `network` effects (not set); the gateway warning that `node`, `npm` and `git` "do not resolve under
-the trusted system directories" (watch item; the commands still ran); behaviour on macOS, Linux and WSL; a judge
-install from a git URL.
+`allowedTools` and `network` effects (not set; for `allowedTools` this is gap G1); the gateway warning that `node`,
+`npm` and `git` "do not resolve under the trusted system directories" (watch item; the commands still ran); behaviour
+on macOS, Linux and WSL; a judge install from a git URL. Two gaps bear on the weekly hunt: G1, unattended
+approvals (`allowedTools` was never set), and G2, a cron that starts an agent run (never tested). Both are checked
+first in `exploit-hunt` (section 10, item 4).
 ## 7. Technical choices
 
 - Node 22.12+ and git on the host; the README says so, and says that only Windows was tested. Plain ESM JavaScript
@@ -175,8 +183,18 @@ install from a git URL.
    write module that takes a lock), the `timeout` and `timeout_secs` values, the `replay` script cron. Changed: it
    now includes the launcher and the results key.
 4. `exploit-hunt`: the agent with `"tools": ["execute_bash"]`, the `find-exploits` skill under the `~` glob, the
-   shell-agnostic rules, candidate files, verification, the `hunt` cron. Changed: the approval prompts and the shell
-   rules are part of the design, and verified findings reach the page through the same results key.
+   shell-agnostic rules, candidate files, verification, the `hunt` cron if the checks below pass. Changed: the
+   approval prompts and the shell rules are part of the design, and verified findings reach the page through the same
+   results key. Its first tasks are two small checks, done before any design work
+   that depends on them (Notes h.8, G1 and G2):
+   - C1: set `"allowedTools": ["execute_bash"]` on a test agent and count the approval prompts for a shell command and
+     for a skill load.
+   - C2: register a message cron that starts the app agent with one short instruction, run it once by hand, and record
+     whether it ran, which agent and skills it used, whether it hit approvals, and where its output appeared
+     (Executions tab, Activity Feed, chat session).
+   - Decision rule: if C1 and C2 both pass, keep the weekly `hunt` cron. If either fails, the hunt becomes on request
+     only: the manifest has no `hunt` cron, the user starts it from chat, and the README says so. The Crew bonus still
+     rests on the agent, its two skills, the nightly replay cron and the `ui/` dashboard.
 5. `dashboard`: the `ui/` page over the results key (`GET` only), a timer and a Refresh button, run state from
    `/api/crons`. Changed: no PUT, no event.
 6. `packaging`: `app.json` final, install and trust steps for a judge (clone, build `ui/` first because the install
