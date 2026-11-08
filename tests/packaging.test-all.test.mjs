@@ -161,7 +161,7 @@ describe('runBundleStep', () => {
     const { io, builds, removed, temp } = bundleIo();
     expect(await runBundleStep(io)).toBe(0);
     expect(builds).toHaveLength(1);
-    expect(builds[0]?.args).toEqual([path.join('/repo', 'ui', 'node_modules', 'vite', 'bin', 'vite.js'), 'build', '--outDir', temp, '--emptyOutDir']);
+    expect(builds[0]?.args).toEqual([path.join('/repo', 'ui', 'node_modules', 'vite', 'bin', 'vite.js'), 'build', '--logLevel', 'warn', '--outDir', temp, '--emptyOutDir']);
     expect(builds[0]?.cwd).toBe(path.join('/repo', 'ui'));
     expect(builds[0]?.args.some((a) => a.replace(/\\/g, '/').includes('ui/dist'))).toBe(false);
     expect(removed).toEqual([temp]);

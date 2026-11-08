@@ -261,7 +261,8 @@ describe('measurement properties', () => {
       }),
       { numRuns: 100 },
     );
-  });
+    // 30 s: each of the 100 cases runs a full ladder and bisect with probes up to 1 MiB, and a CI runner is about 3x slower than this machine.
+  }, 30000);
 
   // Feature: packaging, Property 9: the token never leaves (end to end)
   it('Property 9: the report and every write of the fake file system hold no token, through the real reader', async () => {

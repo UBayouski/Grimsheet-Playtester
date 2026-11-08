@@ -112,7 +112,7 @@ export async function runBundleStep(io) {
   try {
     const uiFolder = path.join(io.root, 'ui');
     const vite = path.join(uiFolder, 'node_modules', 'vite', 'bin', 'vite.js');
-    const code = await io.runNode([vite, 'build', '--outDir', temp, '--emptyOutDir'], uiFolder);
+    const code = await io.runNode([vite, 'build', '--logLevel', 'warn', '--outDir', temp, '--emptyOutDir'], uiFolder);
     if (code !== 0) return code;
     /** @param {string} p @returns {Promise<Uint8Array|null>} */
     const read = (p) => io.readFile(p).then((b) => b, () => null);
