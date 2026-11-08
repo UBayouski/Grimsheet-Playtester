@@ -1,0 +1,15 @@
+[
+  {
+    "kind": "edit",
+    "address": "B14",
+    "raw": "=IF(DIST(HERO,SELF)<1,TOWARD(HERO),\"-\")"
+  },
+  {
+    "kind": "move",
+    "dir": "E"
+  },
+  {
+    "kind": "move",
+    "dir": "E"
+  }
+]

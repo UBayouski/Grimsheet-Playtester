@@ -1,0 +1,63 @@
+{
+  "levelId": "02-the-chaser",
+  "minimalInk": 1,
+  "actions": [
+    {
+      "kind": "edit",
+      "address": "B14",
+      "raw": "=IF(DIST(HERO,SELF)<1,TOWARD(HERO),\"-\")"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "N"
+    },
+    {
+      "kind": "move",
+      "dir": "N"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "S"
+    },
+    {
+      "kind": "move",
+      "dir": "S"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "levelId": "03-the-locked-crypt",
+  "minimalInk": 2,
+  "actions": [
+    {
+      "kind": "edit",
+      "address": "B14",
+      "raw": "7"
+    },
+    {
+      "kind": "edit",
+      "address": "B15",
+      "raw": "191"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    }
+  ]
+}

@@ -1,0 +1,1317 @@
+{
+  "levelId": "01-the-corridor",
+  "start": {
+    "hero": "B6",
+    "hp": 3,
+    "ink": 0,
+    "turn": 0,
+    "status": "playing",
+    "monsters": []
+  },
+  "steps": [
+    {
+      "index": 0,
+      "action": {
+        "kind": "move",
+        "dir": "E"
+      },
+      "accepted": true,
+      "damage": [],
+      "hero": "C6",
+      "hp": 3,
+      "ink": 0,
+      "turn": 1,
+      "status": "playing"
+    },
+    {
+      "index": 1,
+      "action": {
+        "kind": "move",
+        "dir": "E"
+      },
+      "accepted": true,
+      "damage": [],
+      "hero": "D6",
+      "hp": 3,
+      "ink": 0,
+      "turn": 2,
+      "status": "playing"
+    },
+    {
+      "index": 2,
+      "action": {
+        "kind": "move",
+        "dir": "E"
+      },
+      "accepted": true,
+      "damage": [],
+      "hero": "E6",
+      "hp": 3,
+      "ink": 0,
+      "turn": 3,
+      "status": "playing"
+    },
+    {
+      "index": 3,
+      "action": {
+        "kind": "move",
+        "dir": "E"
+      },
+      "accepted": true,
+      "damage": [],
+      "hero": "F6",
+      "hp": 3,
+      "ink": 0,
+      "turn": 4,
+      "status": "playing"
+    },
+    {
+      "index": 4,
+      "action": {
+        "kind": "move",
+        "dir": "E"
+      },
+      "accepted": true,
+      "damage": [],
+      "hero": "G6",
+      "hp": 3,
+      "ink": 0,
+      "turn": 5,
+      "status": "playing"
+    },
+    {
+      "index": 5,
+      "action": {
+        "kind": "move",
+        "dir": "E"
+      },
+      "accepted": true,
+      "damage": [],
+      "hero": "H6",
+      "hp": 3,
+      "ink": 0,
+      "turn": 6,
+      "status": "playing"
+    },
+    {
+      "index": 6,
+      "action": {
+        "kind": "move",
+        "dir": "E"
+      },
+      "accepted": true,
+      "damage": [],
+      "hero": "I6",
+      "hp": 3,
+      "ink": 0,
+      "turn": 7,
+      "status": "playing"
+    },
+    {
+      "index": 7,
+      "action": {
+        "kind": "move",
+        "dir": "E"
+      },
+      "accepted": true,
+      "damage": [],
+      "hero": "J6",
+      "hp": 3,
+      "ink": 0,
+      "turn": 8,
+      "status": "playing"
+    },
+    {
+      "index": 8,
+      "action": {
+        "kind": "move",
+        "dir": "E"
+      },
+      "accepted": true,
+      "damage": [],
+      "hero": "K6",
+      "hp": 3,
+      "ink": 0,
+      "turn": 9,
+      "status": "won"
+    }
+  ],
+  "final": {
+    "hero": "K6",
+    "hp": 3,
+    "ink": 0,
+    "turn": 9,
+    "status": "won",
+    "monsters": []
+  },
+  "sheet": [
+    {
+      "address": "A1",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "B1",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "C1",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "D1",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "E1",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "F1",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "G1",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "H1",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "I1",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "J1",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "K1",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "L1",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "A2",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "B2",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "C2",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "D2",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "E2",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "F2",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "G2",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "H2",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "I2",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "J2",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "K2",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "L2",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "A3",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "B3",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "C3",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "D3",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "E3",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "F3",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "G3",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "H3",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "I3",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "J3",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "K3",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "L3",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "A4",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "B4",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "C4",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "D4",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "E4",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "F4",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "G4",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "H4",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "I4",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "J4",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "K4",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "L4",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "A5",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "B5",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "C5",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "D5",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "E5",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "F5",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "G5",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "H5",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "I5",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "J5",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "K5",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "L5",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "A6",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "B6",
+      "raw": ".",
+      "value": ".",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "C6",
+      "raw": ".",
+      "value": ".",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "D6",
+      "raw": ".",
+      "value": ".",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "E6",
+      "raw": ".",
+      "value": ".",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "F6",
+      "raw": ".",
+      "value": ".",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "G6",
+      "raw": ".",
+      "value": ".",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "H6",
+      "raw": ".",
+      "value": ".",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "I6",
+      "raw": ".",
+      "value": ".",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "J6",
+      "raw": ".",
+      "value": ".",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "K6",
+      "raw": "X",
+      "value": "X",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "L6",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "A7",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "B7",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "C7",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "D7",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "E7",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "F7",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "G7",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "H7",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "I7",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "J7",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "K7",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "L7",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "A8",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "B8",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "C8",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "D8",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "E8",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "F8",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "G8",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "H8",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "I8",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "J8",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "K8",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "L8",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "A9",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "B9",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "C9",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "D9",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "E9",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "F9",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "G9",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "H9",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "I9",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "J9",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "K9",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "L9",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "A10",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "B10",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "C10",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "D10",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "E10",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "F10",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "G10",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "H10",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "I10",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "J10",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "K10",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "L10",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "A11",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "B11",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "C11",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "D11",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "E11",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "F11",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "G11",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "H11",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "I11",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "J11",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "K11",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "L11",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "A12",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "B12",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "C12",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "D12",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "E12",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "F12",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "G12",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "H12",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "I12",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "J12",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "K12",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "L12",
+      "raw": "#",
+      "value": "#",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "A14",
+      "raw": "Steps to the exit",
+      "value": "Steps to the exit",
+      "valueKind": "string",
+      "locked": true,
+      "name": null
+    },
+    {
+      "address": "B14",
+      "raw": "=DIST(HERO,K6)",
+      "value": "0",
+      "valueKind": "number",
+      "locked": true,
+      "name": "DIST_TO_EXIT"
+    }
+  ]
+}

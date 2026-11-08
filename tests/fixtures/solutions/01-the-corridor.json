@@ -1,0 +1,42 @@
+{
+  "levelId": "01-the-corridor",
+  "minimalInk": 0,
+  "actions": [
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    },
+    {
+      "kind": "move",
+      "dir": "E"
+    }
+  ]
+}

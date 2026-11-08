@@ -179,7 +179,7 @@ unexpected_route: isUnexpected ? confirmed : rejected no_new_cell
 
 Requirement 4.8: on a rejection, compute `others` = the other two classes whose tests (`isCheaper && minimalInk>0`, `isFree`, `isUnexpected`) are true. If exactly one, the reason ends "Measured class: <name>." If none, it ends "Measured class: none." If two, it ends "Measured classes: <a> and <b>." The reason code stays the claimed-class code, so the code is stable. `not_won` and `minimal_ink_zero`/`no_ink_below_zero` reasons carry no measured-class suffix, since the class tests do not apply.
 
-Requirement 3.8 holds by construction: a copy of a green stored solution has `inkSpent == minimalInk` (so not cheaper), edits only stored addresses, and either has edits (`has_edits`) or has `minimalInk` 0 (`minimal_ink_zero`).
+Requirement 3.8 holds by construction for stored solutions that spend ink only through edits, as every real one does (in Grimsheet only an accepted edit spends ink): a copy of a green stored solution has `inkSpent == minimalInk` (so not cheaper), edits only stored addresses, and either has edits (`has_edits`) or has `minimalInk` 0 (`minimal_ink_zero`). A stored solution with `minimalInk` above 0 and no edit does not occur in the real engine; the verifier does not check for it (Requirement 5.9 is unchanged), and Property 7 is stated for the real domain.
 
 Requirement 3.9 and 3.10: `confirmed` is returned only from the three branches above, which read only `won`, `inkSpent`, `minimalInk`, `editCount` and `newEditAddresses`.
 
@@ -212,7 +212,7 @@ For any valid candidate input with a non-winning play result and any claimed cla
 **Validates: Requirements 3.6**
 
 ### Property 7: Copy of the stored solution is rejected
-For any valid stored solution and a green replay of its own actions, every class is rejected.
+For any valid stored solution and a green replay of its own actions, every class is rejected. The domain is stored solutions in which `minimalInk` above 0 implies at least one `edit` action. This holds for every real stored solution: in Grimsheet only an accepted edit spends ink (1 ink per edit, `src/game/turn.ts`; an undo refunds it), so a green replay with `minimalInk` above 0 always contains an edit. A stored solution that spends ink with no edit cannot come from the real engine, and for such an input a copy would be a `free_win` under Requirement 4.2 (won, no edits, `minimalInk` above 0), so Requirement 3.8 would not hold; the property is therefore stated for the real domain.
 **Validates: Requirements 3.8**
 
 ### Property 8: Edit order in the stored solution does not matter
@@ -272,6 +272,7 @@ Valid inputs first, breakers second:
 5. `arbCandidateInput`: stored, claimed class, candidate actions (`arbAction` array, sometimes a copy of the stored actions), play built from the candidate; yields all six arguments.
 6. `breaker` applied with probability about 0.15 (`fc.option` with `freq`): wrong exit code (2, 1, `"0"`), delete or null a play field, `NaN` ink, negative ink spent, other `levelId`, solution `minimalInk` of `-1` or `1.5`, missing `actions`, unknown class, candidate action of unknown kind, a stored action of unknown kind (must give `malformed_solution`), one step action changed, one step dropped, address case flipped. Each breaker records the reason code it must produce, so the property "a broken input gives that code" is checked, not only "no throw".
 7. `arbAnything`: `fc.anything()` for each argument position, for Property 11.
+8. Property 7 builder (in `tests/verifier.properties.test.mjs`, not in `arbitraries.mjs`): a stored solution from `arbStored` in which, when `minimalInk` is above 0 and there is no `edit` action, one generated `edit` is put in front. This is a construction, not a filter, and `arbStored` itself is unchanged. The reason is the Property 7 domain: in Grimsheet only an accepted edit spends ink. The play is built with `arbPlayFor(..., 'won', minimalInk, ['equal'])`, whose optional fifth argument `spendKinds` limits the ink spent to equal. `arbReplayInputFor(modes)` and `arbCandidateInputFor(modes)` build the valid replay and candidate inputs for a chosen set of end statuses (used by Properties 4 and 6); `arbReplayInput` and `arbCandidateInput` are those with all three statuses.
 
 Properties that need valid input filter on `breaker === null` through construction, not `fc.pre`.
 

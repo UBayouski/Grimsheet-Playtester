@@ -1,0 +1,12 @@
+[
+  { "kind": "undo" },
+  { "kind": "move", "dir": "E" },
+  { "kind": "move", "dir": "E" },
+  { "kind": "move", "dir": "E" },
+  { "kind": "move", "dir": "E" },
+  { "kind": "move", "dir": "E" },
+  { "kind": "move", "dir": "E" },
+  { "kind": "move", "dir": "E" },
+  { "kind": "move", "dir": "E" },
+  { "kind": "move", "dir": "E" }
+]

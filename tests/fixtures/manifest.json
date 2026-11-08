@@ -1,0 +1,37 @@
+[
+  {
+    "file": "01-the-corridor.play.json",
+    "levelId": "01-the-corridor",
+    "actionsFile": "actions/01-the-corridor.json",
+    "exitCode": 0,
+    "note": "01 stored solution, played as is (minimalInk 0, expected green)"
+  },
+  {
+    "file": "02-the-chaser.play.json",
+    "levelId": "02-the-chaser",
+    "actionsFile": "actions/02-the-chaser.json",
+    "exitCode": 0,
+    "note": "02 stored solution, played as is (one edit, minimalInk 1, expected green)"
+  },
+  {
+    "file": "03-the-locked-crypt.play.json",
+    "levelId": "03-the-locked-crypt",
+    "actionsFile": "actions/03-the-locked-crypt.json",
+    "exitCode": 0,
+    "note": "03 stored solution, played as is (expected green)"
+  },
+  {
+    "file": "02-the-chaser.truncated.play.json",
+    "levelId": "02-the-chaser",
+    "actionsFile": "actions/02-the-chaser.truncated.json",
+    "exitCode": 0,
+    "note": "02 solution cut to its first 3 actions (one edit, two moves); the hero does not reach the exit (expected red)"
+  },
+  {
+    "file": "01-the-corridor.undo-first.play.json",
+    "levelId": "01-the-corridor",
+    "actionsFile": "actions/01-the-corridor.undo-first.json",
+    "exitCode": 0,
+    "note": "01 solution preceded by an undo that is refused because nothing has been edited"
+  }
+]
