@@ -33,16 +33,17 @@ function refused(reasonCode, reason, extra = {}) {
  * @returns {Promise<unknown>} the parsed value, or null when the command failed or printed text that is not JSON
  */
 async function runLevelInfo(deps, checkoutDir, levelId) {
+  // A throw from deps.spawn is an internal fault and propagates; only text that is not JSON is "failed".
+  const r = await deps.spawn({
+    command: 'node',
+    args: ['scripts/play.mjs', levelId, '--level-info'],
+    cwd: checkoutDir,
+    shell: false,
+    timeoutMs: STEP_LIMITS_MS.list,
+    label: 'node play.mjs --level-info',
+  });
+  if (r.timedOut || r.startError !== null || r.exitCode !== 0) return null;
   try {
-    const r = await deps.spawn({
-      command: 'node',
-      args: ['scripts/play.mjs', levelId, '--level-info'],
-      cwd: checkoutDir,
-      shell: false,
-      timeoutMs: STEP_LIMITS_MS.list,
-      label: 'node play.mjs --level-info',
-    });
-    if (r.timedOut || r.startError !== null || r.exitCode !== 0) return null;
     const value = JSON.parse(r.stdout);
     return value === undefined ? null : value;
   } catch {
@@ -73,9 +74,10 @@ async function storedOf(deps, checkoutDir, levelId) {
  * @returns {Promise<HuntResult>}
  */
 export async function runInfo(deps, argv) {
+  // resolveActiveHunt catches its own faults and answers "no active hunt"; it is called outside the try.
+  const active = await resolveActiveHunt(deps);
+  if (!active.ok) return refused('no_active_hunt', 'No hunt is active. Run Hunt_Begin first.');
   try {
-    const active = await resolveActiveHunt(deps);
-    if (!active.ok) return refused('no_active_hunt', 'No hunt is active. Run Hunt_Begin first.');
     const { record, readyAtMs } = active.hunt;
     const deadlineMs = deadlineOf(readyAtMs);
     const left = (/** @type {string|null} */ levelId) => budgetLeft(record, levelId, deps.clock.nowMs(), deadlineMs);
@@ -114,6 +116,7 @@ export async function runInfo(deps, argv) {
     body.left = left(levelId);
     return { exit: 0, body };
   } catch {
-    return refused('no_active_hunt', 'No hunt is active. Run Hunt_Begin first.');
+    // An unexpected fault after the Hunt is resolved: nothing was written, so report it as an internal fault (exit 4).
+    return { exit: 4, body: { outcome: 'error', reasonCode: 'hunt_internal_error', reason: 'Hunt_Info failed unexpectedly. Nothing was changed.' } };
   }
 }

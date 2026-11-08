@@ -243,6 +243,32 @@ describe('Hunt_Info: the game command fails', () => {
   });
 });
 
+describe('Hunt_Info: an internal fault is not a refusal', () => {
+  it('a throw from the process dependency gives exit 4 hunt_internal_error and leaves the Hunt running', async () => {
+    const w = await liveWorld();
+    const before = w.fs.snapshot();
+    const { runInfo } = await import('../scripts/hunt/info.mjs');
+    const faulty = {
+      ...w.deps,
+      spawn: /** @type {any} */ (
+        async () => {
+          throw new Error('unexpected fault in spawn');
+        }
+      ),
+    };
+    const res = await runInfo(faulty, ['--level', '02-the-chaser']);
+    expect(res.exit).toBe(4);
+    expect(res.body).toEqual({ outcome: 'error', reasonCode: 'hunt_internal_error', reason: expect.any(String) });
+    // nothing written; the record, pointer and lock are exactly as they were
+    expect(w.fs.snapshot()).toEqual(before);
+    expect(w.fs.peek(LOCK)).toContain(TOKEN);
+    // and a normal call afterwards still sees a live Hunt
+    const again = /** @type {any} */ (await w.info(['--level', '02-the-chaser']));
+    expect(again.exit).toBe(0);
+    expect(again.body.state).toBe('level');
+  });
+});
+
 describe('Hunt_Info: the stored solution cannot be read', () => {
   it('gives stored null and no_solution_file for a missing file', async () => {
     const w = await liveWorld();

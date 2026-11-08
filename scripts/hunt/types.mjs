@@ -1,7 +1,7 @@
 // @ts-check
 // Typedefs only for the exploit-hunt (see .kiro/specs/exploit-hunt/design.md). No run-time code.
 // CheckResult, CheckOk and CheckError are re-declared here from .kiro/specs/verifier/design.md,
-// not imported from ../verifier.mjs (only scripts/hunt/deps.mjs imports the verifier).
+// not imported from the verifier (only scripts/hunt/deps.mjs imports the verifier).
 
 /**
  * Hunt dependencies: the replay's Deps without `verifier`, plus `checkCandidate`.

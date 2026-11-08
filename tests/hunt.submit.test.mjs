@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import * as path from 'node:path';
 import * as fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { LEVEL_POOL, arbActionList, arbCheckResult, arbSubmitScript } from './hunt.arbitraries.mjs';
+import { CLASS_NAMES, LEVEL_POOL, arbActionList, arbArgv, arbCheckResult, arbSubmitScript, canonicalTokens } from './hunt.arbitraries.mjs';
 import { checkCandidate } from '../scripts/verifier.mjs';
 import { summarizePlay } from '../scripts/hunt/submit.mjs';
 import { writeActive, writeHuntRecord } from '../scripts/hunt/hunt-store.mjs';
@@ -1178,7 +1178,7 @@ describe('Property 5: Determinism', () => {
 describe('Property 7: Budgets bound every Hunt', () => {
   const DEADLINE_MS = READY_MS + 1800 * 1000;
   /** Samples (and steps) that reached each cap, over the whole run. */
-  const reached = { samples: 0, attempts20: 0, refusals10: 0, level4: 0, timeCap: 0, calls30: 0 };
+  const reached = { samples: 0, attempts20: 0, refusals10: 0, level4: 0, timeCap: 0, calls30: 0, levelRefusal: 0 };
 
   /** A stub check that answers rejected for whatever level and class it is given. */
   const rejectedCheck = (/** @type {any[]} */ ...a) =>
@@ -1234,17 +1234,52 @@ describe('Property 7: Budgets bound every Hunt', () => {
     return { res, charged: after.attempts > before.attempts || after.refusals > before.refusals };
   }
 
+  /**
+   * Long scripts (22 to 45 steps) of mostly well-formed calls over 5 or 6 of the Hunt's levels, so the same level
+   * repeats (4-per-level) and the 20-Attempt cap can be reached. Clock jumps are 0 to 30 s. About one call in
+   * seven is an unknown level or a malformed argument list, so refusals still occur. Built, not filtered.
+   */
+  const arbLongValidScript = fc.shuffledSubarray(LEVEL_POOL, { minLength: 5, maxLength: 6 }).chain((levels) =>
+    fc
+      .array(
+        fc.record({
+          jumpMs: fc.integer({ min: 0, max: 30000 }),
+          step: fc.oneof(
+            { weight: 8, arbitrary: fc.tuple(fc.constant('good'), fc.constantFrom(...CLASS_NAMES), arbActionList) },
+            { weight: 1, arbitrary: fc.tuple(fc.constantFrom('99-not-in-hunt', 'zz-other'), fc.constantFrom(...CLASS_NAMES), arbActionList) },
+            { weight: 1, arbitrary: arbArgv.map((argv) => /** @type {[string, unknown[]]} */ (['malformed', argv])) },
+          ),
+        }),
+        { minLength: 24, maxLength: 45 },
+      )
+      .map((steps) => {
+        // Good calls take the Hunt's levels in turn, so each level is hit about equally often (4 each = 20 Attempts).
+        let good = 0;
+        return steps.map(({ jumpMs, step }) => {
+          const [first, second, third] = /** @type {any[]} */ (step);
+          if (first === 'malformed') return { jumpMs, argv: /** @type {unknown[]} */ (second) };
+          const level = first === 'good' ? levels[good++ % levels.length] : first;
+          return { jumpMs, argv: ['--level', level, '--class', second, '--actions', ...canonicalTokens(third)] };
+        });
+      }),
+  );
+
+  const arbBudgetScript = fc.oneof({ weight: 1, arbitrary: arbSubmitScript }, { weight: 1, arbitrary: arbLongValidScript });
+
   const property = () =>
-    fc.asyncProperty(arbSubmitScript, async (script) => {
+    fc.asyncProperty(arbBudgetScript, async (script) => {
       const { w, playStarts } = await budgetWorld();
       let charging = 0;
+      let sawLevelRefusal = false;
       for (const step of script) {
         w.clock.advance(step.jumpMs);
-        const { charged } = await callAndCount(w, /** @type {string[]} */ (step.argv));
+        const { res, charged } = await callAndCount(w, /** @type {string[]} */ (step.argv));
         if (charged) charging += 1;
+        if (/** @type {any} */ (res.body)?.reasonCode === 'level_budget_spent') sawLevelRefusal = true;
         expectBounds(w, playStarts, charging);
       }
       const rec = readRecord(w);
+      if (sawLevelRefusal) reached.levelRefusal += 1;
       reached.samples += 1;
       if (rec.attempts >= 20) reached.attempts20 += 1;
       if (rec.refusals >= 10) reached.refusals10 += 1;
@@ -1255,6 +1290,10 @@ describe('Property 7: Budgets bound every Hunt', () => {
 
   it('attempts, per-level attempts, refusals, play processes, Candidate_Files, the time cap and charging calls stay within budget', async () => {
     await fc.assert(property(), { numRuns: 150 });
+    // The inputs reach the caps often enough for the bounds above to mean something.
+    expect(reached.attempts20 / reached.samples).toBeGreaterThanOrEqual(0.2);
+    expect(reached.level4 / reached.samples).toBeGreaterThanOrEqual(0.2);
+    expect(reached.levelRefusal).toBeGreaterThan(0);
   });
 
   it('example: 20 Attempts across five levels, then total_budget_spent; nothing more is charged', async () => {

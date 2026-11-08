@@ -18,7 +18,9 @@ import { publishFindings } from './publish.mjs';
 function summaryFor(record, nowMs) {
   const finishedMs = typeof record.finishedAt === 'string' ? Date.parse(record.finishedAt) : NaN;
   const endMs = record.state !== 'running' && !Number.isNaN(finishedMs) ? finishedMs : nowMs;
-  return { ...summaryOf(record, endMs), refusals: record.refusals, findingsKey: record.findingsKey };
+  const { attempts, ...rest } = summaryOf(record, endMs);
+  // Key order follows the Hunt_End example in the design: attempts, refusals, counts, seconds, findingsKey.
+  return { attempts, refusals: record.refusals, ...rest, findingsKey: record.findingsKey };
 }
 
 /**
