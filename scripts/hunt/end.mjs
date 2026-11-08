@@ -23,7 +23,14 @@ const refusal = (reasonCode, reason) => ({ exit: 3, body: { outcome: 'refused', 
  * @returns {Promise<HuntResult>}
  */
 async function endBody(deps, argv) {
-  const resolved = await resolveActiveHunt(deps);
+  /** @type {Awaited<ReturnType<typeof resolveActiveHunt>>} */
+  let resolved;
+  try {
+    resolved = await resolveActiveHunt(deps);
+  } catch {
+    // A fault while resolving the Hunt: nothing is finished or written. withCallLock releases the call lock.
+    return { exit: 4, body: { outcome: 'error', reasonCode: 'hunt_internal_error', reason: 'Hunt_End failed unexpectedly. Nothing was changed.' } };
+  }
   if (!resolved.ok) return refusal('no_active_hunt', 'No hunt is active.');
   if (!parseNoArgs(argv).ok) return refusal('bad_arguments', 'Hunt_End takes no arguments.');
 

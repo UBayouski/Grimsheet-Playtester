@@ -65,13 +65,15 @@ export async function writeJsonAtomic(deps, finalPath, value) {
 /**
  * @param {Pick<HuntDeps, 'fs'>} deps
  * @param {string} file
+ * @param {boolean} [strict] true: only a missing file (ENOENT) is null; any other read error is thrown
  * @returns {Promise<Record<string, any>|null>} null when missing, unparsable or not an object
  */
-async function readJsonObject(deps, file) {
+async function readJsonObject(deps, file, strict = false) {
   let text;
   try {
     text = await deps.fs.readFile(file, 'utf8');
-  } catch {
+  } catch (e) {
+    if (strict && codeOf(e) !== 'ENOENT') throw e;
     return null;
   }
   try {
@@ -85,11 +87,12 @@ async function readJsonObject(deps, file) {
 /**
  * @param {HuntDeps} deps
  * @param {string} huntId
+ * @param {boolean} [strict] true: a read error other than ENOENT is thrown instead of answering null
  * @returns {Promise<HuntRecord|null>} null when missing or not an object
  */
-export async function readHuntRecord(deps, huntId) {
+export async function readHuntRecord(deps, huntId, strict = false) {
   if (typeof huntId !== 'string' || !HUNT_RECORD_PATTERN.test(`${huntId}.json`)) return null;
-  const value = await readJsonObject(deps, path.join(huntPaths(deps).huntsFolder, `${huntId}.json`));
+  const value = await readJsonObject(deps, path.join(huntPaths(deps).huntsFolder, `${huntId}.json`), strict);
   return /** @type {HuntRecord|null} */ (value);
 }
 
@@ -153,9 +156,13 @@ export async function pruneCandidateFolders(deps) {
   }
 }
 
-/** @param {HuntDeps} deps @returns {Promise<ActivePointer|null>} null when missing, unparsable or incomplete */
-export async function readActive(deps) {
-  const value = await readJsonObject(deps, huntPaths(deps).activePath);
+/**
+ * @param {HuntDeps} deps
+ * @param {boolean} [strict] true: a read error other than ENOENT is thrown instead of answering null
+ * @returns {Promise<ActivePointer|null>} null when missing, unparsable or incomplete
+ */
+export async function readActive(deps, strict = false) {
+  const value = await readJsonObject(deps, huntPaths(deps).activePath, strict);
   if (value === null) return null;
   if (typeof value.huntId !== 'string' || typeof value.token !== 'string' || typeof value.readyAt !== 'string') return null;
   return /** @type {ActivePointer} */ (value);
@@ -172,47 +179,47 @@ export async function clearActive(deps) {
 }
 
 /**
- * The four checks. Read only. Any failure, including a read error, is "no active Hunt".
+ * The four checks. Read only. `{ok:false}` is answered only for the states of the design: a missing (ENOENT) or
+ * unparseable file, a lock of another token, a stale lock, a record that is not `running`. Any other fault (a read
+ * error other than ENOENT, a throw from code) is not caught here: it propagates and the caller reports it.
  * @param {HuntDeps} deps
  * @returns {Promise<{ok:true, hunt:{huntId:string, token:string, readyAtMs:number, record:HuntRecord}} | {ok:false}>}
  */
 export async function resolveActiveHunt(deps) {
   const none = /** @type {const} */ ({ ok: false });
+  const active = await readActive(deps, true); // check 1
+  if (active === null) return none;
+
+  const lockPath = huntPaths(deps).lockPath; // check 2
+  let text;
   try {
-    const active = await readActive(deps); // check 1
-    if (active === null) return none;
-
-    const lockPath = huntPaths(deps).lockPath; // check 2
-    let text;
-    try {
-      text = await deps.fs.readFile(lockPath, 'utf8');
-    } catch {
-      return none;
-    }
-    let lock;
-    try {
-      lock = JSON.parse(text);
-    } catch {
-      return none;
-    }
-    if (!isObject(lock) || lock.token !== active.token) return none;
-
-    let mtimeMs = null; // check 3: only strictly more than the limit is stale
-    try {
-      mtimeMs = (await deps.fs.stat(lockPath)).mtimeMs;
-    } catch {
-      // the content alone decides
-    }
-    const created = lockCreatedMs(text, mtimeMs);
-    if (created === null || deps.clock.nowMs() - created > LOCK_AGE_SEC * 1000) return none;
-
-    const record = await readHuntRecord(deps, active.huntId); // check 4
-    if (record === null || record.state !== 'running') return none;
-
-    return { ok: true, hunt: { huntId: active.huntId, token: active.token, readyAtMs: Date.parse(active.readyAt), record } };
+    text = await deps.fs.readFile(lockPath, 'utf8');
+  } catch (e) {
+    if (codeOf(e) === 'ENOENT') return none;
+    throw e;
+  }
+  let lock;
+  try {
+    lock = JSON.parse(text);
   } catch {
     return none;
   }
+  if (!isObject(lock) || lock.token !== active.token) return none;
+
+  let mtimeMs; // check 3: only strictly more than the limit is stale
+  try {
+    mtimeMs = (await deps.fs.stat(lockPath)).mtimeMs;
+  } catch (e) {
+    if (codeOf(e) === 'ENOENT') return none; // the lock vanished: a missing lock
+    throw e;
+  }
+  const created = lockCreatedMs(text, mtimeMs);
+  if (created === null || deps.clock.nowMs() - created > LOCK_AGE_SEC * 1000) return none;
+
+  const record = await readHuntRecord(deps, active.huntId, true); // check 4
+  if (record === null || record.state !== 'running') return none;
+
+  return { ok: true, hunt: { huntId: active.huntId, token: active.token, readyAtMs: Date.parse(active.readyAt), record } };
 }
 
 /**

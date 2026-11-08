@@ -24,16 +24,38 @@ export function withExitStatus(body, exit) {
 }
 
 /**
+ * A safe one-word label for a fault: its string `code`, else its string `name`, else `unknown`.
+ * Never the message or stack. Only [A-Za-z0-9_.-] survive, at most 40 characters.
+ * @param {unknown} fault
+ * @returns {string}
+ */
+function faultToken(fault) {
+  /** @param {string} key */
+  const pick = (key) => {
+    try {
+      const value = /** @type {any} */ (fault)[key];
+      if (typeof value !== 'string') return '';
+      return value.replace(/[^A-Za-z0-9_.-]/g, '').slice(0, 40);
+    } catch {
+      return '';
+    }
+  };
+  return pick('code') || pick('name') || 'unknown';
+}
+
+/**
  * @param {'begin'|'info'|'submit'|'end'} name
  * @param {string[]} [argv]   default process.argv.slice(2)
  * @param {{buildDeps?: () => HuntDeps, run?: Record<string, (deps: HuntDeps, argv: string[]) => Promise<HuntResult>>,
- *          write?: (text: string) => void, setExitCode?: (code: number) => void}} [io]
+ *          write?: (text: string) => void, writeErr?: (text: string) => void,
+ *          setExitCode?: (code: number) => void}} [io]
  * @returns {Promise<HuntResult>}
  */
 export async function main(name, argv, io = {}) {
   const args = argv ?? process.argv.slice(2);
   const run = io.run ?? REAL_RUN;
   const write = io.write ?? ((/** @type {string} */ text) => void process.stdout.write(text));
+  const writeErr = io.writeErr ?? ((/** @type {string} */ text) => void process.stderr.write(text));
   const setExitCode =
     io.setExitCode ??
     ((/** @type {number} */ code) => {
@@ -52,8 +74,13 @@ export async function main(name, argv, io = {}) {
       deps = buildHuntDeps({});
     }
     result = await run[name](deps, args);
-  } catch {
+  } catch (fault) {
     result = { exit: 4, body: { outcome: 'error', reasonCode: 'hunt_internal_error' } };
+    try {
+      writeErr(`hunt: internal error ${faultToken(fault)}\n`);
+    } catch {
+      // A broken stderr must not change stdout or the exit code.
+    }
   }
 
   // One variable feeds both the printed exitStatus and the process exit code.

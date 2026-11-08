@@ -219,11 +219,16 @@ describe('skill wording', () => {
 });
 
 describe('budget numbers match limits.mjs', () => {
-  /** @param {string} unit @returns {number[]} */
-  function numbersBefore(unit) {
-    // A number glued to a preceding hyphen or letter is not a budget ("UTF-8 bytes").
-    const re = new RegExp(`(?<![\\d.\\-A-Za-z])(\\d+) ${unit}\\b`, 'g');
-    return [...read(FIND).matchAll(re)].map((m) => Number(m[1]));
+  /**
+   * @param {string} unit
+   * @param {string} [text] defaults to the real find-exploits text
+   * @returns {number[]}
+   */
+  function numbersBefore(unit, text = read(FIND)) {
+    // Only the literal "UTF-8" is exempt ("UTF-8 bytes" is an encoding, not a budget).
+    // Any other number, even one after a hyphen or letter, is read as a budget.
+    const re = new RegExp(`(?<![\\d.])(\\d+) ${unit}\\b`, 'g');
+    return [...text.replaceAll('UTF-8', '').matchAll(re)].map((m) => Number(m[1]));
   }
 
   /** @type {Array<[string, number, string]>} */
@@ -245,6 +250,27 @@ describe('budget numbers match limits.mjs', () => {
 
   it('every "N attempts" number is one of the two attempt budgets', () => {
     for (const n of numbersBefore('attempts')) expect([LEVEL_BUDGET, HUNT_BUDGET]).toContain(n);
+  });
+
+  it('on the real text the attempt numbers are exactly the two budgets', () => {
+    expect(new Set(numbersBefore('attempts'))).toEqual(new Set([LEVEL_BUDGET, HUNT_BUDGET]));
+  });
+
+  it('"UTF-8 bytes" is not read as 8', () => {
+    const text = read(FIND);
+    expect(text).toContain('UTF-8 bytes');
+    expect(numbersBefore('bytes')).not.toContain(8);
+    expect(numbersBefore('bytes', 'of its UTF-8 bytes')).toEqual([]);
+  });
+
+  it('a wrong budget written with a hyphen is caught', () => {
+    const real = read(FIND);
+    const variant = real.replace('4 attempts for each level', 'level-5 attempts for each level');
+    expect(variant).not.toBe(real);
+    expect(numbersBefore('attempts', variant)).toContain(5);
+    expect(
+      numbersBefore('attempts', variant).every((n) => [LEVEL_BUDGET, HUNT_BUDGET].includes(n)),
+    ).toBe(false);
   });
 
   it('the single-valued budgets have no other number', () => {

@@ -399,6 +399,75 @@ describe('resolveActiveHunt', () => {
     expect(await resolveActiveHunt(w.deps)).toEqual({ ok: false });
   });
 
+  /** A fs whose readFile or stat fails with `code` for one path. */
+  function faultOn(/** @type {ReturnType<typeof setup>} */ w, /** @type {string} */ target, /** @type {string} */ code, method = 'readFile') {
+    const real = w.deps.fs;
+    w.deps.fs = {
+      ...real,
+      async [method](/** @type {string} */ p, /** @type {any} */ ...rest) {
+        if (p === target) throw Object.assign(new Error('denied'), { code });
+        return /** @type {any} */ (real)[method](p, ...rest);
+      },
+    };
+  }
+
+  it.each(['EACCES', 'EBUSY', 'EIO'])('throws (is not "no active hunt") when active.json cannot be read: %s', async (code) => {
+    const w = setup();
+    seedActive(w, huntId);
+    seedLock(w, TOKEN, w.clock.nowMs());
+    seedRecord(w, record(huntId, w.clock.nowMs()));
+    faultOn(w, ACTIVE, code);
+    await expect(resolveActiveHunt(w.deps)).rejects.toMatchObject({ code });
+  });
+
+  it('throws when the lock file cannot be read (EACCES)', async () => {
+    const w = setup();
+    seedActive(w, huntId);
+    seedLock(w, TOKEN, w.clock.nowMs());
+    seedRecord(w, record(huntId, w.clock.nowMs()));
+    faultOn(w, LOCK, 'EACCES');
+    await expect(resolveActiveHunt(w.deps)).rejects.toMatchObject({ code: 'EACCES' });
+  });
+
+  it('throws when the lock cannot be stat-ed for another reason than ENOENT (EIO)', async () => {
+    const w = setup();
+    seedActive(w, huntId);
+    seedLock(w, TOKEN, w.clock.nowMs());
+    seedRecord(w, record(huntId, w.clock.nowMs()));
+    faultOn(w, LOCK, 'EIO', 'stat');
+    await expect(resolveActiveHunt(w.deps)).rejects.toMatchObject({ code: 'EIO' });
+  });
+
+  it('a lock whose stat gives ENOENT is a missing lock: no active hunt', async () => {
+    const w = setup();
+    seedActive(w, huntId);
+    seedLock(w, TOKEN, w.clock.nowMs());
+    seedRecord(w, record(huntId, w.clock.nowMs()));
+    faultOn(w, LOCK, 'ENOENT', 'stat');
+    expect(await resolveActiveHunt(w.deps)).toEqual({ ok: false });
+  });
+
+  it('throws when the Hunt_Record cannot be read (EACCES)', async () => {
+    const w = setup();
+    seedActive(w, huntId);
+    seedLock(w, TOKEN, w.clock.nowMs());
+    seedRecord(w, record(huntId, w.clock.nowMs()));
+    faultOn(w, `${HUNTS}\\${huntId}.json`, 'EACCES');
+    await expect(resolveActiveHunt(w.deps)).rejects.toMatchObject({ code: 'EACCES' });
+  });
+
+  it('still answers {ok:false} for ENOENT on active.json and for unparseable active.json and lock', async () => {
+    const w = setup();
+    expect(await resolveActiveHunt(w.deps)).toEqual({ ok: false });
+    seedLock(w, TOKEN, w.clock.nowMs());
+    seedRecord(w, record(huntId, w.clock.nowMs()));
+    w.fs.seedFile(ACTIVE, '{oops');
+    expect(await resolveActiveHunt(w.deps)).toEqual({ ok: false });
+    seedActive(w, huntId);
+    w.fs.seedFile(LOCK, '{oops');
+    expect(await resolveActiveHunt(w.deps)).toEqual({ ok: false });
+  });
+
   it('touches nothing (read only)', async () => {
     const w = setup();
     seedActive(w, huntId);

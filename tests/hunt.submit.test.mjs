@@ -878,6 +878,37 @@ describe('Hunt_Submit: failures after the charge or in the writes', () => {
     expect(w.fs.has(CALL_LOCK)).toBe(false);
   });
 
+  it('a missing active.json is no_active_hunt, exit 3, nothing written, call lock released', async () => {
+    const w = makeHuntWorld({ check: { [L02]: checkOk() } });
+    w.fs.seedDir(HUNTS);
+    const before = w.fs.snapshot();
+    const res = await w.submit(args());
+    expect(res.exit).toBe(3);
+    expect(/** @type {any} */ (res.body).reasonCode).toBe('no_active_hunt');
+    expect(w.fs.snapshot()).toEqual(before);
+    expect(w.fs.has(CALL_LOCK)).toBe(false);
+  });
+
+  it.each([ACTIVE, LOCK])('an EACCES while reading %s: exit 4 hunt_internal_error, nothing charged, call lock released', async (target) => {
+    const w = await liveWorld({ plays: { [L02]: aPlay() }, check: { [L02]: checkOk() } });
+    const before = w.fs.snapshot();
+    const real = w.deps.fs;
+    w.deps.fs = {
+      ...real,
+      async readFile(p, ...rest) {
+        if (p === target) throw Object.assign(new Error('denied'), { code: 'EACCES' });
+        return /** @type {any} */ (real.readFile)(p, ...rest);
+      },
+    };
+    const res = await w.submit(args());
+    expect(res.exit).toBe(4);
+    expect(res.body).toEqual({ outcome: 'error', reasonCode: 'hunt_internal_error', reason: expect.any(String) });
+    expect(w.fs.snapshot()).toEqual(before);
+    expect(readRecord(w).attempts).toBe(0);
+    expect(w.fs.has(CALL_LOCK)).toBe(false);
+    expect(w.calls.spawn).toHaveLength(0);
+  });
+
   it.each([
     ['the verifier', 'check'],
     ['the play process', 'play'],

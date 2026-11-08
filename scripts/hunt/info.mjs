@@ -74,10 +74,10 @@ async function storedOf(deps, checkoutDir, levelId) {
  * @returns {Promise<HuntResult>}
  */
 export async function runInfo(deps, argv) {
-  // resolveActiveHunt catches its own faults and answers "no active hunt"; it is called outside the try.
-  const active = await resolveActiveHunt(deps);
-  if (!active.ok) return refused('no_active_hunt', 'No hunt is active. Run Hunt_Begin first.');
   try {
+    // resolveActiveHunt answers "no active hunt" only for the states of the design; any other fault throws into the catch.
+    const active = await resolveActiveHunt(deps);
+    if (!active.ok) return refused('no_active_hunt', 'No hunt is active. Run Hunt_Begin first.');
     const { record, readyAtMs } = active.hunt;
     const deadlineMs = deadlineOf(readyAtMs);
     const left = (/** @type {string|null} */ levelId) => budgetLeft(record, levelId, deps.clock.nowMs(), deadlineMs);
@@ -116,7 +116,7 @@ export async function runInfo(deps, argv) {
     body.left = left(levelId);
     return { exit: 0, body };
   } catch {
-    // An unexpected fault after the Hunt is resolved: nothing was written, so report it as an internal fault (exit 4).
+    // An unexpected fault, while resolving the Hunt or after: nothing was written, so report it as an internal fault (exit 4).
     return { exit: 4, body: { outcome: 'error', reasonCode: 'hunt_internal_error', reason: 'Hunt_Info failed unexpectedly. Nothing was changed.' } };
   }
 }

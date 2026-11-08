@@ -101,7 +101,15 @@ async function tryWrite(deps, record) {
  * @returns {Promise<HuntResult>}
  */
 async function submitBody(deps, argv) {
-  const resolved = await resolveActiveHunt(deps);
+  /** @type {Awaited<ReturnType<typeof resolveActiveHunt>>} */
+  let resolved;
+  try {
+    resolved = await resolveActiveHunt(deps);
+  } catch {
+    // A fault while resolving the Hunt: nothing is charged and nothing is written. Answer it here, with a reason;
+    // withCallLock releases the call lock. (A throw after the charge is rethrown below, as before.)
+    return unwritable('hunt_internal_error', 'Hunt_Submit failed unexpectedly. Nothing was changed.');
+  }
   const parsed = resolved.ok ? parseSubmitArgs(argv) : /** @type {const} */ ({ ok: false, detail: 'no_active_hunt' });
   if (!resolved.ok) return refusal('no_active_hunt', REFUSAL_REASONS.no_active_hunt);
 

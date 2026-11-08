@@ -17,13 +17,17 @@ function fakeIo(run, buildDeps = () => ({ marker: 'deps' })) {
   const written = [];
   /** @type {number[]} */
   const codes = [];
+  /** @type {string[]} */
+  const errs = [];
   return {
     written,
     codes,
+    errs,
     io: {
       buildDeps,
       ...(run ? { run } : {}),
       write: (/** @type {string} */ text) => void written.push(text),
+      writeErr: (/** @type {string} */ text) => void errs.push(text),
       setExitCode: (/** @type {number} */ code) => void codes.push(code),
     },
   };
@@ -95,6 +99,86 @@ describe('main: an orchestrator that throws', () => {
     await main('end', [], io);
     expect(written).toEqual(['{"outcome":"error","reasonCode":"hunt_internal_error","exitStatus":4}\n']);
     expect(codes).toEqual([4]);
+  });
+});
+
+describe('main: one stderr line for a fault (code or name only)', () => {
+  const ERROR_LINE = '{"outcome":"error","reasonCode":"hunt_internal_error","exitStatus":4}\n';
+
+  /** @param {() => any} thrower */
+  async function runThrowing(thrower) {
+    const { io, written, codes, errs } = fakeIo({
+      end: async () => {
+        throw thrower();
+      },
+    });
+    await main('end', [], io);
+    return { written, codes, errs };
+  }
+
+  it('(a) prints the error code, never the message or a backslash', async () => {
+    const { written, codes, errs } = await runThrowing(() => Object.assign(new Error('C:\\Users\\someone\\x failed'), { code: 'EBUSY' }));
+    expect(errs).toEqual(['hunt: internal error EBUSY\n']);
+    expect(errs[0]).not.toContain('someone');
+    expect(errs[0]).not.toContain('\\');
+    expect(written).toEqual([ERROR_LINE]);
+    expect(codes).toEqual([4]);
+  });
+
+  it('(b) falls back to the error name when there is no code', async () => {
+    const { errs, written } = await runThrowing(() => new TypeError('secret path /home/x'));
+    expect(errs).toEqual(['hunt: internal error TypeError\n']);
+    expect(written).toEqual([ERROR_LINE]);
+  });
+
+  it('(c) prints unknown for a thrown non-Error', async () => {
+    for (const value of ['x', {}, null, undefined, 42]) {
+      const { errs } = await runThrowing(() => value);
+      expect(errs).toEqual(['hunt: internal error unknown\n']);
+    }
+  });
+
+  it('(d) writes nothing to stderr when there is no fault', async () => {
+    const { io, errs } = fakeIo({ end: async () => ({ exit: 3, body: { outcome: 'refused' } }) });
+    await main('end', [], io);
+    expect(errs).toEqual([]);
+  });
+
+  it('(e) a throwing buildDeps gives the exit-4 line and one stderr line', async () => {
+    const { io, written, codes, errs } = fakeIo(
+      { end: async () => ({ exit: 0, body: {} }) },
+      () => {
+        throw Object.assign(new Error('/home/x/deps'), { code: 'ENOENT' });
+      },
+    );
+    await main('end', [], io);
+    expect(written).toEqual([ERROR_LINE]);
+    expect(codes).toEqual([4]);
+    expect(errs).toEqual(['hunt: internal error ENOENT\n']);
+  });
+
+  it('falls back to unknown when reading code or name throws, or they are empty or not strings', async () => {
+    const hostile = {
+      get code() {
+        throw new Error('no');
+      },
+      get name() {
+        throw new Error('no');
+      },
+    };
+    expect((await runThrowing(() => hostile)).errs).toEqual(['hunt: internal error unknown\n']);
+    expect((await runThrowing(() => ({ code: '', name: '' }))).errs).toEqual(['hunt: internal error unknown\n']);
+    expect((await runThrowing(() => ({ code: 5, name: ['a'] }))).errs).toEqual(['hunt: internal error unknown\n']);
+    expect((await runThrowing(() => ({ code: 5, name: 'RangeError' }))).errs).toEqual(['hunt: internal error RangeError\n']);
+  });
+
+  it('strips characters outside [A-Za-z0-9_.-] and caps the token at 40 characters', async () => {
+    const crafted = await runThrowing(() => ({ code: 'C:\\Users\\someone\\x /home/y' }));
+    expect(crafted.errs).toEqual(['hunt: internal error CUserssomeonexhomey\n']);
+    const long = await runThrowing(() => ({ code: 'A'.repeat(100) }));
+    expect(long.errs).toEqual([`hunt: internal error ${'A'.repeat(40)}\n`]);
+    const allStripped = await runThrowing(() => ({ code: '\\/: ' }));
+    expect(allStripped.errs).toEqual(['hunt: internal error unknown\n']);
   });
 });
 

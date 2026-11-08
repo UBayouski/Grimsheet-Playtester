@@ -23,6 +23,7 @@ const HUNTS = `${DATA_FOLDER}\\hunts`;
 const LOCK = `${DATA_FOLDER}\\.hunt.lock`;
 const ACTIVE = `${HUNTS}\\active.json`;
 const RECORD_PATH = `${HUNTS}\\${HUNT_ID}.json`;
+const L02_INFO = '02-the-chaser';
 
 const FIXTURE_TEXT = readFileSync(new URL('./fixtures/level-info/02-the-chaser.json', import.meta.url), 'utf8');
 const FIXTURE = JSON.parse(FIXTURE_TEXT);
@@ -266,6 +267,40 @@ describe('Hunt_Info: an internal fault is not a refusal', () => {
     const again = /** @type {any} */ (await w.info(['--level', '02-the-chaser']));
     expect(again.exit).toBe(0);
     expect(again.body.state).toBe('level');
+  });
+});
+
+/** Makes readFile fail with EACCES for one path. @param {ReturnType<typeof makeHuntWorld>} w @param {string} target */
+function denyRead(w, target) {
+  const real = w.deps.fs;
+  w.deps.fs = {
+    ...real,
+    async readFile(p, ...rest) {
+      if (p === target) throw Object.assign(new Error('denied'), { code: 'EACCES' });
+      return /** @type {any} */ (real.readFile)(p, ...rest);
+    },
+  };
+}
+
+describe('Hunt_Info: resolving the Hunt', () => {
+  it('a missing active.json is no_active_hunt, exit 3, nothing written', async () => {
+    const w = makeHuntWorld({ levelInfo: procOk(FIXTURE_TEXT) });
+    w.fs.seedDir(HUNTS);
+    const before = w.fs.snapshot();
+    const res = await w.info(['--level', L02_INFO]);
+    expect(res.exit).toBe(3);
+    expect(/** @type {any} */ (res.body).reasonCode).toBe('no_active_hunt');
+    expect(w.fs.snapshot()).toEqual(before);
+  });
+
+  it.each([ACTIVE, LOCK])('an EACCES while reading %s is exit 4 hunt_internal_error, nothing written', async (target) => {
+    const w = await liveWorld();
+    const before = w.fs.snapshot();
+    denyRead(w, target);
+    const res = await w.info(['--level', L02_INFO]);
+    expect(res.exit).toBe(4);
+    expect(res.body).toEqual({ outcome: 'error', reasonCode: 'hunt_internal_error', reason: expect.any(String) });
+    expect(w.fs.snapshot()).toEqual(before);
   });
 });
 
@@ -606,6 +641,19 @@ describe('Hunt_End: refusals', () => {
     expect(readRecord(w).refusals).toBe(1); // not charged: End refusals are outside the seven checks of Requirement 9
     expect(w.fs.has(ACTIVE)).toBe(true);
     expect(w.fs.has(LOCK)).toBe(true);
+  });
+
+  it.each([ACTIVE, LOCK])('an EACCES while reading %s: exit 4 hunt_internal_error, nothing finished or written, call lock released', async (target) => {
+    const w = await endWorld({ mutate: someAttempts });
+    const before = w.fs.snapshot();
+    denyRead(w, target);
+    const res = await w.end([]);
+    expect(res.exit).toBe(4);
+    expect(res.body).toEqual({ outcome: 'error', reasonCode: 'hunt_internal_error', reason: expect.any(String) });
+    expect(w.fs.snapshot()).toEqual(before);
+    expect(w.fs.has(CALL_LOCK)).toBe(false);
+    expect(readRecord(w).state).toBe('running');
+    expect(w.fs.has(ACTIVE)).toBe(true);
   });
 
   it('call_busy: a fresh call lock is held, exit 3, the printed body, nothing written, the Hunt not finished', async () => {
