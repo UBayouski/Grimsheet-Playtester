@@ -322,3 +322,12 @@ Packaging task 13, 2026-11-08, Crew 0.12.0. Evidence: E40. Cause not proven.
 - Practical rule: use one fresh `kirocrew token` for each command, and paste it straight away. A dry run followed by a real run needs two addresses, or no dry run (the real run reads both routes before it writes).
 - Not built: the reader could exchange the link for the session cookie on its first request and send only the cookie afterwards, as the browser does. That is an option if a later step needs one address across several commands.
 - Basis: Docs say (the two pages), and Observed (E40).
+
+## m. Packaging: sizes of the Results_Key after the first replay run
+Read on 2026-11-08 after run-000001 (packaging task 12.3), Crew 0.12.0, app 1.0.0; unchanged afterwards (the measurement of section k restored the file). Evidence: E41.
+
+- Question: how big are the Results_Key and `latest` on the installed app, now that the compact level entries carry `endHp`?
+- Answer: read through the Config_Route (`read-route config`, query form, status 200): body 1369 bytes, Results_Key 1228, `latest` 828, `trend` 323 (one entry), no `findings`, 5 levels, 1 trend entry. The parts add up: 58 + 828 + 323 + 19 = 1228. `latest` was 778 before replay-runner task 16.1 added `endHp`; the 50 bytes are 5 levels x 10.
+- Computed from the measured parts (not rebuilt): a full replay value with 30 trend entries is 58 + 828 + 9721 + 19 = 10626 bytes (it was 10576); with `findings` at its 16384-byte cap and 12 bytes of key overhead the total is 27022, which is under 65536 with 38514 bytes to spare. About 847 bytes per level in the whole value, so the replay value fits up to about 50 levels with the hunt at its cap (it was 51). The fixed part of that estimate is 6391; an earlier text gave 6394, a 3-byte slip that does not change the result.
+- The size figures in the exploit-hunt design (section "Together with the replay's value in `playtesterResults`", lines 812 to 815) were corrected in one edit. No other line of that file was changed.
+- Basis: Observed for the sizes, computed for the totals. Evidence: E41.
