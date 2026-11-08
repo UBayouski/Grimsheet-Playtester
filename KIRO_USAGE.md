@@ -157,7 +157,7 @@ What changed because of it:
 - One gap the smoke run showed: `last-child.log` holds only the final JSON line, because the runner captures npm's output through pipes and discards it. So the log cannot show an npm warning or how long `npm ci` and the build took; the Result_File has no per-stage times either. Nothing was changed inside the task; it is listed as a possible improvement.
 - Mistakes worth keeping: one module (`checkout.mjs`) was written before its tests, so it was moved aside, the tests were written and shown to fail, and the file was put back; several of my own tests had wrong expectations (a path separator, an exit code, a missing type) and were fixed in the tests, never in the checks.
 ## 2026-11-07 - exploit-hunt: four checks in a throwaway Crew app before any design
-Surface: Crew, IDE
+Surface: Crew
 Features: agent, spec, power, mcp
 What I asked for: Before designing the hunt, run checks C1 to C4 of the `exploit-hunt` requirements in a throwaway Crew app, with me at the keyboard and at most five agent runs: can `allowedTools` (or a narrower rule) remove the approval prompts of an app agent (C1); can a message cron start the app agent unattended (C2); which candidate argument forms reach Node unchanged through the agent shell (C3); and can a script in a skill folder import a module of the app's `scripts/` folder (C4). Then update the requirements from the results.
 What Kiro did:
