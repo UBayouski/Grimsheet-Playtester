@@ -1,0 +1,33 @@
+{
+  "playtesterResults": {
+    "findings": {
+      "schemaVersion": 1,
+      "updatedAt": "2026-11-08T11:14:02.640Z",
+      "commit": "e1c61a35b3da027aada5d9ef4460efa4470488a4",
+      "huntId": "hunt-20261108T110312Z",
+      "counts": { "attempts": 7, "confirmed": 2, "rejected": 4, "error": 0, "duplicate": 1, "notRecorded": 0 },
+      "items": [
+        {
+          "id": "hunt-20261108T110312Z-007",
+          "levelId": "02-the-chaser",
+          "class": "cheaper_win",
+          "commit": "e1c61a35b3da027aada5d9ef4460efa4470488a4",
+          "huntId": "hunt-20261108T110312Z",
+          "foundAt": "2026-11-08T11:14:02.511Z",
+          "actions": ["E", "E", "E", "E", "N", "N", "E", "E", "E", "E", "E", "S", "S"],
+          "result": { "won": true, "inkSpent": 0, "minimalInk": 1, "editCount": 0, "newEditAddresses": [], "reasonCode": "class_reproduced" }
+        },
+        {
+          "id": "hunt-20261108T110312Z-012",
+          "levelId": "04-the-trap-row",
+          "class": "unexpected_route",
+          "commit": "6372d9a27ae81a6ab75e9f8ae45d1d70ccebe50b",
+          "huntId": "hunt-20261108T110312Z",
+          "foundAt": "2026-11-08T11:16:40.100Z",
+          "actions": ["edit:B14=%3DIF%28DIST%28HERO%2CSELF%29%3C1%2CTOWARD%28HERO%29%2C%22-%22%29", "E", "E", "N"],
+          "result": { "won": true, "inkSpent": 1, "minimalInk": 1, "editCount": 1, "newEditAddresses": ["B14"], "reasonCode": "class_reproduced" }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "jobs": [
+    {
+      "id": "a1b2c3d4",
+      "script": "<app folder>/scripts/replay_cron.py",
+      "last_run_ts": 1794100793,
+      "last_status": "error",
+      "next_run_ts": "2026-11-10T01:00:00Z",
+      "is_running": false,
+      "consecutive_failures": 3,
+      "enabled": true,
+      "user_paused": true
+    }
+  ],
+  "server_tz": "UTC"
+}

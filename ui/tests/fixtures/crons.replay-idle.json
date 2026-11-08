@@ -1,0 +1,21 @@
+{
+  "jobs": [
+    {
+      "id": "a1b2c3d4",
+      "name": "grimsheet-playtester/replay",
+      "last_run_ts": "2026-11-08T01:26:53.169Z",
+      "last_status": "ok",
+      "next_run_ts": 1794187200,
+      "is_running": false,
+      "running_since": null,
+      "consecutive_failures": 0,
+      "enabled": true,
+      "user_paused": false,
+      "every_secs": 86400,
+      "timeout_secs": 905
+    }
+  ],
+  "server_tz": "UTC",
+  "default_tz": "UTC",
+  "host_tz": "UTC"
+}

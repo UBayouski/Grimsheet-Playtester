@@ -1,0 +1,24 @@
+{
+  "playtesterResults": {
+    "schemaVersion": 1,
+    "updatedAt": "2026-11-09T01:27:00.396Z",
+    "latest": {
+      "runId": "run-000003",
+      "counter": 3,
+      "state": "failed",
+      "startedAt": "2026-11-09T01:26:53.212Z",
+      "finishedAt": "2026-11-09T01:26:58.002Z",
+      "commit": "6372d9a27ae81a6ab75e9f8ae45d1d70ccebe50b",
+      "repoUrl": "https://github.com/UBayouski/Grimsheet",
+      "branch": "main",
+      "failure": { "stage": "build", "reasonCode": "build_failed", "message": "The Grimsheet build failed with exit code 1.", "exitCode": 1 },
+      "coverage": { "listed": 0, "played": 0, "noSolution": 0, "unreadable": 0, "unlisted": 0, "duplicateListedLevels": [], "unlistedSolutions": [] },
+      "levels": []
+    },
+    "trend": [
+      { "runId": "run-000003", "counter": 3, "state": "failed", "startedAt": "2026-11-09T01:26:53.212Z", "commit": "6372d9a27ae81a6ab75e9f8ae45d1d70ccebe50b", "green": 0, "amber": 0, "red": 0, "error": 0, "levels": {} },
+      { "runId": "run-000002", "counter": 2, "state": "complete", "startedAt": "2026-11-08T01:26:53.212Z", "commit": "6372d9a27ae81a6ab75e9f8ae45d1d70ccebe50b", "green": 5, "amber": 0, "red": 0, "error": 0,
+        "levels": { "01-the-corridor": "green", "02-the-chaser": "green", "03-the-locked-crypt": "green", "04-the-trap-row": "green", "05-the-lich": "green" } }
+    ]
+  }
+}

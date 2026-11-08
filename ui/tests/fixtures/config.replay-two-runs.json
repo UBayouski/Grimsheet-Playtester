@@ -1,0 +1,96 @@
+{
+  "playtesterResults": {
+    "schemaVersion": 1,
+    "updatedAt": "2026-11-08T01:27:00.396Z",
+    "latest": {
+      "runId": "run-000002",
+      "counter": 2,
+      "state": "complete",
+      "startedAt": "2026-11-08T01:26:53.212Z",
+      "finishedAt": "2026-11-08T01:27:00.391Z",
+      "commit": "6372d9a27ae81a6ab75e9f8ae45d1d70ccebe50b",
+      "repoUrl": "https://github.com/UBayouski/Grimsheet",
+      "branch": "main",
+      "failure": null,
+      "coverage": {
+        "listed": 5,
+        "played": 5,
+        "noSolution": 0,
+        "unreadable": 0,
+        "unlisted": 0,
+        "duplicateListedLevels": [],
+        "unlistedSolutions": []
+      },
+      "levels": [
+        {
+          "levelId": "01-the-corridor",
+          "colour": "green",
+          "inkSpent": 0,
+          "minimalInk": 0
+        },
+        {
+          "levelId": "02-the-chaser",
+          "colour": "green",
+          "inkSpent": 1,
+          "minimalInk": 1
+        },
+        {
+          "levelId": "03-the-locked-crypt",
+          "colour": "green",
+          "inkSpent": 2,
+          "minimalInk": 2
+        },
+        {
+          "levelId": "04-the-trap-row",
+          "colour": "green",
+          "inkSpent": 1,
+          "minimalInk": 1
+        },
+        {
+          "levelId": "05-the-lich",
+          "colour": "green",
+          "inkSpent": 2,
+          "minimalInk": 2
+        }
+      ]
+    },
+    "trend": [
+      {
+        "runId": "run-000002",
+        "counter": 2,
+        "state": "complete",
+        "startedAt": "2026-11-08T01:26:53.212Z",
+        "commit": "6372d9a27ae81a6ab75e9f8ae45d1d70ccebe50b",
+        "green": 5,
+        "amber": 0,
+        "red": 0,
+        "error": 0,
+        "levels": {
+          "01-the-corridor": "green",
+          "02-the-chaser": "green",
+          "03-the-locked-crypt": "green",
+          "04-the-trap-row": "green",
+          "05-the-lich": "green"
+        }
+      },
+      {
+        "runId": "run-000001",
+        "counter": 1,
+        "state": "complete",
+        "startedAt": "2026-11-08T01:26:32.369Z",
+        "commit": "6372d9a27ae81a6ab75e9f8ae45d1d70ccebe50b",
+        "green": 5,
+        "amber": 0,
+        "red": 0,
+        "error": 0,
+        "levels": {
+          "01-the-corridor": "green",
+          "02-the-chaser": "green",
+          "03-the-locked-crypt": "green",
+          "04-the-trap-row": "green",
+          "05-the-lich": "green"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "jobs": [
+    {
+      "id": "a1b2c3d4",
+      "name": "replay",
+      "last_run_ts": 1794100793169,
+      "last_status": "ok",
+      "next_run_ts": 1794187200000,
+      "is_running": true,
+      "running_since": 1794187200000,
+      "consecutive_failures": 0,
+      "enabled": true,
+      "user_paused": false
+    }
+  ],
+  "server_tz": "UTC"
+}

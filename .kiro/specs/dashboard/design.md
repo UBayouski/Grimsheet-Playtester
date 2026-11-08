@@ -543,6 +543,10 @@ The page styles are one constant string in a `<style>` element rendered once by 
 
 `ui/package.json` (versions are pinned at the task, exact, no ranges): `type: module`; scripts `build` (`vite build && node scripts/check-dist.mjs`), `typecheck` (`tsc --noEmit`), `test` (`vitest --run`). Dependencies: none. Dev dependencies: `typescript`, `vite`, `vitest`, `fast-check`, `react`, `react-dom`, `@types/react`, `@types/react-dom`. `react` and `react-dom` are dev dependencies only, for types and for server rendering in the tests; the host provides them at run time. `@kirocrew/app-sdk` is not listed and not installed (Requirement 9, criterion 3). `vitest`, `fast-check` and `typescript` use the same versions as the root `package.json`, so the project has one set of tools.
 
+**Pinned versions (chosen at task 1.1, exact):** `vite` 7.3.7, `react` and `react-dom` 18.3.1, `@types/react` 18.3.31, `@types/react-dom` 18.3.7, `vitest` 5.1.0, `fast-check` 4.10.2, `typescript` 6.0.3, `@types/node` 22.20.5 (the last four copied from the root `package.json`).
+- Why Vite 7: the library config below targets Rollup (`rollupOptions`) and esbuild (`esbuild.jsx`), which Vite 8 replaced with Rolldown; 7.3.7 is the newest Vite that still uses them, and it satisfies the Vitest peer range.
+- Why React 18: it is the older major, so the type check rejects React 19-only APIs while the host version is unknown (Open question Q10).
+
 **React version.** The version of React that the host provides is not recorded (Open question Q10). The page therefore uses only React APIs that exist in both React 18 and React 19: `useSyncExternalStore`, `useMemo`, `useRef`, `useEffect` and `useState`, plus the automatic JSX runtime. It does not use `use()`, Actions (`useActionState`, `useOptimistic`, `useFormStatus`, form actions), `ref` as a prop of a function component, `<Context>` as a provider, or any API added after React 18. The dev dependency on `react` and `react-dom` is pinned to one exact version chosen at the task (no range), and `@types/react` and `@types/react-dom` to the matching exact versions. A source scan fails on an import of `use`, `useActionState`, `useOptimistic` or `useFormStatus` from `react`.
 
 `vite.config.ts` (library mode, one ES module):
@@ -579,6 +583,13 @@ No Vite plugin is used (the `kirocrewApp()` plugin stays unconfirmed). The `esbu
 - the SDK is imported by name (`import { ... } from "@kirocrew/app-sdk"`) instead of as a namespace.
 
 `typecheck` is `tsc --noEmit` with `strict: true`, `noUncheckedIndexedAccess: true`, `jsx: react-jsx`, `moduleResolution: bundler`, and an `include` of `src` and `tests`. The repository's root `tsconfig.json` does not include `ui/`, so the root typecheck and `npm test` are unchanged; the `ui/` project has its own `npm test`. How a single command runs both is a `packaging` question.
+
+Extra `ui/tsconfig.json` and `ui/vitest.config.ts` settings (approved at task 1.1):
+- `skipLibCheck: true`: the type check ignores errors inside `.d.ts` files of the dependencies, so only the page's own code is judged.
+- `isolatedModules: true`: every file must be compilable on its own, which is what Vite and esbuild do, so the type check rejects code that only works with whole-program compilation.
+- `allowJs: true`: `scripts/check-dist.mjs` and the config files are plain JavaScript and are part of the project.
+- `checkJs: true`: those JavaScript files are type-checked through their JSDoc, as in the root project.
+- `esbuild: { jsx: 'automatic' }` in `vitest.config.ts`: the `.tsx` tests use the same automatic JSX runtime as the build, so no `import React` is needed.
 
 ## Error handling
 

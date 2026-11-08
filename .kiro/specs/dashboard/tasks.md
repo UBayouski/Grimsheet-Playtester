@@ -20,243 +20,243 @@ Rules that apply to every task:
 
 ## Tasks
 
-- [ ] 1. Project and guards
-  - [ ] 1.1 Create the `ui/` project (asks the user twice)
+- [x] 1. Project and guards
+  - [x] 1.1 Create the `ui/` project (asks the user twice)
     - Look up the current versions with the read-only command `npm view <package> version` for `react`, `react-dom`, `@types/react`, `@types/react-dom` and `vite`. `vitest` (5.1.0), `fast-check` (4.10.2) and `typescript` (6.0.3) are taken from the root `package.json` and must be identical. Then **STOP and ask the user** to confirm the exact version list. Say which React major each candidate is (the host's React version is not recorded, Open question Q10); `react` and `react-dom` must be one exact version, `@types/react` and `@types/react-dom` the matching ones.
     - After the user confirms, write `ui/package.json` (`private`, `type: module`, exact versions with no `^` or `~`, no `@kirocrew/app-sdk`, scripts `build` = `vite build && node scripts/check-dist.mjs`, `typecheck` = `tsc --noEmit`, `test` = `vitest --run`), `ui/tsconfig.json` (`strict`, `noUncheckedIndexedAccess`, `jsx: react-jsx`, `moduleResolution: bundler`, `module: ESNext`, `target: ES2022`, `lib` with `DOM`, `include` `src`, `tests`, `vite.config.ts`, `vitest.config.ts`), `ui/vite.config.ts` exactly as in the design, `ui/vitest.config.ts` (environment `node`, alias `@kirocrew/app-sdk` to `tests/stubs/app-sdk.ts`) and `ui/tests/stubs/app-sdk.ts` (an empty module).
     - Then **STOP and ask the user** for permission to run `npm install` inside `ui/`. Run it only after a yes, with the working directory set to `ui/`. Afterwards run `npm ls --depth=0` and check that `@kirocrew/app-sdk` is absent.
     - _Requirements: 9.1, 9.2, 9.3, 9.11; design "Build configuration", "React version"_
 
-  - [ ] 1.2 Write the environment test and check that the root run is unaffected
+  - [x] 1.2 Write the environment test and check that the root run is unaffected
     - Create `ui/tests/environment.test.ts`: `ui/package.json` has no `@kirocrew/app-sdk`; every version in `dependencies` and `devDependencies` is exact (matches `^\d+\.\d+\.\d+$`); `vitest`, `fast-check` and `typescript` equal the root `package.json` versions (read with `node:fs`); `react` and `react-dom` have the same version; `TextDecoder` with `fatal: true` and `ignoreBOM: true` keeps a leading U+FEFF and rejects the bytes `C3 28`.
     - Command: `npx vitest --run tests/environment.test.ts`. Expected: passes. Then `npm run typecheck`.
-    - From the repository root run `npm test` and `npm run typecheck` (read only). Expected: the root results are the same as before and the root run does **not** collect any file under `ui/`. If it does, **STOP and ask the user**: the cause is that the root Vitest has no `exclude` for `ui/`, and the fix (a root `vitest.config.mjs` or a `package.json` change) is a root change that the user must approve.
+    - Root isolation (approved by the user): first run the root `npm test` and record the number of test files and tests (the baseline). Then add `vitest.config.mjs` at the repository root with `test.include` set to `["tests/**/*.test.mjs"]` (every root test lives in `tests/`); the root `package.json` and `tsconfig.json` stay unchanged. Run the root `npm test` again and report both counts: they must equal the baseline, and nothing under `ui/` may be collected. Run the root `npm run typecheck`; it must pass. If the counts differ, STOP and report.
     - _Requirements: 9.3, 10.2, 10.8; design "Build configuration" (decision 17)_
 
-  - [ ] 1.3 Write the fixtures and the fixture scan test
+  - [x] 1.3 Write the fixtures and the fixture scan test
     - Create the fixtures of the design in `ui/tests/fixtures/`: `config.replay-two-runs.json` (the shape of the real `data/config.json` of the replay smoke run; read that file, which is ignored by git, and copy its structure and values; it holds no path or user name), `config.amber-and-red.json`, `config.failed-run.json`, `config.with-findings.json` (the two runs plus the Findings_Value of the exploit-hunt design example and a second finding with the C3-f token `edit:B14=%3DIF%28DIST%28HERO%2CSELF%29%3C1%2CTOWARD%28HERO%29%2C%22-%22%29`), `config.findings-only.json`, `config.no-key.json`, `config.schema-2.json`, `crons.replay-idle.json`, `crons.replay-running.json`, `crons.replay-failing.json`, `crons.none.json`. The cron fixtures have no `script` field, or a placeholder; `last_run_ts` and `next_run_ts` appear as epoch seconds, epoch milliseconds and ISO strings across the files.
     - Create `ui/tests/fixtures.test.ts`: every fixture parses as JSON, holds no drive-letter path (`[A-Za-z]:\\`), no `Users\`, no `token=` and no `/home/`, and the cron fixtures hold no `script` value other than a placeholder.
     - Command: `npx vitest --run tests/fixtures.test.ts`. Expected: passes.
     - _Requirements: 10.9; Assumption A-2, A-6_
 
-  - [ ] 1.4 Write the source-scan test
+  - [x] 1.4 Write the source-scan test
     - Create `ui/tests/source-scan.test.ts`. It reads every file under `ui/src/` as text (an empty or missing `src/` passes) and fails on: `.post(`, `.put(`, `.delete(`, `fetch(`, `XMLHttpRequest`, `useAppEvents`, `dangerouslySetInnerHTML`, a dynamic `import(`, `@kirocrew/app-sdk/ui`, an import of `use`, `useActionState`, `useOptimistic` or `useFormStatus` from `react`; on an import of `react`, `react-dom` or `@kirocrew/app-sdk` in `src/core/` or `src/controller/`; on an import in `src/core/` from outside `src/core/`; and on an import of `@kirocrew/app-sdk` in any file other than `src/index.tsx`. Add a self-test that runs the scanning function on strings that contain each forbidden pattern and expects a failure for each, and on a clean string and expects a pass. The same file also scans `ui/tests/*.test.ts` and `*.test.tsx`: every `fc.assert` call must pass `numRuns` with a number of at least 100, no file may contain `fc.pre` or `.filter(` inside an arbitrary passed to `fc.assert` (a plain `.filter(` is allowed only in a line that carries the comment `// by construction`), and every `Property N` named in the design has exactly one `// Feature: dashboard, Property N:` tag once the property tasks are done (the last check is skipped while no tag exists).
     - Command: `npx vitest --run tests/source-scan.test.ts`. Expected: passes (it guards the later tasks).
     - _Requirements: 1.2, 1.4, 1.5, 1.8, 2.9, 9.7, 10.1, 10.2_
 
-  - [ ] 1.5 Write the base generators
+  - [x] 1.5 Write the base generators
     - Create `ui/tests/arbitraries.ts` with `arbJson` (any JSON value of bounded depth, including `null`, arrays and objects with extra keys, and the keys `__proto__` and `constructor`), `corrupt(valid, arb)` (replaces one part, one field or one array element of a valid value with a value from `arb`), `arbNow` (finite numbers, plus `NaN`, `Infinity`, strings and `null` for the totality property), and `arbCodePointString(maxBytes)` (a string built from code points outside D800 to DFFF). Later tasks add their own generators to this file.
     - Create `ui/tests/arbitraries.test.ts` with unit tests: `corrupt` changes exactly one place, `arbJson` output survives `JSON.parse(JSON.stringify(x))`, `arbCodePointString` never contains a lone surrogate.
     - Command: `npx vitest --run tests/arbitraries.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 10.10_
 
-- [ ] 2. Constants, text and JSON helpers
-  - [ ] 2.1 Write the failing unit tests for `constants.ts`, `text.ts` and `json.ts`
+- [x] 2. Constants, text and JSON helpers
+  - [x] 2.1 Write the failing unit tests for `constants.ts`, `text.ts` and `json.ts`
     - Create `ui/tests/core.json.test.ts`. Import from `../src/core/constants`, `../src/core/text` and `../src/core/json` (missing).
     - Cases: `APP_NAME` is `grimsheet-playtester`, `CONFIG_PATH` is `/api/apps/grimsheet-playtester/config`, `CRONS_PATH` is `/api/crons`, `TOP_KEY` is `playtesterResults`; the limits (30 trend entries, 20 findings, 100 level entries, 40 tokens, 140 characters per token, 50 jobs); the text constants equal the literal wording of the requirements (`Reading results`, `No results yet. The nightly replay has not written any results.`, `No replay run recorded yet`, `No hunt has run yet`, `The last hunt found no exploits`, `Results could not be read`, `Replay job state is unavailable`, `The replay job is not registered`, `Kiro Crew did not provide the app API`, `The last replay is older than 36 hours`, `Copied`, `Copy is not available here. Select the text and press Ctrl+C.`, `Results updated`, `Unknown colour`, `time unknown`, `commit unknown`, the findings sentence of Requirement 6 criterion 6, and the help text of Requirement 7 criterion 1). `isRecord`, `readString`, `readFiniteNumber`, `readCount`, `readBool` and `clip` for each JSON type; a field with the wrong type is read as `null` and nothing is converted (the string `"1"` is not 1); `getOwn(record, key)` returns `null` for `__proto__`, `constructor` and `toString` when they are not own keys.
     - Command: `npx vitest --run tests/core.json.test.ts`. Expected: fails (module missing).
     - _Requirements: 2.6, 1.1, 2.7, 3.1, 3.2, 3.3, 3.4, 3.5, 3.9, 3.10, 3.11, 5.11, 6.6, 7.1, 9.5, 11.5, 11.6_
 
-  - [ ] 2.2 Implement `constants.ts`, `text.ts` and `json.ts`
+  - [x] 2.2 Implement `constants.ts`, `text.ts` and `json.ts`
     - Create `ui/src/core/constants.ts`, `ui/src/core/text.ts` and `ui/src/core/json.ts`, as in the design ("Validation of each part", "Time functions" for the limits). `json.ts` exports `isRecord`, `readString`, `readFiniteNumber`, `readCount`, `readBool`, `clip`, `getOwn`.
     - Command: `npx vitest --run tests/core.json.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 2.6, 2.7_
 
-- [ ] 3. Time
-  - [ ] 3.1 Write the failing unit tests for `time.ts`
+- [x] 3. Time
+  - [x] 3.1 Write the failing unit tests for `time.ts`
     - Create `ui/tests/core.time.test.ts`. Import from `../src/core/time` (missing).
     - Cases: `parseTime` for `2026-11-08T11:03:12.481Z`, the form without seconds, an offset form (`+02:00`), a date only (null), a month 13, `2026-02-30` (null), `2024-02-29` (valid), `2026-02-29` (null), hour 24 (null), a number (null), `null`; `parseCronTime` for epoch seconds (`1.7e9`), epoch milliseconds (`1.7e12`), the boundary `1e11` (milliseconds) and `99999999999` (seconds), a negative number (null), `NaN` (null), an ISO string, an object (null); `formatUtc` (`2026-11-08 11:03 UTC`, the minute floored, `null` gives `time unknown`); `isStale` (exactly 129,600,000 ms before `nowMs` is not stale, one millisecond more is, a time after `nowMs` is not, `nowMs` that is `NaN`, a string or `Infinity` is not, a null time is not); `STALE_LIMIT_MS` is 129600000.
     - Command: `npx vitest --run tests/core.time.test.ts`. Expected: fails (module missing).
     - _Requirements: 5.2, 5.7, 5.11, 10.11_
 
-  - [ ] 3.2 Implement `time.ts`
+  - [x] 3.2 Implement `time.ts`
     - Create `ui/src/core/time.ts` as in the design: `parseTime` with the regular expression and hand-checked field ranges and no use of `Date.parse`, `parseCronTime`, `formatUtc`, `STALE_LIMIT_MS`, `isStale`, `replayTimeOf(latest)`.
     - Command: `npx vitest --run tests/core.time.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 5.2, 5.7, 5.11_
 
-  - [ ] 3.3 Write property test for the time functions
+  - [x] 3.3 Write property test for the time functions
     - Append to `ui/tests/core.time.test.ts`. Tag `// Feature: dashboard, Property 12: Time functions`. Generators: valid ISO strings built by construction (year, month, a day within the month, hour, minute, second, optional fraction, `Z` or an offset), arbitrary strings, arbitrary numbers. Checks: `formatUtc(parseTime(valid))` matches `^\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC$`; strings built with an invalid day, month, hour or minute give `null`; `parseCronTime(n)` for a number below `1e11` equals `parseCronTime` of the same instant in milliseconds; no input makes any of the three throw. `numRuns` 100 or more. If it fails, STOP and report the counterexample; never narrow an arbitrary, add `fc.pre`, lower `numRuns` or loosen the expectation.
     - **Property 12: Time functions**
     - Command: `npx vitest --run tests/core.time.test.ts`. Expected: passes.
     - _Requirements: 5.2, 5.7; Properties: 12_
 
-- [ ] 4. Colour
-  - [ ] 4.1 Write the failing unit tests for `colour.ts`
+- [x] 4. Colour
+  - [x] 4.1 Write the failing unit tests for `colour.ts`
     - Create `ui/tests/core.colour.test.ts`. Import from `../src/core/colour` (missing).
     - Cases: `COLOURS` is `green, amber, red, error`; `colourLabel` for each of the five card colours gives exactly `Green: intended solution holds`, `Amber: wins with a different ink count`, `Red: no longer wins`, `Not judged`, `No result`; `normaliseColour` keeps the four known strings and turns `purple`, an empty string and `GREEN` into `error`; `markerClass` gives a different class for each of the five colours and the same class for the same colour.
     - Command: `npx vitest --run tests/core.colour.test.ts`. Expected: fails (module missing).
     - _Requirements: 2.10, 4.3_
 
-  - [ ] 4.2 Implement `colour.ts`
+  - [x] 4.2 Implement `colour.ts`
     - Create `ui/src/core/colour.ts` as in the design ("Colour mapping").
     - Command: `npx vitest --run tests/core.colour.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 2.10, 4.3_
 
-- [ ] 5. Error text
-  - [ ] 5.1 Write the failing unit tests for `errors.ts`
+- [x] 5. Error text
+  - [x] 5.1 Write the failing unit tests for `errors.ts`
     - Create `ui/tests/core.errors.test.ts`. Import from `../src/core/errors` (missing).
     - Cases: an object with a string `message` gives its first line; a multi-line message gives only the first line; an error with a `stack` property never shows the stack; a value without a string `message` (a number, `null`, a string, an object) gives `The request failed`; the text is clipped to 200 characters; `token=abc123&x=1` becomes `token=…&x=1`; `Bearer abc.def` becomes `Bearer …`; the fixed phrase for the time limit is `The request took longer than 10 seconds`.
     - Command: `npx vitest --run tests/core.errors.test.ts`. Expected: fails (module missing).
     - _Requirements: 3.13_
 
-  - [ ] 5.2 Implement `errors.ts`
+  - [x] 5.2 Implement `errors.ts`
     - Create `ui/src/core/errors.ts` with `errorText` and `TIME_LIMIT_TEXT` as in the design ("Reader and controller").
     - Command: `npx vitest --run tests/core.errors.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 3.13_
 
-  - [ ] 5.3 Write property test for the error text
+  - [x] 5.3 Write property test for the error text
     - Append to `ui/tests/core.errors.test.ts`. Tag `// Feature: dashboard, Property 15: Bounded text`. Generators: any value (`arbJson`), objects with a `message` made of arbitrary strings with embedded newlines, `token=` and `Bearer` followed by arbitrary non-space text. Checks: the result is one line (no `\n` or `\r`), at most 200 characters, holds no `token=` followed by a value and no `Bearer` followed by a value, and `errorText` never throws. `numRuns` 100 or more. Failure rule as in task 3.3.
     - **Property 15: Bounded text**
     - Command: `npx vitest --run tests/core.errors.test.ts`. Expected: passes.
     - _Requirements: 3.13; Properties: 15_
 
-- [ ] 6. Token codec
-  - [ ] 6.1 Write the failing unit tests for `tokens.ts`
+- [x] 6. Token codec
+  - [x] 6.1 Write the failing unit tests for `tokens.ts`
     - Create `ui/tests/core.tokens.test.ts`. Import from `../src/core/tokens` (missing).
     - Cases: `decodeToken` for `N`, `S`, `E`, `W`, `wait`, `undo`; `n`, `Wait` and `EDIT:B14=7` give null (case sensitive); `edit:B14=7`; `edit:B14=%3DB15%2B1` gives raw `=B15+1`; `edit:B14=%3d` (lower case) gives raw `=`; `edit:B14=` (empty raw) is valid; `edit:b14=7`, `edit:B=7`, `edit:14=7`, `edit:ABCDEFG1=7` (more than 6 characters) give null; a lone `%`, `%4`, `%ZZ`, a raw containing a space, `=`, `:` or `é` unescaped give null; `%C3%28` and `%FF` and an overlong `%C0%AF` and a surrogate `%ED%A0%80` give null; `%EF%BB%BF` (a BOM) decodes to U+FEFF and is kept; a non-string input gives null. The C3-f token `edit:B14=%3DIF%28DIST%28HERO%2CSELF%29%3C1%2CTOWARD%28HERO%29%2C%22-%22%29` decodes to the raw `=IF(DIST(HERO,SELF)<1,TOWARD(HERO),"-")`. `decodeActions` returns null if any token fails and the list otherwise. `encodeAction` and `encodeActions` give upper-case hex and keep `A-Z a-z 0-9 . _ -`; `encodeAction` of a raw with a space gives `%20`, a double quote `%22`, `é` gives `%C3%A9`. `actionsFileText` is `JSON.stringify(actions, null, 2)` with no trailing newline, and its keys are in the order `kind`, `dir` (or `address`, `raw`). `replayCommand('02-the-chaser')` gives `node scripts/play.mjs 02-the-chaser --actions-file <actions-file>`; `..`, `a/b`, `A`, an empty string and a string with a space give null.
     - Command: `npx vitest --run tests/core.tokens.test.ts`. Expected: fails (module missing).
     - _Requirements: 7.2, 7.5, 7.6, 7.7, 7.8, 7.9_
 
-  - [ ] 6.2 Implement `tokens.ts`
+  - [x] 6.2 Implement `tokens.ts`
     - Create `ui/src/core/tokens.ts` as in the design ("Token codec"): a module-level `TextDecoder('utf-8', { fatal: true, ignoreBOM: true })`, a hand scan of the raw part, the address rule, no 40-byte limit.
     - Command: `npx vitest --run tests/core.tokens.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 7.2, 7.5, 7.6, 7.7, 7.9_
 
-  - [ ] 6.3 Write property test for the Token round trip
+  - [x] 6.3 Write property test for the Token round trip
     - Append to `ui/tests/core.tokens.test.ts`. Add `arbAction` and `arbActionList` (1 to 40 actions; moves from `N S E W`; `wait`; `undo`; edits with an address of 1 to 3 capital letters and 1 to 3 digits and a `raw` from `arbCodePointString`, so no lone surrogate) to `ui/tests/arbitraries.ts`. Tag `// Feature: dashboard, Property 8: Token round trip`. Check `decodeActions(encodeActions(list))` equals `list`; also check that the encoded tokens match the grammar (no character outside `A-Z a-z 0-9 . _ - % : =` in an edit token, and `%` always followed by two upper-case hex digits), and an example check of the C3-f token. `numRuns` 100 or more. Failure rule as in task 3.3.
     - **Property 8: Token round trip**
     - Command: `npx vitest --run tests/core.tokens.test.ts`. Expected: passes.
     - _Requirements: 7.8, 10.5; Properties: 8_
 
-  - [ ] 6.4 Write property test for the decoder's totality
+  - [x] 6.4 Write property test for the decoder's totality
     - Append to `ui/tests/core.tokens.test.ts`. Tag `// Feature: dashboard, Property 9: Decoder totality and rejection`. Checks over arbitrary strings: `decodeToken` never throws and returns an action or null; a token built as `edit:A1=` plus a raw part that holds a lone `%`, a `%` followed by one hex digit, a `%` followed by a non-hex pair, or an invalid UTF-8 byte sequence (built from a list of known invalid sequences) is null; for any valid action list, replacing every upper-case hex digit pair of the encoded tokens with lower case decodes to the same actions. `numRuns` 100 or more. Failure rule as in task 3.3.
     - **Property 9: Decoder totality and rejection**
     - Command: `npx vitest --run tests/core.tokens.test.ts`. Expected: passes.
     - _Requirements: 7.9, 10.5; Properties: 9_
 
-- [ ] 7. Latest run, level entries and trend
-  - [ ] 7.1 Write the failing unit tests for `results.ts`
+- [x] 7. Latest run, level entries and trend
+  - [x] 7.1 Write the failing unit tests for `results.ts`
     - Create `ui/tests/core.results.test.ts`. Import from `../src/core/results` (missing) and the fixtures.
     - Cases for `parseSchema`: 1 gives no notice; 2, `"1"`, absent and `null` give the notice `This value comes from a different schema version (found: N)` or `(found: none)`. `parseLatest`: the real fixture gives the run id, state, short commit (first 7 characters), the time from `finishedAt`, the full hash; `commit` null gives `commit unknown` data; a `failure` record is copied with each field clipped to 200; `failure` with a wrong type is null; a `finishedAt` that is not a string falls back to `startedAt`; a `finishedAt` string that does not parse gives `time unknown` and no fallback; a `state` outside the four is null; a non-record is null. `parseLevelEntries`: valid entries kept; a non-record, a missing `levelId`, a missing or non-string `colour` dropped and counted; an unknown colour string becomes `error` with the label `Unknown colour`; a repeated `levelId` keeps the first and counts the rest; `inkSpent` and `minimalInk` both finite integers at least 0 give `ink`, otherwise null; `endHp` finite at least 0 kept, `-1` and `"3"` give null; `timedOut` only for exactly `true`; 101 entries keep 100 and count 1. `parseTrend`: a non-array gives no runs and a dropped count of 1; entries without a string `runId` or a finite integer `counter` are dropped and counted; the counts use `readCount` (a string `"3"` gives null); `levels` that is not a record becomes `{}`; keys with non-string values are ignored; an unknown colour in the map becomes `error`; sorting by `counter` descending, ties by `startedAt` descending, then `runId` descending; a repeated `runId` keeps the first after sorting; 31 entries keep 30 and count 1.
     - Command: `npx vitest --run tests/core.results.test.ts`. Expected: fails (module missing).
     - _Requirements: 2.3, 2.4, 2.5, 2.6, 2.7, 2.10, 3.7, 3.8, 4.5, 4.6, 4.7, 4.11, 5.1, 5.3, 5.11_
 
-  - [ ] 7.2 Implement `results.ts`
+  - [x] 7.2 Implement `results.ts`
     - Create `ui/src/core/results.ts` with `parseSchema`, `parseLatest`, `parseLevelEntries` and `parseTrend` as in the design ("Validation of each part").
     - Command: `npx vitest --run tests/core.results.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 2.3, 2.5, 2.6, 2.7, 4.11_
 
-  - [ ] 7.3 Write property test for the trend order and size
+  - [x] 7.3 Write property test for the trend order and size
     - Append to `ui/tests/core.results.test.ts`. Add `arbTrendEntry` and `arbTrend` to `ui/tests/arbitraries.ts` (valid entries with counters in any order, repeated `runId`s, repeated counters, 0 to 80 entries, and `arbJson` elements mixed in). Tag `// Feature: dashboard, Property 4: Trend order and size`. Checks: `runs` has at most 30 entries; it is sorted by `counter` descending, with ties by `startedAt` descending and then `runId` descending; no `runId` repeats; the dropped count plus the kept count equals the number of input elements minus the removed duplicates. `numRuns` 100 or more. Failure rule as in task 3.3.
     - **Property 4: Trend order and size**
     - Command: `npx vitest --run tests/core.results.test.ts`. Expected: passes.
     - _Requirements: 4.11, 2.7, 4.14; Properties: 4_
 
-- [ ] 8. Findings
-  - [ ] 8.1 Write the failing unit tests for `findings.ts`
+- [x] 8. Findings
+  - [x] 8.1 Write the failing unit tests for `findings.ts`
     - Create `ui/tests/core.findings.test.ts`. Import from `../src/core/findings` (missing) and the fixtures.
     - Cases for `parseFindings`: absent gives `present` false and no drop; a record with `items` empty gives `present` true and an empty list; a legacy array, a string and a number give `present` false and `dropped` 1; the header: `updatedAt`, `commit` and its short form, `huntId`, six counts (a count that is not a finite integer at least 0 is null); a different `schemaVersion` gives the notice; one Finding of the fixture gives `classLabel` `Cheaper win`, `commitShort`, the formatted time, `tokensText`, `replayCommand`, `actionsFileText`, the result fields; classes `free_win` and `unexpected_route` give `Free win` and `Unexpected route`; an unknown class shows the stored string clipped to 40; a Finding with 41 tokens, with a 141-character token, with no `actions`, with a non-string `id` is dropped and counted; a Finding with a token that does not decode is kept with `actionsFileText` null; a level id that does not match `^[a-z0-9][a-z0-9-]*$` is kept with `replayCommand` null; ordering by `foundAt` descending then `id` descending, an unparseable `foundAt` sorts last; duplicates (same level id, class and tokens) keep the first in that order and are not counted; 21 distinct valid items keep 20 and count 1. `isEarlierCommit`: both present and different gives true; equal, either null or an empty string gives false.
     - Command: `npx vitest --run tests/core.findings.test.ts`. Expected: fails (module missing).
     - _Requirements: 2.3, 2.4, 2.5, 2.7, 5.4, 5.5, 6.1, 6.2, 6.3, 6.5, 6.7, 7.2, 7.5, 7.6_
 
-  - [ ] 8.2 Implement `findings.ts`
+  - [x] 8.2 Implement `findings.ts`
     - Create `ui/src/core/findings.ts` with `parseFindings` and `isEarlierCommit` as in the design ("Findings order and caps"). It uses `tokens.ts` for `replayCommand` and `actionsFileText`.
     - Command: `npx vitest --run tests/core.findings.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 2.3, 2.7, 6.1, 6.3, 6.5, 6.7, 7.1, 7.2, 7.5, 7.6_
 
-  - [ ] 8.3 Write property test for the findings view
+  - [x] 8.3 Write property test for the findings view
     - Append to `ui/tests/core.findings.test.ts`. Add `arbFinding` and `arbFindingsValue` to `ui/tests/arbitraries.ts` (up to 40 items, with duplicates, out-of-order and equal times, tokens from `arbActionList` encoded, class strings from the three known and arbitrary ones, and invalid items built by `corrupt`). Tag `// Feature: dashboard, Property 7: Findings view`. Checks: at most 20 items; no two items with the same level id, class and token list; the items are in `foundAt` descending order (parsed time, unparseable last) then `id` descending; every item has 1 to 40 tokens of at most 140 characters; `dropped` equals the number of invalid items plus the number of distinct valid items beyond 20. `numRuns` 100 or more. Failure rule as in task 3.3.
     - **Property 7: Findings view**
     - Command: `npx vitest --run tests/core.findings.test.ts`. Expected: passes.
     - _Requirements: 6.3, 6.7, 6.8, 2.7; Properties: 7_
 
-- [ ] 9. Crons
-  - [ ] 9.1 Write the failing unit tests for `crons.ts`
+- [x] 9. Crons
+  - [x] 9.1 Write the failing unit tests for `crons.ts`
     - Create `ui/tests/core.crons.test.ts`. Import from `../src/core/crons` (missing) and the cron fixtures.
     - Cases: `findReplayJob` picks the job named exactly `replay`; the job whose name ends with `/replay`; when no name matches, the job whose `script` contains `replay_cron.py`; the first match in list order; no job gives `not-registered`; `jobs` that is not an array gives `unavailable`; only the first 50 jobs are inspected. `parseJob`: `last_run_ts` and `next_run_ts` in seconds, milliseconds and ISO string form give `YYYY-MM-DD HH:MM UTC`; a value of another type gives `time unknown`; `last_status` clipped to 40; `is_running` only for exactly `true`; `consecutive_failures` by `readCount`; `paused` when `user_paused` is `true` or `enabled` is `false`; the result object has no key `script`, `command` or `folder` and no value that contains the `script` string of the input. `readIsRunning(cronsValue)` is true only for a found replay job with `is_running` exactly true, and false for anything else including `null`.
     - Command: `npx vitest --run tests/core.crons.test.ts`. Expected: fails (module missing).
     - _Requirements: 5.6, 5.7, 5.8, 5.9, 5.10, 3.11, 8.5; Assumption A-5, A-6_
 
-  - [ ] 9.2 Implement `crons.ts`
+  - [x] 9.2 Implement `crons.ts`
     - Create `ui/src/core/crons.ts` with `findReplayJob`, `parseJob`, `readIsRunning` as in the design. The `script` string is read only inside `findReplayJob`.
     - Command: `npx vitest --run tests/core.crons.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 5.6, 5.7, 5.8, 5.9, 5.10, 8.5_
 
-- [ ] 10. Level cards
-  - [ ] 10.1 Write the failing unit tests for `cards.ts`
+- [x] 10. Level cards
+  - [x] 10.1 Write the failing unit tests for `cards.ts`
     - Create `ui/tests/core.cards.test.ts`. Import from `../src/core/cards` (missing).
     - Cases: the ids are the union of `latest.levels` and the newest run's `levels`, sorted ascending by plain comparison (`02` before `10`, `a` before `b`, upper case before lower case is not a concern because ids are lower case); a card from `latest.levels` shows its entry; a card only in the newest run takes the run's colour, has `noDetail` true and no ink or end HP; `outcome` is `won` for green and amber, `not won` for red, `not judged` for error, `no result` for none; the trend cells are one per run in `runs`, newest first, with `none` where the run does not name the level; `trendText` for 12 runs of 11 green and 1 amber is `Last 12 runs: 11 green, 1 amber`; zero runs give `No runs recorded`; counts of zero are left out and the order is green, amber, red, not judged, no result; 101 distinct ids keep 100; the colour of a card does not change when `inkSpent` and `minimalInk` change.
     - Command: `npx vitest --run tests/core.cards.test.ts`. Expected: fails (module missing).
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10_
 
-  - [ ] 10.2 Implement `cards.ts`
+  - [x] 10.2 Implement `cards.ts`
     - Create `ui/src/core/cards.ts` with `buildCards` as in the design ("Cards and the trend"). It never reads `inkSpent` or `minimalInk` to decide a colour.
     - Command: `npx vitest --run tests/core.cards.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 4.1, 4.4, 4.8, 4.9, 4.10_
 
-  - [ ] 10.3 Write property test for one card per level id
+  - [x] 10.3 Write property test for one card per level id
     - Append to `ui/tests/core.cards.test.ts`. Add `arbLevelEntry` and `arbLatest` to `ui/tests/arbitraries.ts`. Tag `// Feature: dashboard, Property 5: One card per level id`. Checks: for any level entries and any trend, the card ids are exactly the distinct ids of the entries and of the newest run (capped at 100), in ascending order, with no card for any other id. `numRuns` 100 or more. Failure rule as in task 3.3.
     - **Property 5: One card per level id**
     - Command: `npx vitest --run tests/core.cards.test.ts`. Expected: passes.
     - _Requirements: 4.1, 4.14; Properties: 5_
 
-  - [ ] 10.4 Write property test for colour and label
+  - [x] 10.4 Write property test for colour and label
     - Append to `ui/tests/core.cards.test.ts`. Tag `// Feature: dashboard, Property 6: Colour and label`. Checks over generated entries (known and unknown colour strings, any ink values): every card colour is one of `green`, `amber`, `red`, `error`, `none`; for a known colour the `label` equals `colourLabel(colour)`; for an unknown colour string the colour is `error` and the label is `Unknown colour`; `markerClass(a) === markerClass(b)` exactly when `a === b`; replacing the ink values of every entry by arbitrary values leaves every card colour unchanged. `numRuns` 100 or more. Failure rule as in task 3.3.
     - **Property 6: Colour and label**
     - Command: `npx vitest --run tests/core.cards.test.ts`. Expected: passes.
     - _Requirements: 2.10, 4.3, 4.4, 10.4; Properties: 6_
 
-- [ ] 11. View_Model, change key and app-name notice
-  - [ ] 11.1 Write the failing unit tests for `viewmodel.ts`, `change-key.ts` and `app-name.ts`
+- [x] 11. View_Model, change key and app-name notice
+  - [x] 11.1 Write the failing unit tests for `viewmodel.ts`, `change-key.ts` and `app-name.ts`
     - Create `ui/tests/core.viewmodel.test.ts`. Import from `../src/core/viewmodel`, `../src/core/change-key` and `../src/core/app-name` (missing), and the fixtures. A helper `route(value, status)` builds a `RouteState`.
     - Cases for `buildViewModel`: both routes `pending` give `loading` true; a good config with no key gives `hasData` true and `present` false; `config.replay-two-runs.json` gives five green cards, two runs, commit `6372d9a`, `findings.present` false, no stale warning at a `nowMs` one hour after the replay; the same at 37 hours gives `stale` true; `config.amber-and-red.json` gives the amber, red, timed-out and error cards; `config.failed-run.json` gives `replay.failure` with stage, reason code and message and no cards; `config.findings-only.json` gives `replay` null and the findings; `config.with-findings.json` gives two findings; `config.schema-2.json` gives the schema notice and still reads the parts; a config route `failed` with a good value keeps the results and carries the error text and the read time; a config route `failed` without a good value gives `hasData` false and the error; a crons route `failed` gives the job area error and leaves the results unchanged; `crons.replay-idle.json`, `-running.json`, `-failing.json` and `-none.json` give a found job, a running job, `consecutiveFailures` above 0, and `not-registered`; the View_Model contains no `script` text; every value is JSON (a `JSON.parse(JSON.stringify(vm))` round trip gives an equal object). A part that throws inside a builder is replaced by its empty state (inject a getter that throws on an input record). `changeKey`: equal for the same data with different read times, different when a level colour or a finding changes. `appNameNotice('grimsheet-playtester')` is null; another name gives a notice that holds both names; a non-string gives null.
     - Command: `npx vitest --run tests/core.viewmodel.test.ts`. Expected: fails (module missing).
     - _Requirements: 2.1, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.12, 5.1, 5.11, 8.10, 8.11, 9.9, 11.7_
 
-  - [ ] 11.2 Implement `viewmodel.ts`, `change-key.ts` and `app-name.ts`
+  - [x] 11.2 Implement `viewmodel.ts`, `change-key.ts` and `app-name.ts`
     - Create `ui/src/core/viewmodel.ts` (the types of the design and `buildViewModel`, wrapping each part builder in its own `try`), `ui/src/core/change-key.ts` (`changeKey(vm)` is `JSON.stringify` of `vm.results` and `vm.job`) and `ui/src/core/app-name.ts` (`appNameNotice`).
     - Command: `npx vitest --run tests/core.viewmodel.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 5.11, 9.9_
 
-  - [ ] 11.3 Write property tests for totality and determinism
+  - [x] 11.3 Write property tests for totality and determinism
     - Append to `ui/tests/core.viewmodel.test.ts`. Add `arbResultsValue`, `arbCronJob`, `arbCronsValue` and `arbRouteState` to `ui/tests/arbitraries.ts`. Two tests, tags `// Feature: dashboard, Property 1: Total View_Model` and `// Feature: dashboard, Property 2: Deterministic`. Property 1: for any JSON value as the config value, any JSON value as the crons value, any statuses and any value from `arbNow`, `buildViewModel` returns an object with the keys of the View_Model and does not throw. Property 2: two calls with equal inputs (the second built by `structuredClone`) return results that are equal with `toStrictEqual`. `numRuns` 100 or more. Failure rule as in task 3.3.
     - **Property 1: Total View_Model**, **Property 2: Deterministic**
     - Command: `npx vitest --run tests/core.viewmodel.test.ts`. Expected: passes.
     - _Requirements: 2.2, 2.8, 10.3, 10.7; Properties: 1, 2_
 
-  - [ ] 11.4 Write property test for "a bad part never blanks the good parts"
+  - [x] 11.4 Write property test for "a bad part never blanks the good parts"
     - Append to `ui/tests/core.viewmodel.test.ts`. Tag `// Feature: dashboard, Property 3: A bad part never blanks the good parts`. Start from a valid Results_Value (`arbResultsValue` with `latest`, `trend` and `findings` all present), and replace one of `latest`, `trend`, `findings` by an arbitrary JSON value or remove it. Compare with the View_Model of the unchanged value: replacing `latest` leaves `results.runs`, `results.findings` and `job` equal; replacing `trend` leaves `results.replay`, `results.findings` and `job` equal; replacing `findings` leaves `results.replay`, `results.runs`, `results.levels` and `job` equal. Replacing the crons value (by any JSON) leaves `results` equal. `numRuns` 100 or more. Failure rule as in task 3.3.
     - **Property 3: A bad part never blanks the good parts**
     - Command: `npx vitest --run tests/core.viewmodel.test.ts`. Expected: passes.
     - _Requirements: 2.3, 10.6; Properties: 3_
 
-  - [ ] 11.5 Write property test for the stale warning
+  - [x] 11.5 Write property test for the stale warning
     - Append to `ui/tests/core.viewmodel.test.ts`. Tag `// Feature: dashboard, Property 11: Stale warning`. Over `arbResultsValue` (with `finishedAt` and `startedAt` as valid ISO strings, absent, null, unparseable strings and non-strings) and finite `nowMs` built as the replay time plus an offset taken around the boundary (offsets from -1 hour to 72 hours, and the exact values 129,600,000 and 129,600,001): `replay.stale` is true exactly when the replay time (the `finishedAt` string if it is a string, otherwise `startedAt`) parses and `nowMs - time > 129600000`. Add example tests for the boundary (exactly 36 hours is not stale, one millisecond more is), an unparseable `finishedAt` (no fallback, no warning), an absent time, a time in the future, and a `nowMs` that is `NaN`, `Infinity`, a string or `null` (no warning). `numRuns` 100 or more. Failure rule as in task 3.3.
     - **Property 11: Stale warning**
     - Command: `npx vitest --run tests/core.viewmodel.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 5.11, 10.11; Properties: 11_
 
-- [ ] 12. Poll scheduler
-  - [ ] 12.1 Write the failing unit tests for `poll.ts`
+- [x] 12. Poll scheduler
+  - [x] 12.1 Write the failing unit tests for `poll.ts`
     - Create `ui/tests/core.poll.test.ts`. Import from `../src/core/poll` (missing).
     - Cases for `decide`: hidden gives `none`; in flight gives `none`; no previous start gives `start`; 59,999 ms after the last start gives `wait` with `ms` 1; exactly 60,000 ms gives `start`; with `isRunning` true the interval is 15,000; the effective interval never exceeds the base interval. Cases for `step`: `mount` while visible starts at once and sets `inFlight` and `lastStartMs`; `mount` while hidden does nothing; `tick` starts or waits by `decide`; `visibility` to hidden gives `none`; `visibility` to visible after more than one interval starts at once, and after less gives `wait` for the rest; `refresh` while visible and idle starts; `refresh` while in flight or hidden gives `none`; `complete` clears `inFlight`, takes `isRunning` and decides; a `complete` with nothing in flight changes nothing but `isRunning` and cannot start before the interval; `unmount` closes the scheduler and every later event gives `none`.
     - Command: `npx vitest --run tests/core.poll.test.ts`. Expected: fails (module missing).
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.9, 8.12_
 
-  - [ ] 12.2 Implement `poll.ts`
+  - [x] 12.2 Implement `poll.ts`
     - Create `ui/src/core/poll.ts` as in the design ("Poll scheduler as a state machine"): `POLL_INTERVAL_MS`, `RUNNING_INTERVAL_MS`, `decide`, `step`, `initialScheduler`.
     - Command: `npx vitest --run tests/core.poll.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 8.3, 8.4, 8.5, 8.6, 8.7, 8.12_
 
-  - [ ] 12.3 Write property test for the poll scheduler
+  - [x] 12.3 Write property test for the poll scheduler
     - Append to `ui/tests/core.poll.test.ts`. Add `arbSchedulerEvents` (sequences of `tick`, `visibility`, `refresh` and `complete` with non-decreasing times) to `ui/tests/arbitraries.ts`. Tag `// Feature: dashboard, Property 10: Poll scheduler`. The model completes every Read it starts, at a generated later time. Checks for every prefix: the number of Reads in flight is never above 1; no `start` effect is returned while `visible` is false or `closed` is true; every `start` from a `tick` or a `visibility` event comes at least one effective interval after the previous start (or is the first); `decide` never returns an interval above `POLL_INTERVAL_MS`; after the sequence, with the page visible and nothing in flight, a `tick` at a time past the interval gives `start` (progress). `numRuns` 100 or more. Failure rule as in task 3.3.
     - **Property 10: Poll scheduler**
     - Command: `npx vitest --run tests/core.poll.test.ts`. Expected: passes.
     - _Requirements: 8.3, 8.4, 8.5, 8.6, 8.7, 8.12, 8.13; Properties: 10_
 
-- [ ] 13. Checkpoint: the pure core
-  - [ ] 13.1 Ensure the core tests, the typecheck and the guards pass
-    - In `ui/` run `npm test`, then `npm run typecheck`. Both must pass. Check with a read-only search that nothing under `ui/src/core/` imports `react`, `react-dom`, `@kirocrew/app-sdk` or a file outside `core/`. From the repository root run `npm test` once more and check that it still collects no file under `ui/` (task 1.2). Ask the user if questions arise.
+- [x] 13. Checkpoint: the pure core
+  - [x] 13.1 Ensure the core tests, the typecheck and the guards pass
+    - In `ui/` run `npm test`, then `npm run typecheck`. Both must pass. Check with a read-only search that nothing under `ui/src/core/` imports `react`, `react-dom`, `@kirocrew/app-sdk` or a file outside `core/`. From the repository root run `npm test` once more and check that it still runs the same number of files and tests as the baseline of task 1.2 and collects no file under `ui/`. Ask the user if questions arise.
     - _Requirements: 10.1, 10.12_
 
 - [ ] 14. Controller
