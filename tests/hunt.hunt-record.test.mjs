@@ -180,6 +180,17 @@ describe('markCutShort', () => {
     expect(r.finishedAt).toBeNull();
   });
 
+  it('leaves a running record exactly 2400 s old unchanged', () => {
+    const r = ready();
+    expect(markCutShort(r, START_MS + 2400 * 1000)).toEqual(r);
+  });
+
+  it('turns a running record 2400 s and 1 ms old into cut-short and leaves finishedAt null', () => {
+    const r = markCutShort(ready(), START_MS + 2400 * 1000 + 1);
+    expect(r.state).toBe('cut-short');
+    expect(r.finishedAt).toBeNull();
+  });
+
   it('is idempotent', () => {
     const once = markCutShort(ready(), old);
     expect(markCutShort(once, old)).toEqual(once);
@@ -277,16 +288,15 @@ describe('what the record holds', () => {
 
 // Feature: exploit-hunt, Property 13: Cut-short is idempotent and final states are final
 // Clock = the record's startedAt plus a generated offset in ms. The offset is either near the 2400 s boundary
-// (but never exactly on it, because the design does not say which side exactly 2400 s falls on) or anywhere
-// from before the start to far past it, so running records are covered both young and old.
+// (including exactly on it) or anywhere from before the start to far past it. A running record exactly 2400 s
+// old is still live (unchanged); only strictly more than 2400 s becomes cut-short.
 describe('Property 13: Cut-short is idempotent and final states are final', () => {
   const LIMIT_MS = 2400 * 1000;
-  const arbOffsetMs = fc
-    .oneof(
-      fc.integer({ min: -LIMIT_MS, max: 3 * LIMIT_MS }),
-      fc.integer({ min: LIMIT_MS - 5000, max: LIMIT_MS + 5000 }),
-    )
-    .filter((ms) => ms !== LIMIT_MS);
+  const arbOffsetMs = fc.oneof(
+    fc.integer({ min: -LIMIT_MS, max: 3 * LIMIT_MS }),
+    fc.integer({ min: LIMIT_MS - 5000, max: LIMIT_MS + 5000 }),
+    fc.constantFrom(LIMIT_MS, LIMIT_MS + 1),
+  );
   const arbCase = fc.tuple(arbHuntRecord, arbOffsetMs);
 
   it('holds for any record and any clock', () => {
@@ -307,7 +317,7 @@ describe('Property 13: Cut-short is idempotent and final states are final', () =
           expect(failRecord(r, { finishedAt: END_ISO, failure: FAILURE })).toEqual(r);
         } else {
           expect(r.state).toBe('running');
-          if (offsetMs < LIMIT_MS) {
+          if (offsetMs <= LIMIT_MS) {
             expect(once).toEqual(r);
           } else {
             expect(once).toEqual({ ...r, state: 'cut-short' });
