@@ -1,0 +1,18 @@
+E35: first install of grimsheet-playtester (packaging task 11)
+date: 2026-11-08. Crew 0.12.0. Paths use ~ and %USERPROFILE%. CREW = the CLI by the path built from $env:ProgramFiles.
+
+1. CREW app info grimsheet-playtester
+   App 'grimsheet-playtester' is not installed.
+   exit=1
+
+2. git clone https://github.com/UBayouski/Grimsheet-Playtester.git %USERPROFILE%\crew-install-src\grimsheet-playtester
+   exit=0
+   checks: git status --porcelain empty; data\ absent; ui\dist\index.mjs present (43902 bytes, SHA-256 9BB096655C7EC5A8C53144D1DD6B703394721865704E2DAA1D1382416C444E58); spike\ absent; HEAD 9c2f703 Merge pull request #1
+
+3. CREW app install %USERPROFILE%\crew-install-src\grimsheet-playtester
+   12:13:11 WARNING kiro_crew.apps.bridges: App grimsheet-playtester: skipping executable resource registration (resource_register): third-party app execution is disabled; trust this app alone from the dashboard's App Store, whose install, update and enable prompts ask for it (agent.apps_trusted), or set agent.apps_allow_third_party=true to allow every third-party app's Python, backend, and manifest shell code
+   installed grimsheet-playtester v1.0.0
+      registration blocked by execution policy: third-party app execution is disabled; trust this app alone from the dashboard's App Store, whose install, update and enable prompts ask for it (agent.apps_trusted), or set agent.apps_allow_third_party=true to allow every third-party app's Python, backend, and manifest shell code
+
+      Run: kirocrew app enable grimsheet-playtester
+   exit=0

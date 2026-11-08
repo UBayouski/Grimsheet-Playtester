@@ -243,7 +243,7 @@ Checks for the `exploit-hunt` spec (Requirement 13), run on 2026-11-07 on Window
 - Agent runs used: 4 of 5 (limit of 13.11); run 5 was skipped by the developer.
 
 ## i. Packaging: how an API request carries the token
-Checked on 2026-11-09 for the `packaging` spec (task 1.2), on Windows 11, Crew 0.12.0. Read only: the help text of `kirocrew token --help` and Kiro's documentation power for the library `/kirodotdev/kirocrew`. No token was printed, read or stored, and `kirocrew token` itself was not run.
+Checked on 2026-11-08 for the `packaging` spec (task 1.2), on Windows 11, Crew 0.12.0. Read only: the help text of `kirocrew token --help` and Kiro's documentation power for the library `/kirodotdev/kirocrew`. No token was printed, read or stored, and `kirocrew token` itself was not run.
 
 - Question: which form does a request to the gateway's `/api/...` routes use for the dashboard access token, a header or a query parameter?
 - Answer from the help text: `kirocrew token` prints "a dashboard access URL with auth token" and takes `--port`, `--ttl` (default 20h) and `--embed-parent-port`. The help text does not say how an API request carries the token.
@@ -253,3 +253,52 @@ Checked on 2026-11-09 for the `packaging` spec (task 1.2), on Windows 11, Crew 0
 - The address that `kirocrew token` prints contains the token. The user runs the command in their own terminal and pastes the address into the masked prompt of the reader, which takes the gateway origin and the token from it. The address is never written anywhere and the agent never sees it.
 - Basis: Docs say (the help text and the three documentation pages above); nothing here was observed on the gateway.
 - Evidence: none (no gateway request was made).
+
+## j. Packaging: first real install on this machine
+Run on 2026-11-08, Windows 11, Kiro Crew 0.12.0 (KiroCrew desktop app), for the `packaging` spec (tasks 11 and 12). The app was installed from a clone of the public repository (`https://github.com/UBayouski/Grimsheet-Playtester.git`, commit 9c2f703, the merge of PR #1) made in `%USERPROFILE%\crew-install-src\grimsheet-playtester`. Paths use ~. No token or dashboard address is recorded: the user ran `kirocrew token`, opened the address in the browser and pasted it only at the masked prompt of the route reader. Evidence ids are E35 to E39.
+
+### j.1 Install and its warning
+- Question: what does a local install of the final app print?
+- Answer: before the install, `kirocrew app info grimsheet-playtester` said the app is not installed (exit 1). `kirocrew app install <clone>` exited 0 and printed "installed grimsheet-playtester v1.0.0" and a warning that registration is blocked by the execution policy. The wording is new compared with the spike: it says to trust the app alone from the dashboard's App Store, "whose install, update and enable prompts ask for it", and it names two settings, `agent.apps_trusted` (this app alone) and `agent.apps_allow_third_party` (every third-party app). The line "Run: kirocrew app enable grimsheet-playtester" is still printed. The README does not tell anyone to change either setting.
+- Basis: Observed. Evidence: E35.
+
+### j.2 Trust and enable
+- Answer: the user trusted and enabled the app in the dashboard; no CLI enable was run. Which screen and which button label: not observed. A permission prompt for the two api paths: none noticed. After that, `app info` shows `enabled: true`, `updatedAt` about four minutes after `installedAt`, `approvedGrantsStored: true`, and `approvedGrants.api` holding exactly `/api/apps/grimsheet-playtester/config` and `/api/crons`, with no events. `approved-grants.json` in the app folder holds the same two paths and empty lists for every other kind. Whether the grants needed an action by the user: not observed.
+- Library and Details (user report): Enabled; "UBayouski · v1.0.0"; "Source Unknown"; Author UBayouski; Installed 11/8/2026; "Origin: Registry | Resources: Gateway | Lifecycle: Gateway" (the origin says Registry although this was a local install); buttons Disable, Sync and Uninstall. Resources card: playtester (agent), play-level and find-exploits (skills), replay (cron). Permissions card: the two api paths and "Cron: yes". The replay job showed as Ready on the Schedule page's List tab when first looked at, before any run; when it appeared (Q14) was not noticed.
+- Basis: Observed. Evidence: E36, E38.
+
+### j.3 What the gateway stored
+- The stored manifest equals `app.json`, except that the cron's `enabled: true` is dropped (a default) and the key order differs. There is no `storage` key. The field `source` of `app info` is the folder that was installed from, so a Sync reads that clone folder and not the GitHub repository.
+- The generated agent file `~\.kiro\agents\grimsheet-playtester--playtester.json` has `tools` equal to `["execute_bash"]`, the single resource `skill://~/.kiro/crew/apps/grimsheet-playtester/skills/*/SKILL.md`, no `allowedTools`, no `model`, and the prompt of `agents/playtester.json` unchanged. The App Kit adds `"mcpServers": {}`.
+- Basis: Observed. Evidence: E36.
+
+### j.4 Files copied at install (Q11)
+- The installed app folder holds every top-level entry of the clone except `.git`: `.github`, `.kiro`, `agents`, `docs`, `scripts`, `skills`, `tests`, `ui`, `.gitattributes`, `.gitignore`, `app.json`, `KIRO_USAGE.md`, `LICENSE`, `package-lock.json`, `package.json`, `README.md`, `tsconfig.json` and `vitest.config.mjs`. The gateway adds `app-crons.json`, `installed.json`, `approved-grants.json`, a secret file (not read) and a `data` folder (the clone had none; before the first run `data\` held only `config.json` with `{}`). No way to exclude files was found, and none is needed.
+- Basis: Observed. Evidence: E36.
+
+### j.5 The page (Q9, Q10, Q2) and the clipboard
+- The page renders from the default export of `dist/index.mjs` with no `mountFunction` and no `entryPoint` in the manifest (Q9 closed). Its empty state reads "No results yet. The nightly replay has not written any results." and it shows a Replay job card. Both routes answered.
+- The host serves React through small shims at `/vendor/react.mjs` and `/vendor/react-jsx-runtime.mjs`. `React.version` read in the page console is 18.3.1, equal to the `ui/` pins (Q10 closed, no change).
+- Response headers on host files include `Permissions-Policy: clipboard-write=(self), clipboard-read=(self)`. The clipboard check itself is not done: the page has no copy button until there are findings (moved to the first hunt, task 15).
+- Icon (Q2): the icon name `Ghost` did not render. The sidebar and the Details card show a default cube glyph. The fallback `Moon` was not tried. The spike never confirmed that any icon name renders, and a built-in app uses `Radio`, so the host may support only some names.
+- After the first run the markers, card borders, trend squares and the runs table render. Headings render at body-text size and weight, probably because the host's CSS resets them.
+- Basis: Observed (user report). Evidence: E38.
+
+### j.6 The cron: name and time formats (dashboard Q3, Q6)
+- `GET /api/crons`, read with the route reader (query form of the token, status 200): one job, name `grimsheet-playtester/replay`, enabled, not paused, not running, `consecutive_failures` 0. The page's replay-job rule finds exactly one job. `next_run_ts` is an integer in epoch seconds (1794222000 is 2026-11-09T11:00:00Z, 03:00 in Los Angeles). Before the first run `last_run_ts` and `last_status` were null. Read again after the first run, `last_status` is "ok" and `last_run_ts` is epoch seconds with a fraction (1794170709.9848802), equal to the `finished_at` of the Executions detail: it marks the end of the run, not its start (Q6 closed).
+- The Schedule page's List tab shows the job ID starting 1077d, "No owning session", type "script · python", schedule "3:00 AM America/Los Angeles", status Ready. Its Message column shows the full script path, so no screenshot of that page is kept. The Executions run detail gives `started_at` and `finished_at` in epoch seconds with fractions.
+- The query form of the token worked on the first try; the bearer form is untried (decision D6 of the packaging design).
+- Basis: Observed. Evidence: E38.
+
+### j.7 Developer path and the build (Q4)
+- In `ui/` of the clone: `npm ci` exited 0 (47 packages added, 0 vulnerabilities) and printed an npm warning that `esbuild@0.28.2` has a postinstall script not covered by `allowScripts` (exact text in E39). The build worked anyway. `npm run build` exited 0 (32 modules, `index.mjs` 43.90 kB, check-dist ok, 43902 bytes). `git status --porcelain` stayed empty, and the SHA-256 of `ui/dist/index.mjs` was the same in the working folder's build, two temp-folder builds and the clone: the build is reproducible byte for byte.
+- Basis: Observed. Evidence: E39.
+
+### j.8 First replay run (Q7)
+- Before the run, `%LOCALAPPDATA%\grimsheet-playtester` (a checkout left by earlier smoke runs) was renamed to `grimsheet-playtester.dev`, so the run did a fresh clone, `npm ci` and build. The user pressed Run on the Schedule page (trigger manual). The Executions row shows status OK, duration 9.1 s, summary empty. Run record `run-000001`: state complete, commit bea7a52 of Grimsheet `main`, five levels green with end HP 3, 3, 3, 5, 5, `resultsKey` ok. `last-launch.json`: exit code 0, outcome child-exited, control file missing (the default). No lock file was left. The page after Refresh shows five green cards with end HP, the runs table and the findings empty state.
+- Q7: 9.1 s against the 900 s limit, with a warm npm cache; a cold cache was not measured. No change to the timing values.
+- Basis: Observed. Evidence: E37.
+
+### j.9 Still open after this install
+- Q2 (the icon name), the trust screen and button label, when the job appeared (Q14), any prompt for the api paths, and the clipboard check.
+- Q3 (`permissions.storage`): not needed for the two reads; the page never writes. A write was not tried.

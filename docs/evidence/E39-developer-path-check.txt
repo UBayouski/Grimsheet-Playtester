@@ -1,0 +1,25 @@
+E39: developer path in the Install_Source clone (packaging task 11.7)
+date: 2026-11-08. Node and npm as on this machine. Run in <clone>\ui. Paths use ~.
+
+1. npm ci
+   added 47 packages, and audited 48 packages in 1s
+   11 packages are looking for funding
+     run `npm fund` for details
+   found 0 vulnerabilities
+   npm warn install-scripts 1 package has install scripts not yet covered by allowScripts:
+   npm warn install-scripts   esbuild@0.28.2 (postinstall: node install.js)
+   npm warn install-scripts
+   npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+   exit=0
+
+2. npm run build
+   vite v7.3.7 building client environment for production...
+   32 modules transformed.
+   dist/index.mjs  43.90 kB | gzip: 12.61 kB
+   built in 130ms
+   check-dist: ok (dist/index.mjs, 43902 bytes)
+   exit=0
+
+3. git -C <clone> status --porcelain  -> empty
+   SHA-256 of ui/dist/index.mjs: 9BB096655C7EC5A8C53144D1DD6B703394721865704E2DAA1D1382416C444E58
+   The same hash was seen for two builds into temp folders (task 1.1), the committed file, and the clone before and after this build.

@@ -156,51 +156,51 @@ Rules that apply to every task:
     - **STOP and ask the user** to review `git status --porcelain`, to commit the new and changed files, including `ui/dist/index.mjs`, `.gitignore` and `.gitattributes`, and then to push the commit to `https://github.com/UBayouski/Grimsheet-Playtester.git` (the agent runs no git write command). The hand steps clone from the pushed repository. Wait for the user to say that the commit and the push are done, then run `git status --porcelain` and `git log -1 --oneline` (read only) and report.
     - _Requirements: 8.2, 9.2_
 
-- [ ] 11. First real install (Hand_Run_Step; Requirement 9)
-  - [ ] 11.1 STOP: ask the user to approve the whole step (Gate A)
+- [x] 11. First real install (Hand_Run_Step; Requirement 9)
+  - [x] 11.1 STOP: ask the user to approve the whole step (Gate A)
     - Print the 17-step table of the design ("Requirement 9: first install") with the commands, the paths each touches, and the gates B to H. **STOP and ask the user** to approve the step. The clone source is fixed: the public repository `https://github.com/UBayouski/Grimsheet-Playtester.git`. Nothing runs before a yes. Commands run one at a time; the first unexpected output stops the step.
     - _Requirements: 9.1; design "Protocol for every Hand_Run_Step"_
 
-  - [ ] 11.2 Clone and verify the Clean_Clone (Gate B)
+  - [x] 11.2 Clone and verify the Clean_Clone (Gate B)
     - **STOP and ask the user** (Gate B), then `git clone https://github.com/UBayouski/Grimsheet-Playtester.git "$env:USERPROFILE\crew-install-src\grimsheet-playtester"`. The source is the public repository, so the install sees exactly what a judge clones (this needs the network and the user's push of task 10.3). Then `git -C <clone> status --porcelain` (expected empty), `Test-Path <clone>\data` (False), `Test-Path <clone>\ui\dist\index.mjs` (True), `Test-Path <clone>\spike` (False). Also `CREW app info grimsheet-playtester` before the install (expected: not installed).
     - Acceptance: the four checks match; the output is recorded with paths as `%USERPROFILE%`.
     - _Requirements: 9.2, 8.1_
 
-  - [ ] 11.3 Install (Gate C)
+  - [x] 11.3 Install (Gate C)
     - **STOP and ask the user** (Gate C). Then `CREW app install "$env:USERPROFILE\crew-install-src\grimsheet-playtester"` with `CREW` as the path built from `$env:ProgramFiles`. Record the exit code, the output and every warning, with paths shown as `~`.
     - _Requirements: 8.4, 8.5, 9.3_
 
-  - [ ] 11.4 Trust, enable and observe (Gate D)
+  - [x] 11.4 Trust, enable and observe (Gate D)
     - Tell the user to run `kirocrew token` in their own terminal, open the printed address, trust the app (Settings, Security, Third-party apps) and enable it. The agent does not run `kirocrew token` and does not ask for the address. **STOP** until the user says it is done (Gate D). Then ask the user what they see: Library (Enabled), the sidebar entry and whether the icon `Ghost` shows a glyph (Q2; if not, the manifest changes to `Moon`, only after the user approves, as a new small change of `app.json` with the Manifest_Check run again), the Schedule page (the `replay` job, and the point when it appeared: Q14), Details, Resources (one agent, two skills), whether `permissions.storage` was needed (Q3: the page's read of the Config_Route works without it).
     - _Requirements: 8.6, 8.8, 9.3, 9.10, 9.12; Open questions Q2, Q3, Q14_
 
-  - [ ] 11.5 Page checks and the crons read (Gate E)
+  - [x] 11.5 Page checks and the crons read (Gate E)
     - Ask the user to check in the page that it renders from the default export (R9.5), to read `React.version` once in the browser console (R9.6), and to press each copy button once (R9.7). IF the React major version is not 18, STOP and report; change the `ui/` React and type pins to the exact host version only after the user approves, followed by the `ui/` test and build gates.
     - **STOP and ask the user** to run `node scripts/packaging/read-route.mjs crons` in their own terminal in the working folder and to paste the printed summary (Gate E). Record the job `name`, the time formats and the Replay_Job rule result; the record holds no `script` value.
     - _Requirements: 9.4, 9.5, 9.6, 9.7; dashboard Q3, Q9, Q10_
 
-  - [ ] 11.6 Records of the installed state
+  - [x] 11.6 Records of the installed state
     - Run, one per call: `CREW app info grimsheet-playtester`; `Get-Content "$env:USERPROFILE\.kiro\agents\grimsheet-playtester--playtester.json"`; `Get-Content "$env:USERPROFILE\.kiro\crew\apps\grimsheet-playtester\approved-grants.json"` (never `.app_secret`). Record: the stored manifest and any field the gateway dropped or normalised; that the generated agent has `tools` with `execute_bash` and the `skill://` resource; what the grants file held; and whether trust or enable needed an action for the declared `permissions.api` entries.
     - _Requirements: 9.10, 9.11, 9.12_
 
-  - [ ] 11.7 Developer path check (Gate G)
+  - [x] 11.7 Developer path check (Gate G)
     - **STOP and ask the user** (Gate G). Then in `<clone>\ui`: `npm ci`, `npm run build`, and `git -C <clone> status --porcelain`. Copy the exact build-tool warning text if one is printed, or record that none appeared (Q4); the README may quote it only now (R8.9). Expected: `git status --porcelain` is empty, which shows that the build is reproducible on a second tree. IF it is not empty, STOP and report (design "Stale-bundle check").
     - _Requirements: 8.2, 8.9; Open question Q4_
 
-  - [ ] 11.8 Write the install records (Gate H)
+  - [x] 11.8 Write the install records (Gate H)
     - Show the user the planned text, then write: a Notes_File section for the first install (Observed; commands, exit codes, output, warnings, trust and enable steps, the answers to Q2, Q3, Q4, Q6, Q11, Q14, dashboard Q3, Q9, Q10, the clipboard result), new evidence files in `docs/evidence/` (next free ids) and the rows in `docs/evidence/INDEX.md`. The Crew version, the app version and the date go in. List the files in the installed folder to answer Q11 (names only). Check every record for a user name, home path or token before saving. No other repo file changes.
     - _Requirements: 9.3, 9.8 (partly), 9.13, 9.14_
 
-- [ ] 12. First replay run (Hand_Run_Step; Requirement 9)
-  - [ ] 12.1 STOP: ask the user to approve the run (Gate F)
+- [x] 12. First replay run (Hand_Run_Step; Requirement 9)
+  - [x] 12.1 STOP: ask the user to approve the run (Gate F)
     - **STOP and ask the user.** Say what the run does: it fetches Grimsheet `main` into `%LOCALAPPDATA%\grimsheet-playtester`, builds it, plays every stored solution, and writes into the installed app's `data\`. It needs the network. It must not be started within 20 minutes of 03:00 America/Los_Angeles. Wait for the yes.
     - _Requirements: 9.1, 9.8_
 
-  - [ ] 12.2 Run and record
+  - [x] 12.2 Run and record
     - The user presses **Run** on the Schedule page for `replay` and says when it has stopped. Record the Executions tab row (status, duration, trigger, summary), and whether the page then shows one card per level after a Refresh. Compare the duration with `timeout` 900 (Q7).
     - _Requirements: 9.8, 9.9; Open question Q7_
 
-  - [ ] 12.3 Read the sizes after the run
+  - [x] 12.3 Read the sizes after the run
     - **STOP and ask the user** to run `node scripts/packaging/read-route.mjs config` in their own terminal and paste the printed numbers. Record them in the working notes of this task only (the Notes_File entry is written in task 14.2, after task 13).
     - _Requirements: 9.8, 9.15_
 
@@ -307,8 +307,8 @@ Rules that apply to every task:
 
 - Hand steps need the user at the keyboard: they hold the gateway token and press the buttons of the dashboard. The agent runs only the commands that name no token.
 - The reproducibility result of task 1.1 and the token form of task 1.2 are recorded here once known:
-  - Build reproducibility (task 1.1): done 2026-11-09. Two builds into temp folders and `ui/dist/index.mjs` have the same SHA-256 and the same size (43902 bytes). The byte comparison of the design stays. The temp folders were removed.
-  - Token form (task 1.2): done 2026-11-09. `kirocrew token --help` does not say how a request carries the token. The documentation shows the dashboard token as `?token=` (query); `Authorization: Bearer` is documented only for webhooks. `TOKEN_FORM` defaults to `query`, `bearer` stays supported; neither was tried on the gateway (notes, section i). Task 6.3 is not marked as needed yet; task 11.5 shows which form works.
+  - Build reproducibility (task 1.1): done 2026-11-08. Two builds into temp folders and `ui/dist/index.mjs` have the same SHA-256 and the same size (43902 bytes). The byte comparison of the design stays. The temp folders were removed.
+  - Token form (task 1.2): done 2026-11-08. `kirocrew token --help` does not say how a request carries the token. The documentation shows the dashboard token as `?token=` (query); `Authorization: Bearer` is documented only for webhooks. `TOKEN_FORM` defaults to `query`, `bearer` stays supported; neither was tried on the gateway (notes, section i). Task 6.3 is not marked as needed yet; task 11.5 shows which form works.
 - Open for the first install and recorded by tasks 11 to 13: Q3 (`storage`), Q4 (build-tool warning), Q6 (time formats), Q7 (cron timing), Q11 (files copied at install), Q14 (job registration order). Q2 is settled in the design (`Ghost`, fallback `Moon`); task 11.4 confirms it.
 - The design's D1 to D6 are confirmed by the user; D6 is settled in task 1.2.
 - Task 6.3 (`--manual-read`) was not needed: task 1.2 found a documented token form (`query`), so the conditional task was skipped. Task 11.5 shows whether the gateway accepts it; if not, 6.3 is reopened.
@@ -320,6 +320,12 @@ Rules that apply to every task:
   - Task 9.2: the allowed address prefix `https://grimsheet.onrender.com` needs a boundary after it, so that a look-alike host such as that name followed by another domain is refused.
   - Tests found and fixed three of their own slips (an assertion of `false` against `undefined`, a fake `close` event that turned `null` into 0, a path style mismatch); none loosened a check.
   - CI slip (draft PR #1, windows-latest): `tests/packaging.measure.test.mjs`, Property 8, "Test timed out in 5000ms" (about 5058 ms on the runner, about 1.6 s locally; the runner is about 3 times slower). Each of its 100 cases runs a full ladder and bisect with probes up to 1 MiB, so the cost is inherent. Fix: an explicit timeout of 30000 ms as the last argument of that `it(...)`, with a one-line comment. `numRuns`, the generators and every expectation are unchanged. Lesson for the usage log: a property test that is slow on this machine can fail on a slower runner; the local run and `test:all` did not show it. Other tests over 1000 ms locally and on the default 5000 ms limit (not changed): `hunt.publish` "hunt and replay merges leave each other's keys alone and commute" 1339 ms, `hunt.submit` Property 7 1017 ms, `ui` `core.time` Property 12 1560 ms; the `replay.process` test that kills a child tree (5680 ms) already has an explicit 20000 ms limit.
+- Hand-step progress, 2026-11-08 (first install; the text for the Notes_File section is written in task 11.8):
+  - Clone, install (exit 0, version 1.0.0, registration blocked until trusted), trust and enable by the user in the dashboard, and the reads of tasks 11.4 to 11.6 are done. Observed and not yet written into `docs/`: the install warning names `agent.apps_trusted` and `agent.apps_allow_third_party` and says to trust the app from the dashboard's App Store; Details shows Origin Registry and Source Unknown for a local install; the sidebar and Details show a default cube, so the `Ghost` icon name did not render (Q2); the page renders from the default export with no `mountFunction` or `entryPoint` (Q9 closed); `React.version` is 18.3.1 through the host shims at `/vendor/react.mjs` (Q10 closed); `approvedGrants` holds exactly the two api paths; the stored manifest drops the cron `enabled: true`; the generated agent file gains `mcpServers: {}`.
+  - Gate E: the route reader worked with the `query` form on the first try (status 200). The job name is `grimsheet-playtester/replay`, the page rule finds exactly one job, `next_run_ts` is epoch seconds, and `last_run_ts` is null before a run (D6 settled; `bearer` untried; task 6.3 stays skipped).
+  - Not observed (recorded as such): the trust screen and button label, when the `replay` job appeared (Q14), and any permission prompt for the api paths.
+  - First replay run (task 12, 2026-11-08, manual, from the Schedule page): status OK, 9.1 s (run record 20:45:01.96Z to 20:45:09.74Z), summary empty. Before it, `%LOCALAPPDATA%\grimsheet-playtester` was renamed to `grimsheet-playtester.dev` (kept; not deleted), so the run did a fresh clone, `npm ci` and build, with a warm npm cache. Result: run-000001, state complete, commit bea7a52, five levels green with end HP 3, 3, 3, 5, 5, `resultsKey` ok, `last-launch.json` outcome child-exited with exit code 0 and control file missing (the default), no lock file left. Page: five green cards with end HP (replay-runner task 16.1 works end to end), the runs table, the findings empty state; headings render at body-text size (host CSS reset; optional `ui/` style fix only after approval); no copy buttons on this page, so the clipboard check moves to task 15. Config read: body 1369 bytes, Results_Key 1228, `latest` 828 (778 before `endHp`, +10 per level), trend 323, one trend entry, five levels, no `findings`. Q7: 9.1 s against the 900 s limit with a warm cache; a cold cache was not measured.
+  - Open: tasks 11.7 (Gate G, developer path check) and 11.8 (Gate H, the records) are done after the first replay run; the copy buttons are checked in task 15.
 - A commit is made by the user (task 10.3). Until then the Clean_Clone of task 11 has nothing to clone.
 
 ```json
