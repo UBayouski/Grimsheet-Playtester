@@ -39,3 +39,7 @@ export function getOwn(record: Record<string, unknown>, key: string): unknown {
   const descriptor = Object.getOwnPropertyDescriptor(record, key);
   return descriptor === undefined || !('value' in descriptor) ? null : descriptor.value;
 }
+/** Like getOwn, but undefined (not null) when the key is absent, so that "absent" and "null" can differ. */
+export function ownValue(record: Record<string, unknown>, key: string): unknown {
+  return Object.prototype.hasOwnProperty.call(record, key) ? getOwn(record, key) : undefined;
+}

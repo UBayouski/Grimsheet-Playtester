@@ -259,132 +259,133 @@ Rules that apply to every task:
     - In `ui/` run `npm test`, then `npm run typecheck`. Both must pass. Check with a read-only search that nothing under `ui/src/core/` imports `react`, `react-dom`, `@kirocrew/app-sdk` or a file outside `core/`. From the repository root run `npm test` once more and check that it still runs the same number of files and tests as the baseline of task 1.2 and collects no file under `ui/`. Ask the user if questions arise.
     - _Requirements: 10.1, 10.12_
 
-- [ ] 14. Controller
-  - [ ] 14.1 Write the fake Env helper and its self-test
+- [x] 14. Controller
+  - [x] 14.1 Write the fake Env helper and its self-test
     - Create `ui/tests/helpers/fake-env.ts` exporting `makeFakeEnv()` (a manual clock `nowMs`/`advance`, a timer queue where `setTimeout` records `{id, fn, due}` and `advance` runs the due callbacks in order, `clearTimeout`, `isVisible`/`setVisible`, `onVisibilityChange` with an unsubscribe) and `makeFakeApi(script)` (a recording fake with only a `get(path)` method whose answers are resolved, rejected, delayed or never settling, as the script says; it records every call). Create `ui/tests/helpers/fake-env.test.ts` with unit tests: timers fire in order of due time, a cleared timer does not fire, the recording fake records the calls, a never-settling answer stays pending.
     - Command: `npx vitest --run tests/helpers/fake-env.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 10.8_
 
-  - [ ] 14.2 Write the failing unit tests for `reader.ts`
+  - [x] 14.2 Write the failing unit tests for `reader.ts`
     - Create `ui/tests/controller.reader.test.ts`. Import from `../src/controller/reader` (missing), the fake Env and the fake API.
     - Cases: a resolved answer gives `{ok: true, value}`; a rejected answer and a synchronous throw give `{ok: false, error}` with the text from `errorText`; an answer that has not settled after 10,000 ms gives `{ok: false, error: 'The request took longer than 10 seconds'}`; a late answer after the limit is ignored (the result does not change and no second result is produced); the timer is cleared after a fast answer; `readRoute` calls only `api.get`, once, with the path it was given.
     - Command: `npx vitest --run tests/controller.reader.test.ts`. Expected: fails (module missing).
     - _Requirements: 8.8, 3.13, 1.1, 1.2_
 
-  - [ ] 14.3 Implement `env.ts` and `reader.ts`
+  - [x] 14.3 Implement `env.ts` and `reader.ts`
     - Create `ui/src/controller/env.ts` (the `Env` type and `realEnv()`, which uses `Date.now`, `setTimeout`, `clearTimeout`, `document.visibilityState` and the `visibilitychange` event, read when called, not at module load) and `ui/src/controller/reader.ts` (`readRoute` as in the design).
     - Command: `npx vitest --run tests/controller.reader.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 8.8_
 
-  - [ ] 14.4 Write the failing unit tests for `controller.ts`
+  - [x] 14.4 Write the failing unit tests for `controller.ts`
     - Create `ui/tests/controller.controller.test.ts`. Import from `../src/controller/controller` (missing), the fake Env and the fake API.
     - Cases: `start` while visible starts one Read at once with two `get` calls (both issued before either settles, which shows they are parallel); the first snapshot has both routes `pending`; after both answers the routes are `ok` with `good` and `goodAtMs`; a failing config route keeps the earlier `good` and sets `error`; one route succeeding and the other failing in the same Read updates only the successful one; the next Read starts 60,000 ms after the start of the previous one, and 15,000 ms after it when the crons answer shows `is_running` true; a Read never starts while one is in flight (a never-settling request ends at the 10 s limit and the next Read follows); no Read starts while hidden; becoming visible after more than one interval starts a Read at once, after less waits for the rest; `refresh` while idle starts a Read, while in flight does nothing; `stop` clears the timer, unsubscribes from visibility, and an answer that arrives after `stop` changes nothing; `start` after `stop` works (strict mode); with `api` null no request is made and both routes show `Kiro Crew did not provide the app API`; `getSnapshot` returns the same object until something changes; every snapshot carries `nowMs` from the Env; the recorded calls are `get` calls to the two paths only.
     - Command: `npx vitest --run tests/controller.controller.test.ts`. Expected: fails (module missing).
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 8.10, 8.11, 9.5, 1.1, 1.2, 1.3_
 
-  - [ ] 14.5 Implement `controller.ts`
+  - [x] 14.5 Implement `controller.ts`
     - Create `ui/src/controller/controller.ts` with `DashboardController` and `Snapshot` as in the design ("Reader and controller"): one timer, a generation counter, the two `readRoute` calls started in parallel, `complete` sent when both have settled with `isRunning` from `readIsRunning`, `stop` bumping the generation.
     - Command: `npx vitest --run tests/controller.controller.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.9, 8.10, 8.11_
 
-  - [ ] 14.6 Write property test for "read only"
+  - [x] 14.6 Write property test for "read only"
     - Append to `ui/tests/controller.controller.test.ts`. Add `arbControllerOps` to `ui/tests/arbitraries.ts` (sequences of `advance(ms)`, `visible(true|false)`, `refresh`, `stop`, `start`, with the API script giving each request a random outcome: resolved, rejected, delayed beyond the limit, never settling). Tag `// Feature: dashboard, Property 13: Read only`. Checks: every call recorded by the fake API is a `get` of `/api/apps/grimsheet-playtester/config` or `/api/crons`; the fake API has no other method, so any other call throws and fails the test; the number of requests in flight from one controller never exceeds 2 (one Read); no request is issued while the page is hidden except the Read that was already in flight. `numRuns` 100 or more. Failure rule as in task 3.3.
     - **Property 13: Read only**
     - Command: `npx vitest --run tests/controller.controller.test.ts`. Expected: passes.
     - _Requirements: 1.1, 1.2, 1.3, 1.7, 8.13; Properties: 13_
 
-  - [ ] 14.7 Write the failing unit tests for `copy.ts`
+  - [x] 14.7 Write the failing unit tests for `copy.ts`
     - Create `ui/tests/controller.copy.test.ts`. Import from `../src/controller/copy` (missing).
     - Cases: `writeText` resolving gives `{ok: true}` and the selection copy is not tried; `writeText` missing, rejecting or throwing falls back to `selectionCopy`; `selectionCopy` returning `true` gives `{ok: true}`; `selectionCopy` returning `false`, throwing or missing gives `{ok: false}`; `copyText` never throws. The copy-state reducer: success gives `copied` with the message `Copied` and a clear action after 3,000 ms; failure gives `fallback` with the message `Copy is not available here. Select the text and press Ctrl+C.` and the text to show; a new copy replaces the earlier state.
     - Command: `npx vitest --run tests/controller.copy.test.ts`. Expected: fails (module missing).
     - _Requirements: 11.5, 11.6_
 
-  - [ ] 14.8 Implement `copy.ts`
+  - [x] 14.8 Implement `copy.ts`
     - Create `ui/src/controller/copy.ts` with `CopyEnv`, `copyText` and the copy-state reducer as in the design ("Clipboard flow").
     - Command: `npx vitest --run tests/controller.copy.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 11.5, 11.6_
 
-- [ ] 15. Components
-  - [ ] 15.1 Write the failing render tests for the page states
+- [x] 15. Components
+  - [x] 15.1 Write the failing render tests for the page states
     - Create `ui/tests/components.states.test.tsx`. Import `DashboardView` from `../src/components/DashboardView` (missing). Render with `renderToStaticMarkup` from `react-dom/server` and a View_Model built by `buildViewModel` from the fixtures. A helper renders with no-op handlers.
     - One test for each of Requirement 3, criteria 1 to 12: loading shows `Reading results`; no key shows the no-results text and no level cards and no findings list; key without `latest` shows `No replay run recorded yet` and still the trend and findings; `findings` absent shows `No hunt has run yet`; `findings` with no items shows `The last hunt found no exploits` and the hunt header; findings without `latest` shows both; a failed run shows stage, reason code and message with the cards; `cut-short` and `running` show the state as text; a config failure shows `Results could not be read`, the error and `last read at` with the earlier results kept; a crons failure shows `Replay job state is unavailable` in the job area only; no job shows `The replay job is not registered`; both failures on the first Read show both errors and a Refresh_Button that is not disabled. Also: the dropped counts are shown as text (for example `2 findings could not be read`); the schema notice is shown; the app-name notice is shown with both names; `Kiro Crew did not provide the app API` is shown when the API is missing, with the Refresh_Button disabled; a view-model string containing `<b>x</b>` appears escaped.
     - Command: `npx vitest --run tests/components.states.test.tsx`. Expected: fails (module missing).
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.12, 3.14, 2.4, 2.5, 9.5, 9.9_
 
-  - [ ] 15.2 Implement `DashboardView`, `ReplaySummary`, `JobPanel`, `LiveRegion` and `styles`
+  - [x] 15.2 Implement `DashboardView`, `ReplaySummary`, `JobPanel`, `LiveRegion` and `styles`
     - Create `ui/src/components/DashboardView.tsx`, `ReplaySummary.tsx`, `JobPanel.tsx`, `LiveRegion.tsx` and `styles.ts` as in the design ("Components"): a `main` with an `h1`, sections with accessible names, the Refresh_Button (`aria-busy` and the text `Reading` while a Read is in flight), the style constant in one `<style>` element, the short commit with the full hash in `title` and in visually hidden text, the stale warning next to the time, the job area with `replay running now`, `consecutive failures` and a `Warning:` text, `paused`. Every string from the View_Model is rendered as a child text node. No `dangerouslySetInnerHTML`. The components import only React and `src/core`.
     - Command: `npx vitest --run tests/components.states.test.tsx`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 3.1–3.14, 5.1, 5.3, 5.6, 5.8, 5.9, 5.11, 8.2, 8.3, 8.10, 11.1, 11.7, 11.8_
 
-  - [ ] 15.3 Write the failing render tests for the level cards, the trend strip and the run counts
+  - [x] 15.3 Write the failing render tests for the level cards, the trend strip and the run counts
     - Create `ui/tests/components.levels.test.tsx`. Import `LevelCard`, `TrendStrip`, `RunCounts` from `../src/components/*` (missing).
     - Cases: a card shows the level id in an `h3`, the Colour_Label text for each of the five colours, the outcome (`won`, `not won`, `not judged` with the reason code, `play timed out`), `ink spent N of minimal M` or `ink not recorded`, `end HP N` when present and no end HP text when absent, `no detail in the last run`; the strip is a `role="img"` element whose `aria-label` equals the text equivalent, the same text is visible, the cells are `aria-hidden`, the text `oldest to newest` is present, and the first cell in the markup is the oldest run; the run counts table lists the four counts of each run newest first, with `unknown` for a null count; the marker class depends on the colour only.
     - Command: `npx vitest --run tests/components.levels.test.tsx`. Expected: fails (module missing).
     - _Requirements: 4.2, 4.3, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.12, 4.13, 11.2_
 
-  - [ ] 15.4 Implement `LevelCard`, `TrendStrip` and `RunCounts`
+  - [x] 15.4 Implement `LevelCard`, `TrendStrip` and `RunCounts`
     - Create `ui/src/components/LevelCard.tsx`, `TrendStrip.tsx` (with `RunCounts` in the same file or its own) as in the design.
     - Command: `npx vitest --run tests/components.levels.test.tsx`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 4.2–4.13, 11.2_
 
-  - [ ] 15.5 Write the failing render tests for the findings list and the copy controls
+  - [x] 15.5 Write the failing render tests for the findings list and the copy controls
     - Create `ui/tests/components.findings.test.tsx`. Import `FindingsList`, `FindingItem`, `CopyButton` from `../src/components/*` (missing).
     - Cases: the findings sentence of Requirement 6 criterion 6 is present; the hunt header shows the time, short commit, Hunt_Id and the six counts, with `unknown` for a null count; an item shows the level id, the class label, the short commit, the time, the tokens separated by single spaces in a monospace `code` element, the result fields, `found on an earlier commit` when the latest commit differs and not when it is equal or absent; an unknown class shows the stored string; a valid level id shows the Replay_Command and the help text of Requirement 7 criterion 1; an invalid level id shows `level id not valid` and no command; a decodable item shows the Actions_File_Text in a read-only block and its copy button; an item that does not decode shows `action list could not be converted to a file`, still shows the tokens and the token copy button, and no file text; there are three copy buttons for a decodable item and two otherwise; each is a `button` element whose accessible name includes the level id (`Copy action list for 02-the-chaser`, `Copy replay command for 02-the-chaser`, `Copy actions file for 02-the-chaser`); the fallback view shows a read-only, focused `textarea` holding the text and the message `Copy is not available here. Select the text and press Ctrl+C.`; the live region has `aria-live="polite"`; no suggestion to pass JSON inline appears.
     - Command: `npx vitest --run tests/components.findings.test.tsx`. Expected: fails (module missing).
     - _Requirements: 5.4, 5.5, 6.1, 6.2, 6.4, 6.5, 6.6, 6.7, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 11.4, 11.5, 11.6_
 
-  - [ ] 15.6 Implement `FindingsList`, `FindingItem` and `CopyButton`
+  - [x] 15.6 Implement `FindingsList`, `FindingItem` and `CopyButton`
     - Create `ui/src/components/FindingsList.tsx`, `FindingItem.tsx` and `CopyButton.tsx` as in the design. The token element uses `white-space: pre-wrap` and `overflow-wrap: anywhere` (in the style constant). The fallback `textarea` is focused and fully selected in a `useEffect` (`focus()` then `select()`).
     - Command: `npx vitest --run tests/components.findings.test.tsx`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 6.1–6.7, 7.1–7.7, 11.4, 11.5, 11.6_
 
-  - [ ] 15.7 Write property test for "text, not markup"
+  - [x] 15.7 Write property test for "text, not markup"
     - Create `ui/tests/components.safety.test.tsx`. Add generators for strings that hold `<script>`, `<img src=x onerror=1>`, `&amp;`, quotes, `javascript:`, `</style>` and newlines, placed into every string field of a Results_Value, a Findings_Value and a Crons value (including a `script` field on the cron job), to `ui/tests/arbitraries.ts`. Tag `// Feature: dashboard, Property 14: Text, not markup`. Check on the markup of the whole page: the count of `<script`, `<img` and `<a ` is zero; every generated hostile string that is shown appears only in its escaped form (`&lt;`, `&quot;`, `&amp;`); the `script` string of the cron job appears neither in the markup nor in the View_Model; the page never contains an `href` or `src` attribute built from route data. `numRuns` 100 or more. Failure rule as in task 3.3.
     - **Property 14: Text, not markup**
     - Command: `npx vitest --run tests/components.safety.test.tsx`. Expected: passes.
     - _Requirements: 2.9, 5.10; Properties: 14_
 
-  - [ ] 15.8 Write the accessibility tests
+  - [x] 15.8 Write the accessibility tests
     - Create `ui/tests/components.a11y.test.tsx`. Render the whole page from `config.with-findings.json` and `crons.replay-idle.json`. Check: exactly one `main`; headings in order (`h1`, then `h2` sections, then `h3` cards and findings, no level skipped); each `section` has an accessible name (`aria-labelledby` or `aria-label`); every level card holds its Colour_Label text; every colour marker is `aria-hidden` and accompanied by text; every trend strip has its text; every control is a `button` element with a non-empty accessible name; the buttons that name a level include the level id; the style constant contains a `:focus-visible` rule, a `prefers-reduced-motion` rule, no `animation` and no `transition` that the content needs, and no `color:` declaration on a label rule (labels use the host text colour); the live region is `aria-live="polite"`; the Refresh_Button shows `aria-busy="true"` and the text `Reading` while a Read is in flight.
     - Command: `npx vitest --run tests/components.a11y.test.tsx`. Expected: passes (it exercises finished code). Then `npm run typecheck`.
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.7, 11.8, 11.9_
 
-- [ ] 16. Page and entry
-  - [ ] 16.1 Write the failing unit tests for `page.tsx` and `sdk.ts`
+- [x] 16. Page and entry
+  - [x] 16.1 Write the failing unit tests for `page.tsx` and `sdk.ts`
     - Create `ui/tests/page.test.tsx`. Import `createDashboardPage` from `../src/page` and `pickFunction` from `../src/sdk` (missing).
     - Cases: `pickFunction` returns a function export and null for a missing export, a non-function export and a missing record; `createDashboardPage` reads `useAppApi` and `useAppInfo` once, at the call (a spy counts `typeof` reads of the fake SDK record); the component renders with a fake SDK whose `useAppApi` returns a recording API with `get` only; with `useAppApi` missing, the page shows `Kiro Crew did not provide the app API` and the Refresh_Button is disabled; with `useAppApi` throwing, the same and no crash; with `useAppInfo` returning a different `name`, the notice shows both names and the paths still use `grimsheet-playtester`; with `useAppInfo` missing or throwing, no notice and no crash; the first render shows `Reading results`; the component uses no hook outside the five allowed React hooks and the two SDK hooks.
     - Command: `npx vitest --run tests/page.test.tsx`. Expected: fails (module missing).
     - _Requirements: 9.4, 9.5, 9.6, 9.9, 3.1, 3.12_
 
-  - [ ] 16.2 Implement `sdk.ts`, `page.tsx` and `index.tsx`
+  - [x] 16.2 Implement `sdk.ts`, `page.tsx` and `index.tsx`
     - Create `ui/src/sdk.ts` (`SdkRecord`, `pickFunction`), `ui/src/page.tsx` (`createDashboardPage(sdk)`: the two SDK hooks read once at creation and called unconditionally in the component; `useRef` for the controller; `useEffect` for `start` and `stop`; `useSyncExternalStore` for the snapshot; `useMemo` for `buildViewModel`; `useState` for the copy state and the live-region message; the `changeKey` comparison for `Results updated`; the real `CopyEnv` read inside the click handler) and `ui/src/index.tsx` (`import * as sdk from '@kirocrew/app-sdk'` and the default export, as in the design).
     - Command: `npx vitest --run tests/page.test.tsx`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 9.4, 9.5, 9.6, 9.8, 9.9_
 
-  - [ ] 16.3 Write the test for the entry module
+  - [x] 16.3 Write the test for the entry module
     - Create `ui/tests/entry.test.tsx`. Import `../src/index` (the Vitest alias maps `@kirocrew/app-sdk` to the empty stub). Check: the default export is a function; rendering it with `renderToStaticMarkup` shows `Kiro Crew did not provide the app API` (the stub has no `useAppApi`) and does not throw; the module has no named exports other than the default.
     - Command: `npx vitest --run tests/entry.test.tsx`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 9.4, 9.5, 9.8_
 
-- [ ] 17. Build and check-dist
-  - [ ] 17.1 Write the failing tests for `check-dist`
+- [x] 17. Build and check-dist
+  - [x] 17.1 Write the failing tests for `check-dist`
     - Create `ui/tests/check-dist.test.ts`. Import `checkDistText` and `checkDistFiles` from `../scripts/check-dist.mjs` (missing).
     - Cases for `checkDistText(text)`: a clean module that imports only the five allowed specifiers and `import * as` the SDK passes; each of these fails with a message that names the problem: an import from `@kirocrew/app-sdk/ui`; an import from `react-dom/client`; an import from `./other.js`; a named SDK import (`import { useAppApi } from "@kirocrew/app-sdk"`); `C:\Users\someone\x`; `D:\work`; `Users\`; `token=abc`; `http://localhost:5476`; `https://example.com`. `checkDistFiles(names)` passes for `['index.mjs']` and fails for an empty list, a missing `index.mjs`, and any extra file.
     - Command: `npx vitest --run tests/check-dist.test.ts`. Expected: fails (module missing).
     - _Requirements: 9.1, 9.2, 9.4, 9.7, 9.10_
 
-  - [ ] 17.2 Implement `scripts/check-dist.mjs`
+  - [x] 17.2 Implement `scripts/check-dist.mjs`
     - Create `ui/scripts/check-dist.mjs` (plain ESM, JSDoc, no dependency) exporting `checkDistText` and `checkDistFiles`, and, when run as the entry, reading `dist/` and `dist/index.mjs` relative to its own location and exiting with code 1 and the messages on a failure.
+    - Change after the first build (approved by the developer, an exception to "never edit the check"): the check for `token=` looks for a token value, not the bare text. It is a case-insensitive match of `token=` followed by at least 6 characters from `[A-Za-z0-9._~%-]`, and the message is "contains a token value". Reason: the first version flagged the redaction code of `errors.ts` (its pattern `token=[^\s&]*` and its replacement text `token=…`), which only mentions the word. Tests in `tests/check-dist.test.ts` come first: it flags `?token=ab12cd34ef` and `TOKEN=abcdef`, and passes the pattern source `token=[^\s&]*` and the output `token=…`. The redaction code stays plain; code written to hide text from a scan is not acceptable.
     - Command: `npx vitest --run tests/check-dist.test.ts`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 9.2, 9.7, 9.10_
 
-  - [ ] 17.3 Run the build and read the result
+  - [x] 17.3 Run the build and read the result
     - In `ui/` run `npm run build`. Expected: Vite writes `dist/index.mjs` and `check-dist` passes. Read (read only) the import lines of `dist/index.mjs` and report them: only `react/jsx-runtime`, `react` (hooks) and `@kirocrew/app-sdk` as a namespace are expected, and the size. Confirm that the build used no network. If the build fails or `check-dist` fails, STOP and report; do not edit the check to make it pass.
     - `dist/` is ignored by git (the root `.gitignore` has `dist/`). Nothing is installed into the host: that belongs to `packaging`.
     - _Requirements: 9.1, 9.2, 9.7, 9.10, 9.11_
 
-- [ ] 18. Final checkpoint
-  - [ ] 18.1 Ensure all tests and gates pass
+- [x] 18. Final checkpoint
+  - [x] 18.1 Ensure all tests and gates pass
     - In `ui/` run `npm test`, `npm run typecheck` and `npm run build`. All three must pass. From the repository root run `npm test` and `npm run typecheck` and check that the root results are unchanged and that no `ui/` file was collected by the root run. Run `git status --porcelain` (read only) and confirm that only `ui/`, `.kiro/specs/dashboard/`, `.kiro/steering/dashboard.md` and (after task 19.1) `KIRO_USAGE.md` changed, and that `app.json`, `scripts/`, the root `tests/`, the root `package.json` and the root `tsconfig.json` did not. Ask the user if questions arise.
     - _Requirements: 10.12, 9.1_
 

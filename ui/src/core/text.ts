@@ -35,3 +35,7 @@ export const UNKNOWN = 'unknown';
 export const NO_RUNS = 'No runs recorded';
 export const REQUEST_FAILED = 'The request failed';
 export const REQUEST_TOO_SLOW = 'The request took longer than 10 seconds';
+/** "2 findings could not be read" or "1 finding could not be read". */
+export function droppedText(count: number, singular: string, plural: string): string {
+  return `${count} ${count === 1 ? singular : plural} could not be read`;
+}

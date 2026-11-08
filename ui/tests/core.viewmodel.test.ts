@@ -121,6 +121,13 @@ describe('buildViewModel: other fixtures', () => {
     expect(build(ok(fixture('config.replay-two-runs.json'))).results.notice).toBeNull();
   });
 
+  it('an absent findings key is not a dropped part, but findings: null is', () => {
+    expect(build(ok(fixture('config.replay-two-runs.json'))).results.findings).toEqual({ present: false, notice: null, header: null, items: [], dropped: 0 });
+    const config = fixture('config.replay-two-runs.json') as { playtesterResults: Record<string, unknown> };
+    config.playtesterResults['findings'] = null;
+    expect(build(ok(config)).results.findings).toMatchObject({ present: false, dropped: 1 });
+  });
+
   it('a present key that is not a record has the key and empty parts', () => {
     const vm = build(ok({ playtesterResults: 'oops' }));
     expect(vm.results).toMatchObject({ hasData: true, present: true, replay: null, levels: [], runs: [] });

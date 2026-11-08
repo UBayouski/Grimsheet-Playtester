@@ -5,7 +5,7 @@ import { buildCards } from './cards';
 import { TOP_KEY, LIMITS } from './constants';
 import { buildJobView } from './crons';
 import { parseFindings } from './findings';
-import { clip, getOwn, isRecord } from './json';
+import { clip, getOwn, isRecord, ownValue } from './json';
 import { parseLatest, parseLevelEntries, parseSchema, parseTrend, type LatestParsed, type LevelEntryParsed, type TrendParsed } from './results';
 import { REQUEST_FAILED } from './text';
 import { formatUtc, isStale } from './time';
@@ -85,7 +85,7 @@ function buildResults(config: RouteState, nowMs: unknown): ResultsView {
     { entries: [] as LevelEntryParsed[], dropped: 1 },
   );
   const trend = guarded(() => parseTrend(getOwn(top, 'trend')), { runs: [] as TrendParsed[], dropped: 1 });
-  const findings = guarded(() => parseFindings(getOwn(top, 'findings')), { ...NO_FINDINGS, dropped: 1 });
+  const findings = guarded(() => parseFindings(ownValue(top, 'findings')), { ...NO_FINDINGS, dropped: 1 });
   const notice = guarded(() => parseSchema(getOwn(top, 'schemaVersion')), null);
   return {
     hasData: true,

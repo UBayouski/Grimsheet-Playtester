@@ -430,3 +430,58 @@ export const arbSchedulerOps: fc.Arbitrary<SchedulerOp[]> = fc.array(
   ),
   { maxLength: 80 },
 );
+// ---- controller ----
+
+export type ControllerOp =
+  | { op: 'advance'; ms: number }
+  | { op: 'visible'; visible: boolean }
+  | { op: 'refresh' }
+  | { op: 'stop' }
+  | { op: 'start' };
+
+/** How one request ends: at once, after a delay, late (after the 10 second limit), by an error, never, or by a synchronous throw. */
+export const REQUEST_OUTCOMES = ['ok', 'okDelayed', 'okLate', 'fail', 'failDelayed', 'never', 'throw'] as const;
+export type RequestOutcome = (typeof REQUEST_OUTCOMES)[number];
+
+export const arbRequestOutcomes: fc.Arbitrary<RequestOutcome[]> = fc.array(
+  fc.oneof({ weight: 4, arbitrary: fc.constant<RequestOutcome>('ok') }, { weight: 4, arbitrary: fc.constantFrom(...REQUEST_OUTCOMES) }),
+  { minLength: 1, maxLength: 12 },
+);
+
+export const arbControllerOps: fc.Arbitrary<ControllerOp[]> = fc.array(
+  fc.oneof(
+    { weight: 6, arbitrary: fc.oneof(fc.integer({ min: 0, max: 5_000 }), fc.integer({ min: 0, max: 80_000 }), fc.constantFrom(9_999, 10_000, 14_999, 15_000, 59_999, 60_000)).map((ms): ControllerOp => ({ op: 'advance', ms })) },
+    { weight: 3, arbitrary: fc.boolean().map((visible): ControllerOp => ({ op: 'visible', visible })) },
+    { weight: 3, arbitrary: fc.constant<ControllerOp>({ op: 'refresh' }) },
+    { weight: 1, arbitrary: fc.constant<ControllerOp>({ op: 'stop' }) },
+    { weight: 1, arbitrary: fc.constant<ControllerOp>({ op: 'start' }) },
+  ),
+  { maxLength: 30 },
+);
+// ---- hostile text ----
+
+/** Strings that would do harm if they were put into markup, a URL or a style. */
+export const HOSTILE_SNIPPETS = [
+  '<script>alert(1)</script>',
+  '<img src=x onerror=alert(1)>',
+  '<a href="javascript:alert(1)">x</a>',
+  '</style><script>1</script>',
+  '<svg onload=1>',
+  '"><b>x</b>',
+  "' onmouseover='1",
+  '&amp; &lt;b&gt;',
+  'javascript:alert(1)',
+  'line one\nline two',
+  '<!-- comment -->',
+  '${1+1} {{x}}',
+];
+
+export const arbHostile: fc.Arbitrary<string> = fc.oneof(fc.constantFrom(...HOSTILE_SNIPPETS), fc.tuple(fc.constantFrom(...HOSTILE_SNIPPETS), fc.string({ maxLength: 10 })).map(([a, b]) => `${a}${b}`));
+
+/** Puts `prefix` in front of every string value (not key) of a JSON value. */
+export function prefixStrings(value: unknown, prefix: string): unknown {
+  if (typeof value === 'string') return `${prefix}${value}`;
+  if (Array.isArray(value)) return value.map((item) => prefixStrings(item, prefix));
+  if (value !== null && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, prefixStrings(v, prefix)]));
+  return value;
+}

@@ -80,7 +80,7 @@ function listFiles(folder: URL, extensions: string[]): string[] {
   if (!existsSync(folder)) return [];
   return readdirSync(folder, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile() && extensions.some((ext) => entry.name.endsWith(ext)))
-    .map((entry) => `${entry.parentPath}/${entry.name}`.replace(/\\/g, '/'));
+    .map((entry) => `${entry.parentPath}/${entry.name}`.replace(/\\/g, '/').replace(/\/{2,}/g, '/'));
 }
 
 describe('source scan of ui/src', () => {
