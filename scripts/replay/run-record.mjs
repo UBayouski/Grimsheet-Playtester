@@ -160,7 +160,7 @@ export function trendEntryFromIndexEntry(entry) {
 export function compactLatest(record) {
   const compact = pick(record, ['runId', 'counter', 'state', 'startedAt', 'finishedAt', 'commit', 'repoUrl', 'branch', 'failure', 'coverage']);
   compact.levels = (record.levels ?? []).map((/** @type {any} */ level) => {
-    const out = pick(level, ['levelId', 'colour', 'inkSpent', 'minimalInk', 'reasonCode']);
+    const out = pick(level, ['levelId', 'colour', 'endHp', 'inkSpent', 'minimalInk', 'reasonCode']);
     if (level.timedOut === true) out.timedOut = true;
     return out;
   });

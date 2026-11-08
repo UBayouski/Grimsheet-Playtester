@@ -246,8 +246,8 @@ describe('compactLatest', () => {
       ['branch', 'commit', 'counter', 'coverage', 'failure', 'finishedAt', 'levels', 'repoUrl', 'runId', 'startedAt', 'state'],
     );
     expect(c.levels).toStrictEqual([
-      { levelId: '01-the-corridor', colour: 'green', inkSpent: 0, minimalInk: 0 },
-      { levelId: '02-the-chaser', colour: 'amber', inkSpent: 2, minimalInk: 1 },
+      { levelId: '01-the-corridor', colour: 'green', endHp: 3, inkSpent: 0, minimalInk: 0 },
+      { levelId: '02-the-chaser', colour: 'amber', endHp: 3, inkSpent: 2, minimalInk: 1 },
       { levelId: '05-the-lich', colour: 'error', reasonCode: 'play_failed', timedOut: true },
     ]);
   });
@@ -269,8 +269,20 @@ describe('compactLatest', () => {
       { levelId: 'b', colour: 'error', reasonCode: 'play_failed', reason: 'r' },
     ];
     const c = compactLatest(record);
-    expect(c.levels[0]).toStrictEqual({ levelId: 'a', colour: 'green', inkSpent: 0, minimalInk: 0 });
+    expect(c.levels[0]).toStrictEqual({ levelId: 'a', colour: 'green', endHp: 3, inkSpent: 0, minimalInk: 0 });
     expect('timedOut' in c.levels[1]).toBe(false);
+  });
+
+  it('keeps endHp 0 of a ReplayOk, and gives an error entry no endHp', () => {
+    const record = sampleRecord();
+    record.levels = [
+      { levelId: 'a', colour: 'red', won: false, endHp: 0, inkSpent: 1, minimalInk: 1, statusChangeIndex: null, refusedAt: null },
+      { levelId: 'b', colour: 'error', reasonCode: 'play_failed', reason: 'r' },
+    ];
+    const c = compactLatest(record);
+    expect(c.levels[0]).toStrictEqual({ levelId: 'a', colour: 'red', endHp: 0, inkSpent: 1, minimalInk: 1 });
+    expect(c.levels[1]).toStrictEqual({ levelId: 'b', colour: 'error', reasonCode: 'play_failed' });
+    expect('endHp' in c.levels[1]).toBe(false);
   });
 
   it('does not change the record', () => {

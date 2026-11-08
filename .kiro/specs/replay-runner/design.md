@@ -413,9 +413,9 @@ At most 30 entries, Newest first. `commit` and `finishedAt` are `null` until kno
       "failure": null,
       "coverage": { "listed": 5, "played": 4, "noSolution": 1, "unreadable": 0, "unlisted": 1, "duplicateListedLevels": [], "unlistedSolutions": ["99-old-level"] },
       "levels": [
-        { "levelId": "01-the-corridor", "colour": "green", "inkSpent": 0, "minimalInk": 0 },
-        { "levelId": "02-the-chaser", "colour": "amber", "inkSpent": 2, "minimalInk": 1 },
-        { "levelId": "03-the-locked-crypt", "colour": "red", "inkSpent": 2, "minimalInk": 2 },
+        { "levelId": "01-the-corridor", "colour": "green", "endHp": 3, "inkSpent": 0, "minimalInk": 0 },
+        { "levelId": "02-the-chaser", "colour": "amber", "endHp": 3, "inkSpent": 2, "minimalInk": 1 },
+        { "levelId": "03-the-locked-crypt", "colour": "red", "endHp": 3, "inkSpent": 2, "minimalInk": 2 },
         { "levelId": "04-the-trap-row", "colour": "error", "reasonCode": "no_solution_file" },
         { "levelId": "05-the-lich", "colour": "error", "reasonCode": "play_failed", "timedOut": true }
       ]
@@ -434,7 +434,7 @@ At most 30 entries, Newest first. `commit` and `finishedAt` are `null` until kno
 }
 ```
 
-`findings` is written only by `exploit-hunt`. When it does not exist the replay does not create it (9.3). Other top-level keys of `config.json` stay as they were. The compact Level_Entry keeps `levelId`, `colour`, `inkSpent`, `minimalInk`, `reasonCode` and `timedOut` (only when true); keys that the entry does not have are left out, not set to `null`. The `levels` list in `latest` has one entry per level, in list order.
+`findings` is written only by `exploit-hunt`. When it does not exist the replay does not create it (9.3). Other top-level keys of `config.json` stay as they were. The compact Level_Entry keeps `levelId`, `colour`, `endHp`, `inkSpent`, `minimalInk`, `reasonCode` and `timedOut` (only when true); `endHp` is present only on a ReplayOk entry, and keys that the entry does not have are left out, not set to `null`. The `levels` list in `latest` has one entry per level, in list order.
 
 ### Launcher and lock files
 
@@ -601,7 +601,7 @@ Compact forms:
 
 ```
 compactLatest(record) = pick(record, runId, counter, state, startedAt, finishedAt, commit, repoUrl, branch, failure, coverage)
-                        + levels: record.levels.map(e => pick(e, levelId, colour, inkSpent, minimalInk, reasonCode) + (e.timedOut ? {timedOut:true} : {}))
+                        + levels: record.levels.map(e => pick(e, levelId, colour, endHp, inkSpent, minimalInk, reasonCode) + (e.timedOut ? {timedOut:true} : {}))
 trendEntryOf(record)    = pick(record, runId, counter, state, startedAt, commit, green, amber, red, error)
                         + levels: object of levelId -> colour
 indexEntryOf(record)    = pick(record, runId, counter, state, startedAt, finishedAt, commit, green, amber, red, error)

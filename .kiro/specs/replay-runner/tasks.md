@@ -335,6 +335,14 @@ Rules that apply to every task:
     - Then add the optional `logStderr` dependency (`types.mjs`, `buildRealDeps` with `process.stderr.write`) and a wrapper around `deps.spawn` in `scripts/replay/run.mjs` that writes `[<step label>] ...` lines (outcome, then the last 2000 characters of stdout and of stderr). The text is not added to the Result_File or the results key. `tests/replay.entry.test.mjs` lists the keys of `buildRealDeps`, so it gains `logStderr`.
     - Command: `npm test`, `npm run typecheck` and `python -m unittest tests.test_replay_cron`. Expected: all pass.
     - _Requirements: 7.6, 13.1_
+
+- [x] 16. Amendment: `endHp` in the compact Level_Entry
+  - [x] 16.1 Keep `endHp` of a ReplayOk in `latest.levels`
+    - Test first, in `tests/replay.run-record.test.mjs`: the `compactLatest` expectations carry `endHp` on ReplayOk levels and none on error levels (no `null`). Expected before the change: those tests fail because `endHp` is missing.
+    - Then add `'endHp'` to the pick list of `compactLatest` in `scripts/replay/run-record.mjs`, and `endHp?: number` to the `CompactRun.levels` element type in `scripts/replay/types.mjs` (JSDoc only). Check the byte-budget tests and properties for Requirement 9, criteria 17 to 21, and the arbitraries that build compact entries; none may be narrowed.
+    - Command: `npm test`, `npm run typecheck` and `python -m unittest tests.test_replay_cron`. Expected: all pass.
+    - _Requirements: 9.1_
+
 ## Notes
 
 - Out of scope for this plan, and not done by any task: a real run against the gateway, the `app.json` edit (the `replay` cron entry of Requirement 12), the check that `app.json` `timeout` equals `CRON_TIMEOUT`, and the measurement of the config route size limit. They belong to the `packaging` spec.
@@ -401,7 +409,8 @@ Rules that apply to every task:
     { "id": 46, "tasks": ["13.1"] },
     { "id": 47, "tasks": ["13.2"] },
     { "id": 48, "tasks": ["14.1"] },
-    { "id": 49, "tasks": ["15.1"] }
+    { "id": 49, "tasks": ["15.1"] },
+    { "id": 50, "tasks": ["16.1"] }
   ]
 }
 ```

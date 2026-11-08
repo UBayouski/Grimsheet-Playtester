@@ -236,7 +236,7 @@ The measurement of the config route limit, the `app.json` timeout check (both be
 
 #### Acceptance Criteria
 
-1. THE Results_Key SHALL hold: `schemaVersion`, `updatedAt`, `latest` (a compact form of the Newest Run_Record, with `runId`, `counter`, `state`, `startedAt`, `finishedAt`, `commit`, `repoUrl`, `branch`, `failure`, `coverage` and a compact Level_Entry per level, which carries `levelId`, `colour`, `inkSpent`, `minimalInk`, `reasonCode` and `timedOut` (the last only when true)), `trend` (at most 30 Trend_Entries, Newest first), and `findings`.
+1. THE Results_Key SHALL hold: `schemaVersion`, `updatedAt`, `latest` (a compact form of the Newest Run_Record, with `runId`, `counter`, `state`, `startedAt`, `finishedAt`, `commit`, `repoUrl`, `branch`, `failure`, `coverage` and a compact Level_Entry per level, which carries `levelId`, `colour`, `endHp`, `inkSpent`, `minimalInk`, `reasonCode` and `timedOut` (`endHp` only for a ReplayOk, `timedOut` only when true; a key the source Level_Entry lacks is left out, never set to `null`)), `trend` (at most 30 Trend_Entries, Newest first), and `findings`.
 2. EACH Trend_Entry SHALL hold `runId`, `counter`, `state`, `startedAt`, `commit`, the four colour counts, and a map from level id to colour.
 3. THE Replay_Script SHALL NOT write the `findings` sub-key and SHALL keep its existing value unchanged. WHEN `findings` does not exist, THE Replay_Script SHALL NOT create it (assumption A-11).
 4. THE Replay_Script SHALL own and replace only the sub-keys `schemaVersion`, `updatedAt`, `latest` and `trend` of the Results_Key.

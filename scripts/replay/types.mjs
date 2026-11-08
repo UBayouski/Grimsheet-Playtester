@@ -170,7 +170,7 @@
  * @property {string} branch
  * @property {Failure|null} failure
  * @property {Coverage} coverage
- * @property {Array<{levelId: string, colour: string, inkSpent?: number, minimalInk?: number, reasonCode?: string, timedOut?: true}>} levels
+ * @property {Array<{levelId: string, colour: string, endHp?: number, inkSpent?: number, minimalInk?: number, reasonCode?: string, timedOut?: true}>} levels
  */
 
 /**
