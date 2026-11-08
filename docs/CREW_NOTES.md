@@ -302,3 +302,23 @@ Run on 2026-11-08, Windows 11, Kiro Crew 0.12.0 (KiroCrew desktop app), for the 
 ### j.9 Still open after this install
 - Q2 (the icon name), the trust screen and button label, when the job appeared (Q14), any prompt for the api paths, and the clipboard check.
 - Q3 (`permissions.storage`): not needed for the two reads; the page never writes. A write was not tried.
+
+## k. Packaging: how large a config value the Config_Route returns
+Run on 2026-11-08, Crew 0.12.0 (`kirocrew --version` printed "kirocrew 0.12.0"), app grimsheet-playtester 1.0.0 as installed in j, for the `packaging` spec (task 13, requirement 6). The measurement program (`scripts/packaging/measure-config-route.mjs`, commit 9f64b86) was run by the user in a terminal. Paths use ~. Evidence: E40.
+
+- Question: what is the largest config value that the Config_Route returns in full (replay-runner Q3, dashboard Q8)?
+- Answer: no failure was found up to 1 MiB, the highest size tested. A probe key `packagingProbe` of 16384, 32768, 49152, 65536, 98304, 131072, 262144, 524288 and 1048576 bytes was written into the installed `data\config.json`, and after each write `GET /api/apps/grimsheet-playtester/config` answered 200 with a body that parsed and held the probe unchanged (body 17774 to 1049966 bytes, 22 to 46 ms). The probe was removed at the end, and the file and the route were back to their content before the run. The route limit, if there is one, is above 1 MiB; it was not looked for above that, and a PUT was not tried.
+- Method: write the probe under the results lock, read the route with the token in the query form (`?token=`), compare, always remove the probe. Before any write the program read `/api/crons` and the Config_Route.
+- The Byte_Budget of the Results_Key stays 65536. This measurement does not change it, and neither do the findings caps of the exploit-hunt.
+- Earlier attempts without a measurement (the gateway refused the same address in later commands, and the first version of the program wrongly reported a limit of 1024 bytes from them) are described in E40 and in section l. They recorded no limit.
+- Basis: Observed. Evidence: E40.
+
+## l. The gateway token address is a login link
+Packaging task 13, 2026-11-08, Crew 0.12.0. Evidence: E40. Cause not proven.
+
+- Question: how long and how often can the address that `kirocrew token` prints be used by a program?
+- Docs say (the Crew pages on dashboard token authentication and security): the `?token=` address is a login link with a 5-minute click window. On use it is exchanged for a session cookie named `mc_token_<port>`, whose lifetime is the session lifetime (up to 20 hours). The pages also say that presenting the same link again inside the window is allowed, and that each presentation gives a fresh cookie bound to the presenting peer.
+- Observed: the route reader sends the link as `?token=` on every request and keeps no cookie. Runs that reused an address which an earlier command had presented were refused (403 on `/api/crons` or on the Config_Route); the one run whose process presented a fresh address first made 12 requests, all answered 200. This fits "a login link works for the process that presents it first and is refused for a later one" better than "a link serves two requests". The first real run (200 on `/api/crons`, then 403 on the Config_Route within milliseconds) is not explained by either. A token with a changed last character gave 403 "Forbidden" on `/api/crons` and 403 "invalid signature" on the Config_Route.
+- Practical rule: use one fresh `kirocrew token` for each command, and paste it straight away. A dry run followed by a real run needs two addresses, or no dry run (the real run reads both routes before it writes).
+- Not built: the reader could exchange the link for the session cookie on its first request and send only the cookie afterwards, as the browser does. That is an option if a later step needs one address across several commands.
+- Basis: Docs say (the two pages), and Observed (E40).
