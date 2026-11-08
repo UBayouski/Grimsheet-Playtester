@@ -4,10 +4,10 @@
     {
       "name": "Play sound when the agent finishes",
       "trigger": "Stop",
-      "description": "Plays the Windows Asterisk system sound each time the agent stops, so you know the task is done.",
+      "description": "Plays a short rising spooky beep tune each time the agent stops, so you know the task is done.",
       "action": {
         "type": "command",
-        "command": "powershell -NoProfile -Command \"[System.Media.SystemSounds]::Asterisk.Play(); Start-Sleep -Milliseconds 800\"",
+        "command": "powershell -NoProfile -Command \"[console]::Beep(440,150); [console]::Beep(523,150); [console]::Beep(659,150); [console]::Beep(880,400)\"",
         "timeout": 10
       }
     }
