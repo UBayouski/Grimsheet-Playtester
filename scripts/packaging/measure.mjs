@@ -7,7 +7,7 @@ import * as path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { lockCreatedMs } from '../file-lock.mjs';
 import { PROBE_KEY, buildProbe, removeProbe, writeProbe } from './config-probe.mjs';
-import { CONFIG_ROUTE, CRONS_ROUTE, isReplayJob } from './route-reader.mjs';
+import { CONFIG_ROUTE, CRONS_ROUTE, bodyReason, isReplayJob } from './route-reader.mjs';
 
 /** @typedef {import('../results-store.mjs').ResultsDeps} ResultsDeps */
 /** @typedef {import('./route-reader.mjs').RouteResult} RouteResult */
@@ -32,11 +32,13 @@ const HUNT_LOCK_STALE_MS = 2_400_000;
  * @property {boolean} equal
  * @property {boolean} good
  * @property {number|null} ms
+ * @property {string|null} reason  a short reason (at most 80 characters) for a step that is not good
  *
  * @typedef {Object} Removal
  * @property {boolean} done
  * @property {boolean|null} configRestored
  * @property {boolean|null} routeRestored
+ * @property {string} [routeReason]  only when routeRestored is false: status <n>, timeout, network or differs from the file before the run
  *
  * @typedef {Object} Report
  * @property {1} schema
@@ -87,11 +89,38 @@ export function renderReport(report) {
 }
 
 /**
+ * Why an answer of the Config_Route during the ladder or the bisect stops the run, or null when the run can use it (R6.14).
+ * A 200 and a 413 are used (they are good or bad); a 401 or 403 is a refusal, and every other status, a timeout and a network
+ * error end the run: none of them is a size failure.
+ * @param {RouteResult} r
+ * @returns {string|null}
+ */
+function blockCode(r) {
+  if (r.kind !== 'response') return r.kind;
+  if (r.status === 401 || r.status === 403) return `access_refused ${r.status}`;
+  if (r.status === 200 || r.status === 413) return null;
+  return `unexpected_status ${r.status}`;
+}
+
+/**
+ * Why an answer to a read before any write stops the run, or null when it is a 200 (R6.16).
+ * @param {RouteResult} r
+ * @returns {string|null}
+ */
+function precheckCode(r) {
+  if (r.kind !== 'response') return r.kind;
+  if (r.status === 401 || r.status === 403) return `access_refused ${r.status}`;
+  return r.status === 200 ? null : `unexpected_status ${r.status}`;
+}
+
+/**
+ * `: <reason>` for an answer that is not good, or an empty text.
  * @param {RouteResult} r
  * @returns {string}
  */
-function describeFailure(r) {
-  return r.kind === 'response' ? `status ${r.status}` : r.kind;
+function reasonSuffix(r) {
+  const reason = bodyReason(r);
+  return reason ? `: ${reason}` : '';
 }
 
 /**
@@ -102,12 +131,14 @@ function describeFailure(r) {
  */
 function classify(size, phase, r) {
   if (r.kind !== 'response') {
-    return { phase, probeBytes: size, status: null, kind: r.kind, bodyBytes: null, parsed: false, equal: false, good: false, ms: null };
+    return { phase, probeBytes: size, status: null, kind: r.kind, bodyBytes: null, parsed: false, equal: false, good: false, ms: null, reason: bodyReason(r) };
   }
   const parsed = r.json !== undefined;
   const body = /** @type {any} */ (r.json);
   const equal = parsed && typeof body === 'object' && body !== null && isDeepStrictEqual(body[PROBE_KEY], buildProbe(size));
-  return { phase, probeBytes: size, status: r.status, kind: 'response', bodyBytes: r.bytes, parsed, equal, good: r.ok && r.status === 200 && equal, ms: r.ms };
+  const good = r.status === 200 && equal;
+  const reason = good ? null : r.status !== 200 ? bodyReason(r) : !parsed ? 'the body does not parse' : 'the probe in the body differs from what was written';
+  return { phase, probeBytes: size, status: r.status, kind: 'response', bodyBytes: r.bytes, parsed, equal, good, ms: r.ms, reason };
 }
 
 /**
@@ -149,8 +180,9 @@ async function preChecks(deps, read, dataFolder) {
     }
   }
   const crons = await read(CRONS_ROUTE);
-  if (crons.kind !== 'response' || !crons.ok) return { ok: false, message: `${CRONS_ROUTE} could not be read (${describeFailure(crons)})` };
-  const jobs = /** @type {any} */ (crons.json)?.jobs;
+  const cronsCode = precheckCode(crons);
+  if (cronsCode) return { ok: false, message: `${cronsCode} on ${CRONS_ROUTE}${reasonSuffix(crons)}` };
+  const jobs = /** @type {any} */ (crons).json?.jobs;
   if (!Array.isArray(jobs)) return { ok: false, message: `${CRONS_ROUTE} did not return a list of jobs` };
   const replayJobs = jobs.filter(isReplayJob);
   if (replayJobs.length === 0) return { ok: false, message: `the replay job was not found in ${CRONS_ROUTE}` };
@@ -163,6 +195,10 @@ async function preChecks(deps, read, dataFolder) {
     return { ok: false, message: /** @type {any} */ (e)?.code === 'ENOENT' ? 'config.json was not found in the app data folder' : 'config.json is not valid JSON' };
   }
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return { ok: false, message: 'config.json is not a JSON object' };
+  // Last: the route that is measured must accept the token too; an answer of /api/crons does not show that (R6.16).
+  const config = await read(CONFIG_ROUTE);
+  const configCode = precheckCode(config) ?? (typeof (/** @type {any} */ (config).json) === 'object' && /** @type {any} */ (config).json !== null && !Array.isArray(/** @type {any} */ (config).json) ? null : 'unexpected_body');
+  if (configCode) return { ok: false, message: `${configCode} on ${CONFIG_ROUTE} before any write${reasonSuffix(config)}` };
   return { ok: true, before: /** @type {Record<string, unknown>} */ (parsed) };
 }
 
@@ -206,14 +242,14 @@ export async function runMeasurement({ deps, read, dryRun = false, homeDir, sign
   }
   const { before } = checks;
 
-  /** @type {{stop: string|null}} */
-  const state = { stop: null };
+  /** @type {{stop: string|null, kind: 'aborted'|'blocked'|'failed'|null}} */
+  const state = { stop: null, kind: null };
   let lo = 0;
   /** @type {number|null} */
   let hi = null;
 
   /**
-   * One write-read-compare. Returns 'good', 'bad' or 'stop'.
+   * One write-read-compare. Returns 'good', 'bad' or 'stop'. A blocked answer (R6.14) stops the run; it is never a size failure.
    * @param {'ladder'|'bisect'} phase
    * @param {number} size
    * @returns {Promise<'good'|'bad'|'stop'>}
@@ -221,15 +257,24 @@ export async function runMeasurement({ deps, read, dryRun = false, homeDir, sign
   async function step(phase, size) {
     if (signal?.aborted) {
       state.stop = 'aborted';
+      state.kind = 'aborted';
       return 'stop';
     }
     const w = await writeProbe(deps, size);
     if (!w.ok) {
       state.stop = `the probe could not be written (${w.reason})`;
+      state.kind = 'failed';
       return 'stop';
     }
-    const record = classify(size, phase, await read(CONFIG_ROUTE));
+    const answer = await read(CONFIG_ROUTE);
+    const record = classify(size, phase, answer);
     report.steps.push(record);
+    const code = blockCode(answer);
+    if (code !== null) {
+      state.stop = `${code} at ${size} bytes${record.reason ? `: ${record.reason}` : ''}`;
+      state.kind = 'blocked';
+      return 'stop';
+    }
     return record.good ? 'good' : 'bad';
   }
 
@@ -253,7 +298,7 @@ export async function runMeasurement({ deps, read, dryRun = false, homeDir, sign
     report.firstBad = hi;
     if (state.stop === 'aborted') report.status = 'aborted';
     else if (state.stop !== null) {
-      report.status = 'failed';
+      report.status = state.kind === 'blocked' ? 'blocked' : 'failed';
       report.message = hide(state.stop);
     } else if (signal?.aborted) {
       report.status = 'aborted';
@@ -277,9 +322,12 @@ export async function runMeasurement({ deps, read, dryRun = false, homeDir, sign
         }
         try {
           const after = await read(CONFIG_ROUTE);
-          report.removal.routeRestored = after.kind === 'response' && after.ok && isDeepStrictEqual(after.json, before);
+          const restored = after.kind === 'response' && after.ok && isDeepStrictEqual(after.json, before);
+          report.removal.routeRestored = restored;
+          if (!restored) report.removal.routeReason = after.kind !== 'response' ? after.kind : !after.ok ? `status ${after.status}` : 'differs from the file before the run';
         } catch {
           report.removal.routeRestored = false;
+          report.removal.routeReason = 'the read failed';
         }
       } else {
         report.status = 'failed';

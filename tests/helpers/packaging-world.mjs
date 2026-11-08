@@ -19,6 +19,8 @@ export const FAILURE_MODES = /** @type {const} */ (['status', 'truncated', 'not-
  * @property {Record<string, unknown>|null} [config]  the seeded config; null seeds no file
  * @property {number} [limit]                 the largest probe the route returns in full (default: no limit)
  * @property {typeof FAILURE_MODES[number]} [mode]   how a bigger probe fails (default status)
+ * @property {number} [failStatus]            the status of the status mode (default 413)
+ * @property {number} [configStatus]          if set, the Config_Route always answers this status (a refused token)
  * @property {Array<Record<string, unknown>>} [jobs]  the jobs of /api/crons
  * @property {number} [cronsStatus]           the status of /api/crons (default 200)
  * @property {boolean} [seedFolder]           create the data folder (default true)
@@ -49,6 +51,7 @@ export function makeMeasureWorld(o = {}) {
   };
   const limit = o.limit ?? Number.POSITIVE_INFINITY;
   const mode = o.mode ?? 'status';
+  const failStatus = o.failStatus ?? 413;
   const jobs = o.jobs ?? [{ name: 'replay', enabled: true, is_running: false, script: 'D:/secret/path/replay_cron.py:run' }];
   /** @type {string[]} */
   const requested = [];
@@ -62,6 +65,7 @@ export function makeMeasureWorld(o = {}) {
     requested.push(path);
     if (path === CRONS_ROUTE) return { status: o.cronsStatus ?? 200, text: JSON.stringify({ jobs }) };
     if (path !== CONFIG_ROUTE) return { status: 404, text: '{"error":"not found"}' };
+    if (o.configStatus !== undefined) return { status: o.configStatus, text: '{"detail":"Forbidden"}' };
     const text = memFs.peek(configPath);
     if (text === undefined) return { status: 404, text: '{"error":"no config"}' };
     const obj = JSON.parse(text);
@@ -69,7 +73,7 @@ export function makeMeasureWorld(o = {}) {
     const probeBytes = probe === undefined ? 0 : Buffer.byteLength(JSON.stringify(probe), 'utf8');
     const body = JSON.stringify(obj);
     if (probeBytes <= limit) return { status: 200, text: body };
-    if (mode === 'status') return { status: 413, text: '{"error":"too large"}' };
+    if (mode === 'status') return { status: failStatus, text: failStatus === 413 ? '{"error":"too large"}' : failStatus === 403 ? '{"detail":"Forbidden"}' : `{"detail":"status ${failStatus}"}` };
     if (mode === 'truncated') return { status: 200, text: body.slice(0, Math.floor(body.length / 2)) };
     if (mode === 'not-json') return { status: 200, text: 'oops' };
     return { timeout: true };

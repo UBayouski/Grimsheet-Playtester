@@ -5,7 +5,7 @@
 // `config` prints the sizes of the Results_Key and its parts. It writes no file.
 
 import { pathToFileURL } from 'node:url';
-import { CONFIG_ROUTE, CRONS_ROUTE, isReplayJob, readRoute, scrub } from './route-reader.mjs';
+import { CONFIG_ROUTE, CRONS_ROUTE, bodyReason, isReplayJob, readRoute, scrub } from './route-reader.mjs';
 import { parseAccessInput, promptSecret, promptVisible } from './secret-prompt.mjs';
 
 const USAGE = 'usage: node scripts/packaging/read-route.mjs crons|config\n';
@@ -152,7 +152,7 @@ export async function main(argv = process.argv.slice(2), io = {}) {
       return;
     }
     if (!result.ok) {
-      write(`${JSON.stringify({ route, status: result.status }, null, 2)}\n`);
+      write(`${JSON.stringify({ route, status: result.status, reason: bodyReason(result) }, null, 2)}\n`);
       setExitCode(1);
       return;
     }

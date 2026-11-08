@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { PassThrough } from 'node:stream';
-import { ALLOWED_PATHS, TOKEN_FORM, isReplayJob, readRoute, scrub } from '../scripts/packaging/route-reader.mjs';
+import { ALLOWED_PATHS, TOKEN_FORM, bodyReason, isReplayJob, readRoute, scrub } from '../scripts/packaging/route-reader.mjs';
 import { summariseConfig, summariseCrons } from '../scripts/packaging/read-route.mjs';
 import { parseAccessInput, promptSecret, promptVisible } from '../scripts/packaging/secret-prompt.mjs';
 import { fakeResponse, hang, makeFakeFetch, makeFakeTimer } from './helpers/packaging-fakes.mjs';
@@ -310,6 +310,47 @@ describe('the prompts', () => {
   });
 });
 
+describe('bodyReason (the short reason of an answer that is not good, R6.17)', () => {
+  /** @param {Partial<{status: number, bodyText: string, json: unknown}>} o */
+  const response = (o) => /** @type {any} */ ({ ok: false, kind: 'response', status: 403, bytes: 10, ms: 1, bodyText: '', ...o });
+
+  it('takes the error, message, detail or code text of a JSON answer, in that order', () => {
+    expect(bodyReason(response({ bodyText: '{"error":"too large"}', json: { error: 'too large' } }))).toBe('too large');
+    expect(bodyReason(response({ json: { message: 'm', detail: 'd', code: 'c' }, bodyText: '{}' }))).toBe('m');
+    expect(bodyReason(response({ json: { detail: 'Forbidden' }, bodyText: '{}' }))).toBe('Forbidden');
+    expect(bodyReason(response({ json: { code: 'forbidden' }, bodyText: '{}' }))).toBe('forbidden');
+    expect(bodyReason(response({ json: { error: { message: 'nested text' } }, bodyText: '{}' }))).toBe('nested text');
+  });
+
+  it('falls back to the start of the body, with white space collapsed, at most 80 characters', () => {
+    expect(bodyReason(response({ bodyText: 'Forbidden:\n  not   allowed' }))).toBe('Forbidden: not allowed');
+    expect(bodyReason(response({ bodyText: 'x'.repeat(300) }))).toBe('x'.repeat(80));
+    expect(bodyReason(response({ bodyText: '{"other":1}', json: { other: 1 } }))).toBe('{"other":1}');
+    expect(bodyReason(response({ bodyText: '' }))).toBe('');
+  });
+
+  it('gives the message of an answer that never came, cut to 80 characters', () => {
+    expect(bodyReason({ ok: false, kind: 'timeout', message: 'the request took longer than 15 seconds' })).toBe('the request took longer than 15 seconds');
+    expect(bodyReason({ ok: false, kind: 'network', message: 'y'.repeat(200) })).toBe('y'.repeat(80));
+  });
+
+  // Feature: packaging, Property 9 (reason text): the reason never holds the token
+  it('Property 9: the reason of an answer that echoes the token holds no token, in any form', async () => {
+    const arbToken = fc.stringMatching(/^[\x21-\x7e]{8,40}$/);
+    await fc.assert(
+      fc.asyncProperty(arbToken, fc.constantFrom('text', 'json-error', 'json-detail', 'encoded'), async (token, shape) => {
+        const echo = shape === 'encoded' ? encodeURIComponent(token) : token;
+        const body = shape === 'json-error' ? JSON.stringify({ error: `denied ${echo}` }) : shape === 'json-detail' ? JSON.stringify({ detail: `no ${echo}` }) : `denied for ${echo}`;
+        const { fetch } = makeFakeFetch(() => fakeResponse(403, body));
+        const result = await readRoute({ fetch, origin: ORIGIN, token, path: CONFIG_PATH, ...makeFakeTimer(false) });
+        const reason = bodyReason(result);
+        expect(reason.length).toBeLessThanOrEqual(80);
+        for (const form of [token, encodeURIComponent(token), JSON.stringify(token).slice(1, -1)]) expect(reason.includes(form)).toBe(false);
+      }),
+      { numRuns: 300 },
+    );
+  });
+});
 describe('isReplayJob (the page rule for the replay job)', () => {
   it('accepts the name replay, a name ending /replay, and else a script that holds replay_cron.py', () => {
     expect(isReplayJob({ name: 'replay' })).toBe(true);

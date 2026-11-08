@@ -8,6 +8,28 @@ export const CONFIG_ROUTE = '/api/apps/grimsheet-playtester/config';
 export const CRONS_ROUTE = '/api/crons';
 
 /**
+ * A short reason for an answer that is not a good one (R6.17): the `error`, `message`, `detail`, `code` or `reason` text of a
+ * JSON answer, else the start of the body; for an answer that never came, its message. At most 80 characters, white space
+ * collapsed. The text is already free of the token, because readRoute scrubs the body and its messages.
+ * @param {RouteResult} r
+ * @returns {string}
+ */
+export function bodyReason(r) {
+  /** @param {unknown} s @returns {string} */
+  const clip = (s) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, 80);
+  if (r.kind !== 'response') return clip(r.message);
+  const json = /** @type {any} */ (r.json);
+  if (typeof json === 'object' && json !== null && !Array.isArray(json)) {
+    for (const key of ['error', 'message', 'detail', 'code', 'reason']) {
+      const v = json[key];
+      if (typeof v === 'string' && v.trim() !== '') return clip(v);
+      if (typeof v === 'object' && v !== null && typeof v.message === 'string' && v.message.trim() !== '') return clip(v.message);
+    }
+  }
+  return clip(r.bodyText);
+}
+
+/**
  * The page's Replay_Job rule: a name of `replay` or ending `/replay`, else a `script` that holds `replay_cron.py`.
  * @param {unknown} job one element of the `jobs` list of /api/crons
  * @returns {boolean}

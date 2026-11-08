@@ -268,14 +268,22 @@ describe('read-route entry', () => {
     expect(h.urls[0]?.startsWith('http://127.0.0.1:5476/api/crons')).toBe(true);
   });
 
-  it('prints only the status for an answer that is not 2xx, and exits 1', async () => {
+  it('prints the status and a short scrubbed reason for an answer that is not 2xx, and exits 1', async () => {
     const h = rh({ fetch: async () => ({ status: 401, ok: false, text: async () => `denied for ${TOKEN}` }) });
     await readRouteMain(['crons'], h.io);
     const text = h.out.join('');
-    expect(JSON.parse(text)).toMatchObject({ status: 401 });
-    expect(text).not.toContain('denied');
+    expect(JSON.parse(text)).toEqual({ route: '/api/crons', status: 401, reason: 'denied for <token>' });
     expect(text).not.toContain(TOKEN);
     expect(h.codes).toEqual([1]);
+  });
+
+  it('shows the error text of a JSON answer as the reason, cut to 80 characters', async () => {
+    const h = rh({ fetch: async () => ({ status: 403, ok: false, text: async () => JSON.stringify({ detail: 'Forbidden '.repeat(20) }) }) });
+    await readRouteMain(['config'], h.io);
+    const printed = JSON.parse(h.out.join(''));
+    expect(printed).toMatchObject({ route: '/api/apps/grimsheet-playtester/config', status: 403 });
+    expect(printed.reason.length).toBeLessThanOrEqual(80);
+    expect(printed.reason.startsWith('Forbidden Forbidden')).toBe(true);
   });
 
   it('prints a short message and exits 1 for a network error, without the token', async () => {
