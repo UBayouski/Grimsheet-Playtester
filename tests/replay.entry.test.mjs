@@ -62,7 +62,7 @@ describe('parseArgs', () => {
 describe('buildRealDeps', () => {
   it('returns the keys of Deps', () => {
     const deps = buildRealDeps();
-    expect(Object.keys(deps).sort()).toEqual(['appName', 'clock', 'fs', 'paths', 'pid', 'platform', 'sleep', 'spawn', 'token', 'verifier']);
+    expect(Object.keys(deps).sort()).toEqual(['appName', 'clock', 'fs', 'logStderr', 'paths', 'pid', 'platform', 'sleep', 'spawn', 'token', 'verifier']);
   });
 
   it('platform is win32 or other', () => {

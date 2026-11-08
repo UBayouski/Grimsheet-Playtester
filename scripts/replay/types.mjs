@@ -194,6 +194,7 @@
  * @property {() => string} token   32 hex characters
  * @property {number} pid
  * @property {string} appName
+ * @property {(text: string) => void} [logStderr]   Writes to the Replay_Script's stderr (data\launcher\last-child.log). Absent: nothing is printed.
  * @property {'win32'|'other'} platform
  */
 

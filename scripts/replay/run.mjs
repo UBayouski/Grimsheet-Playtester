@@ -30,6 +30,35 @@ import {
 
 const RESULTS_TOP_KEY = 'playtesterResults';
 
+const LOG_TAIL_CHARS = 2000;
+
+/**
+ * Wraps the process starter so that a failed external step of the checkout, install, build or list
+ * stage (non-zero exit, start error or timeout) writes the tail of its output to stderr, every line
+ * prefixed with the step label. Nothing is printed for a step that succeeded, for a play process, or
+ * for the `git remote get-url` that only decides whether the checkout is repaired. The text goes to
+ * stderr only; it is never stored in the Result_File or the results key.
+ * @param {Deps} deps
+ * @returns {Deps['spawn']}
+ */
+function withFailureLog(deps) {
+  const log = deps.logStderr;
+  if (!log) return deps.spawn;
+  return async (spec) => {
+    const r = await deps.spawn(spec);
+    const failed = r.startError !== null || r.timedOut || r.exitCode !== 0;
+    const repairProbe = spec.label === 'git remote get-url' && r.startError === null && !r.timedOut;
+    if (!failed || repairProbe || spec.label.startsWith('play ')) return r;
+    const what = r.startError !== null ? `could not be started: ${r.startError}` : r.timedOut ? 'timed out' : `exit code ${r.exitCode}`;
+    const lines = [`failed: ${what}`];
+    for (const [name, text] of /** @type {const} */ ([['stdout', r.stdout], ['stderr', r.stderr]])) {
+      const tail = text.slice(-LOG_TAIL_CHARS).trimEnd();
+      if (tail !== '') lines.push(`${name}:`, ...tail.split(/\r?\n/));
+    }
+    log(`${lines.map((line) => `[${spec.label}] ${line}`).join('\n')}\n`);
+    return r;
+  };
+}
 /**
  * @param {Failure['stage']} stage
  * @param {string} reasonCode
@@ -136,13 +165,14 @@ async function finish(deps, started, result) {
 /**
  * Steps 5 to 7: checkout, install, build, list, replay. Fills `result` as it goes, so an unexpected
  * throw leaves what was done so far.
- * @param {Deps} deps
+ * @param {Deps} realDeps
  * @param {{repoUrl: string, branch: string, cronTimeoutSec: number}} args
  * @param {number} deadlineMs
  * @param {{commit: string|null, levels: LevelEntry[], coverage: Coverage|null, failure: Failure|null}} result
  * @returns {Promise<void>}
  */
-async function runStages(deps, args, deadlineMs, result) {
+async function runStages(realDeps, args, deadlineMs, result) {
+  const deps = { ...realDeps, spawn: withFailureLog(realDeps) };
   const checkout = await ensureCheckout(deps, { repoUrl: args.repoUrl, branch: args.branch, deadlineMs });
   if (!checkout.ok) {
     result.failure = checkout.failure;

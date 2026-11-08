@@ -52,6 +52,7 @@ export function buildRealDeps() {
     token: () => randomBytes(16).toString('hex'),
     pid: process.pid,
     appName: APP_NAME,
+    logStderr: (text) => void process.stderr.write(text),
     platform: process.platform === 'win32' ? 'win32' : 'other',
   };
 }

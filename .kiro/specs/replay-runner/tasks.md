@@ -329,6 +329,12 @@ Rules that apply to every task:
     - Name no tool other than Kiro. Replace any Windows user name or home path with `~`, `%USERPROFILE%` or `%LOCALAPPDATA%`.
     - _Requirements: 13.1_
 
+- [x] 15. Diagnostics for failed steps
+  - [x] 15.1 Print the tail of a failed external step to stderr
+    - Test first, in `tests/replay.run.test.mjs`: one failing test per stage (`checkout`, `install`, `build`, `list`) with the fake spawn, plus tests for a start error, a timeout, the 2000-character cut, and for silence on success, on a failed play, on the `git remote get-url` repair probe, and when no `logStderr` is given. Expected before the change: the stage tests fail.
+    - Then add the optional `logStderr` dependency (`types.mjs`, `buildRealDeps` with `process.stderr.write`) and a wrapper around `deps.spawn` in `scripts/replay/run.mjs` that writes `[<step label>] ...` lines (outcome, then the last 2000 characters of stdout and of stderr). The text is not added to the Result_File or the results key. `tests/replay.entry.test.mjs` lists the keys of `buildRealDeps`, so it gains `logStderr`.
+    - Command: `npm test`, `npm run typecheck` and `python -m unittest tests.test_replay_cron`. Expected: all pass.
+    - _Requirements: 7.6, 13.1_
 ## Notes
 
 - Out of scope for this plan, and not done by any task: a real run against the gateway, the `app.json` edit (the `replay` cron entry of Requirement 12), the check that `app.json` `timeout` equals `CRON_TIMEOUT`, and the measurement of the config route size limit. They belong to the `packaging` spec.
@@ -394,7 +400,8 @@ Rules that apply to every task:
     { "id": 45, "tasks": ["12.3"] },
     { "id": 46, "tasks": ["13.1"] },
     { "id": 47, "tasks": ["13.2"] },
-    { "id": 48, "tasks": ["14.1"] }
+    { "id": 48, "tasks": ["14.1"] },
+    { "id": 49, "tasks": ["15.1"] }
   ]
 }
 ```

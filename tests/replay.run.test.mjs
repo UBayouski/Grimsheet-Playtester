@@ -49,6 +49,7 @@ function makeVerifier(table = {}) {
  *   viaClone?: boolean,
  *   onSpawn?: (spec: import('../scripts/replay/types.mjs').ProcSpec) => void,
  *   platform?: 'win32'|'other',
+ *   logStderr?: (text: string) => void,
  * }} [o]
  */
 function setup(o = {}) {
@@ -86,6 +87,7 @@ function setup(o = {}) {
     pid: 4242,
     appName: APP,
     platform: o.platform ?? /** @type {'win32'} */ ('win32'),
+    ...(o.logStderr ? { logStderr: o.logStderr } : {}),
   };
   return { clock, fs, deps, fake, verifier, spawn, seedSolution };
 }
@@ -249,6 +251,82 @@ describe('runReplay: failures', () => {
   });
 });
 
+describe('runReplay: the tail of a failed external step goes to stderr', () => {
+  /** @param {Parameters<typeof setup>[0]} o */
+  async function runLogged(o = {}) {
+    /** @type {string[]} */
+    const log = [];
+    const s = setup({ ...o, logStderr: (text) => void log.push(text) });
+    const r = await runReplay(s.deps, ARGS);
+    return { s, r, text: log.join('') };
+  }
+  const big = (/** @type {string} */ c) => `HEAD-${c.repeat(3000)}-TAIL`;
+
+  it('checkout: a failed git step prints its label, stdout and stderr, cut to the last 2000 characters each', async () => {
+    const { text, r } = await runLogged({ grim: { git: { 'rev-parse': procFail(128, big('e'), big('o')) } } });
+    expect(r.line.state).toBe('failed');
+    expect(text).toContain('[git rev-parse]');
+    expect(text).toContain('exit code 128');
+    expect(text).toContain('-TAIL');
+    expect(text).not.toContain('HEAD-');
+    expect(text.match(/e/g)?.length ?? 0).toBeGreaterThan(1900);
+    expect(text.match(/o+/g)?.some((m) => m.length > 2000)).toBe(false);
+    for (const line of text.trimEnd().split('\n')) expect(line.startsWith('[git rev-parse]')).toBe(true);
+  });
+
+  it('install: npm ci that exits non-zero prints its label and output', async () => {
+    const { text } = await runLogged({ grim: { npm: { ci: procFail(1, 'npm ERR! code ELIFECYCLE', 'some stdout') } } });
+    expect(text).toContain('[npm ci]');
+    expect(text).toContain('npm ERR! code ELIFECYCLE');
+    expect(text).toContain('some stdout');
+  });
+
+  it('build: npm run build:play that exits non-zero prints its label and output', async () => {
+    const { text } = await runLogged({ grim: { npm: { build: procFail(2, 'error TS2304: Cannot find name') } } });
+    expect(text).toContain('[npm run build:play]');
+    expect(text).toContain('error TS2304: Cannot find name');
+  });
+
+  it('list: a --list that exits non-zero prints its label and output', async () => {
+    const { text } = await runLogged({ grim: { list: procFail(2, 'unknown option') } });
+    expect(text).toContain('[node play.mjs --list]');
+    expect(text).toContain('unknown option');
+  });
+
+  it('a start error and a timeout are reported too', async () => {
+    const started = await runLogged({ grim: { npm: { ci: procCannotStart('spawn npm ENOENT') } } });
+    expect(started.text).toContain('[npm ci]');
+    expect(started.text).toContain('spawn npm ENOENT');
+    const hung = await runLogged({ grim: { npm: { build: procHang() } } });
+    expect(hung.text).toContain('[npm run build:play]');
+    expect(hung.text).toContain('timed out');
+  });
+
+  it('a successful Run prints nothing, even when the steps wrote to stderr', async () => {
+    const { text, r } = await runLogged({ grim: { npm: { ci: procOk('added 1 package', 'npm WARN deprecated x') }, git: { fetch: procOk('', 'From https://x') } } });
+    expect(r.line.state).toBe('complete');
+    expect(text).toBe('');
+  });
+
+  it('a failed play and a repaired checkout (get-url non-zero) print nothing', async () => {
+    const play = await runLogged({ grim: { rules: [{ command: 'node', args: ['scripts/play.mjs', '02-the-chaser'], result: procFail(2, 'play crashed') }] } });
+    expect(play.r.line.state).toBe('complete');
+    expect(play.text).toBe('');
+    const repaired = await runLogged({ viaClone: true, grim: { git: { 'remote get-url': procFail(128, 'fatal: not a git repository') } } });
+    expect(repaired.text).toBe('');
+  });
+
+  it('the text is not stored in the Result_File or the results key', async () => {
+    const { s } = await runLogged({ grim: { npm: { ci: procFail(1, 'SECRET-LOOKING-OUTPUT-XYZ') } } });
+    expect(s.fs.snapshot()[RUN1.replace(/\//g, '/')] ?? '').not.toContain('SECRET-LOOKING-OUTPUT-XYZ');
+    for (const content of Object.values(s.fs.snapshot())) expect(content).not.toContain('SECRET-LOOKING-OUTPUT-XYZ');
+  });
+
+  it('without a logStderr dependency nothing is printed and nothing breaks', async () => {
+    const s = setup({ grim: { npm: { ci: procFail(1, 'x') } } });
+    expect((await runReplay(s.deps, ARGS)).line.state).toBe('failed');
+  });
+});
 describe('runReplay: time limits', () => {
   it('step_timeout with the step name when a step goes over its limit', async () => {
     const { fs } = await (async () => {
