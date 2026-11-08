@@ -173,3 +173,70 @@ What changed because of it:
 - C4: the hunt's entry scripts live in the `find-exploits` skill folder and import the app's `scripts/hunt/` modules by relative path; the agent runs them with the folder the skill load reports.
 - Credits: 7.86 for the run in which the agent failed to write the long argument, and 0.21, 0.39 and 0.11 for the other three runs, about 8.6 in total. Choosing a cheaper model in the agent file is now a design question.
 - Mistakes worth keeping: one long PowerShell write was refused because the tool could not parse it, and was split into smaller writes; one recorded approval count was a miscount that the gateway log corrected; a sub-agent edit was cancelled midway, so the next pass had to check which edits were already in the file before adding the rest.
+
+## 2026-11-08 - exploit-hunt: the verified hunt, built test-first and run once against the real Grimsheet
+
+Surface: CLI
+
+Features: spec, pbt, agent
+
+What I asked for: Approve the `exploit-hunt` requirements and design, then carry out its tasks in order. Each batch was reviewed in a separate session; the decisions below are mine. The checks C1 to C4 that came before the design are in the entry "exploit-hunt: four checks in a throwaway Crew app before any design". Same rules as the earlier specs: failing tests first, stop and report a counterexample instead of narrowing an input or loosening a check, no git writes, nothing written in the Grimsheet checkout.
+
+What Kiro did:
+- Took the approved requirements and design as the input. Before any code, made two read-only captures from the local Grimsheet checkout: the `--level-info` answer for `02-the-chaser` (11819 bytes raw) and the extra keys that `play.mjs` accepts in a Candidate_File.
+- Built each module after its tests had failed: limits, tokens, args, budget, hunt-record, findings, hunt-store, publish, finish, begin, level-info and info, submit, end, cli, deps, then the four entry scripts, the agent file and the two skills.
+- Built a hunt world builder (`tests/helpers/hunt-world.mjs`) over the replay's fake file system and fake processes, so the hunt runs end to end with no network and no real Grimsheet.
+- Kept the verifier as the only judge. The hunt computes no class and no outcome; every Finding comes from a verifier result.
+- Wrote the 15 properties (tag `pbt`, 100 to 500 runs each).
+- Ran the whole flow once against the real Grimsheet on this machine:
+  - Begin was ready in 13.3 s.
+  - Info returned the reduced level view.
+  - The C3-f candidate was rejected as `not_cheaper`.
+  - The probe candidates were rejected.
+  - A 132-character token reached the script whole.
+  - A bad argument was refused.
+  - End finished `complete` and the locks were gone.
+- Tests: `npm test` in the repo root, run once: 35 files, 1153 tests, all passing. The 19 `tests/hunt.*` files hold 548 of them.
+
+What changed because of it:
+- A fixture changed the design. The raw `--level-info` for `02-the-chaser` is 11819 bytes, too large to hand to the agent. Info now returns a reduced view of 686 bytes with 4 cells.
+- The raw limit of a candidate is counted in UTF-8 bytes, not characters (`MAX_RAW_BYTES = 40`).
+- Property 4 was restated (below).
+- The time boundary is explicit: a Hunt of exactly 2400 s is still live.
+- What testing caught:
+  - The design said a 20-item Findings value is 7670 bytes. Task 9.2 measured it against the real formula; the right figure is 251 + 20 x 386 + 19 = 7990.
+  - The worst-case Finding bound held only for ASCII. Task 9.5 found that 40 code points of U+1F600 gave a 2639-byte Finding. Counting the raw limit in UTF-8 bytes fixed it.
+  - Property 4 contradicted the Finish step. Seed 648562001 failed in task 16.3, a case seven random runs had missed: a self-finish on `time_budget_spent` refreshes the findings header. The property was restated to say so.
+  - The property world first confirmed only 7 steps, because five levels had no stored solution. After seeding solutions it confirmed 44.
+  - Info and `resolveActiveHunt` hid internal faults as `no_active_hunt`. They now exit 4 with `hunt_internal_error`.
+  - The smoke run showed the command tool remapping exit codes (any non-zero code appeared as 1). The printed `exitStatus` covers this; a check in the same session showed exit 3 where 3 was expected.
+  - One Property 4 failure (seed 5) could not be explained. It came from three test suites running at once against the 5 s default timeout. It never repeated in nine parallel runs. Test suites are now run one at a time.
+
+## 2026-11-08 - dashboard: a page that treats every value as untrusted, built test-first
+
+Surface: CLI
+
+Features: spec, steering, pbt
+
+What I asked for: Review the dashboard requirements, approve the design, then carry out the tasks in order. Each batch was reviewed in a separate session; the decisions below are mine. Same rules as the earlier specs: failing tests first, stop and report a counterexample instead of narrowing a generator or loosening a check, no git writes. I asked for a stale warning when the last replay is old.
+
+What Kiro did:
+- Reviewed the requirements against the Crew notes and evidence and recorded where the docs and the observed behaviour differ (observed behaviour wins). Wrote a design with 22 decisions.
+- Built the pure core test-first: data checks, time, colour, tokens, findings, cards, view model and the poll scheduler. It imports no React and no SDK.
+- Wrote the 15 properties (tag `pbt`) over generators for valid Results_Values, Findings_Values, token lists and arbitrary JSON. Invalid values are built by corrupting valid ones.
+- Built the controller with a fake clock and a recording fake API that only has `get`, so a test can show the page never writes.
+- Built the components and tested them with `react-dom/server`. No test uses a browser or the network.
+- Did not import `@kirocrew/app-sdk/ui`. In the spike (E09), a page that imported a name the host did not export failed to link as a whole, and a `typeof` check cannot guard a missing module. A test scans `ui/src/` and `ui/dist/index.mjs` for that specifier.
+- Added the stale warning I asked for (36 hours; exactly 36 hours is not stale) with a property test.
+- Held the page to React APIs that exist in both React 18 and 19: `useSyncExternalStore`, `useMemo`, `useRef`, `useEffect`, `useState`. No `use()`, no Actions, no `ref` as a prop.
+- Wrote the `check-dist` script, which scans the built bundle for the wrong imports, absolute paths, a user name, URLs and a token value.
+- Tests: 254 `ui/` tests after the pure core (tasks 1.1 to 13.1) and 439 after the controller, components, entry and build (tasks 14.1 to 18.1), typecheck clean, one 43.9 kB `index.mjs`. These counts are from the commit messages; I did not run the `ui/` tests for this entry.
+
+What changed because of it:
+- The root test run now collects only `tests/`, so the two suites do not mix.
+- `check-dist` looks for a token value, not the word `token=` (below).
+- What testing caught:
+  - The generator self-tests caught null-prototype objects and the `{"constructor":{}}` case.
+  - The source scan for `.delete(` flagged `Set.delete`, a Set method and not an HTTP call.
+  - A component test caught absent findings being counted as dropped.
+  - `check-dist` flagged the word `token=` in the page's own redaction code. The first fix, hiding the character, was reverted in favour of a check for a token value: `token=` followed by at least 6 token characters.

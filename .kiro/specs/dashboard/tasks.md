@@ -389,8 +389,8 @@ Rules that apply to every task:
     - In `ui/` run `npm test`, `npm run typecheck` and `npm run build`. All three must pass. From the repository root run `npm test` and `npm run typecheck` and check that the root results are unchanged and that no `ui/` file was collected by the root run. Run `git status --porcelain` (read only) and confirm that only `ui/`, `.kiro/specs/dashboard/`, `.kiro/steering/dashboard.md` and (after task 19.1) `KIRO_USAGE.md` changed, and that `app.json`, `scripts/`, the root `tests/`, the root `package.json` and the root `tsconfig.json` did not. Ask the user if questions arise.
     - _Requirements: 10.12, 9.1_
 
-- [ ] 19. Update `KIRO_USAGE.md`
-  - [ ] 19.1 Write the dashboard entry
+- [x] 19. Update `KIRO_USAGE.md`
+  - [x] 19.1 Write the dashboard entry
     - Read `KIRO_USAGE.md` first and follow its entry format (`## YYYY-MM-DD - short title`, then `Surface`, `Features`, `What I asked for`, `What Kiro did`, `What changed because of it`). Append an entry for the dashboard spec: requirements reviewed with changes, the design with 22 decisions, the pure core built test-first, the 15 properties (tag `pbt`), the controller with a fake clock and a recording fake API, `react-dom/server` rendering tests, the decision not to import `@kirocrew/app-sdk/ui` and the reason (E09), the stale warning added by the developer, the React 18 and 19 compatibility rule, the check-dist script, and any decision that changed because of a test.
     - Name no tool other than Kiro. Replace any Windows user name or home path with `~`, `%USERPROFILE%` or `%LOCALAPPDATA%`.
     - _Requirements: 10.12_
