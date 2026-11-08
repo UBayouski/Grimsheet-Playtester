@@ -19,7 +19,7 @@ Read for this design (read only): `requirements.md` (as approved), the root `pac
 
 Not verified (nothing was built, installed, run or called):
 
-- **How the gateway accepts a token for an API call.** The notes record that a dashboard address is obtained with `kirocrew token` and that a session token lasts 30 minutes (E24), and nothing about the header or query form an API request needs. Task 1 reads `kirocrew token --help` and the Crew docs (read only) and fixes one form (Decision D6). Until then the route reader supports two forms behind one constant, `bearer` (default) and `query`.
+- **How the gateway accepts a token for an API call.** The notes record that a dashboard address is obtained with `kirocrew token` and that a session token lasts 30 minutes (E24), and nothing about the header or query form an API request needs. Task 1.2 reads `kirocrew token --help` and the Crew docs (read only, after the user says yes) and fixes one form (Decision D6). Until then the route reader supports two forms behind one constant, `bearer` (default) and `query`.
 - **The text that `kirocrew token` prints.** Not recorded. The reader asks for the gateway origin and the token as two separate prompts, so it does not depend on that text.
 - **Whether the Vite output is byte-for-byte reproducible.** Expected (pinned versions, no sourcemap, no hashed file names, no timestamps) and checked by task 2 (see "Stale-bundle check").
 - **Whether the host's `lucide-react` has the icon names chosen in Q2.** Settled by the first install (the sidebar shows a glyph or not).
@@ -224,7 +224,7 @@ How a step starts: `npm` is a `.cmd` file on Windows, so it is started as a fixe
 4. Otherwise print exactly one line and exit 1: `ui/dist/index.mjs is stale or missing: run "npm run build" in ui/ and commit the result.`
 5. Remove the temp folder in a `finally` block.
 
-**Reproducibility.** The design expects the same bytes from two builds of the same tree, because the Vite config sets `sourcemap: false`, a fixed output name, no hashing and no environment-dependent value, and the versions are pinned in `ui/package.json`. Task 2 proves it before step 6 is written: build twice into two temp folders and compare; also build after `npm ci` on the Clean_Clone of R9 and compare with the committed file (the `git status --porcelain` of the clone after `npm run build` must be empty). The comparison stays byte for byte if all of these match.
+**Reproducibility.** The design expects the same bytes from two builds of the same tree, because the Vite config sets `sourcemap: false`, a fixed output name, no hashing and no environment-dependent value, and the versions are pinned in `ui/package.json`. Task 1.1 proves it before step 6 is written: build twice into two temp folders and compare; also build after `npm ci` on the Clean_Clone of R9 and compare with the committed file (the `git status --porcelain` of the clone after `npm run build` must be empty). The comparison stays byte for byte if all of these match.
 
 If the builds differ, the only comparison that this design allows instead is **bytes after turning each CRLF into LF**, because the one cause known today is line-ending conversion by git, and `.gitattributes` removes it for new clones. If the builds still differ after that, the work stops and reports where the first difference is; it does not invent a looser comparison (for example by size).
 
@@ -438,24 +438,24 @@ Test files: `tests/packaging.manifest.test.mjs` (P1 to P5 and the real files), `
 
 ## Changes to requirements
 
-The design found these points. None of them has been written into `requirements.md`; they wait for approval.
+The design found seven points. The user approved the first five; they have been written into `requirements.md`:
 
-1. **R8.4 and R12.4 (drive letter).** The requirement asks for "the full-path form" of the Crew_CLI, which starts with a drive letter, while R12.24 makes the README lint reject a drive letter. The design shows the command as `$env:ProgramFiles\KiroCrew\...`. Proposed wording: "the path built from `$env:ProgramFiles`".
-2. **R12.21 and R12.24 (dashboard URL).** The README now holds URLs (R12.25), so "no dashboard URL" becomes a check that every address starts with one of two allowed prefixes, plus a ban on `localhost`, `127.0.0.1` and `token=`. Proposed wording for R12.24.
-3. **R8.2 and R14.5 (`.gitattributes`).** The committed bundle needs `.gitattributes` with `ui/dist/index.mjs -text`, because the developer machine has `core.autocrlf` set to `true`. Proposed: name the file in R8.2 and in the list of R14.5.
-4. **R7.1 and R8.2 (where the freshness check lives).** Settled by the user: step 6 of `test:all`. R8.2 still says "the Manifest_Check (or the combined command)". Proposed: say "the combined command" and say that the Manifest_Check checks only that the file exists and is not empty.
-5. **R6.12 (fallback not used).** The lock can be taken from a hand step, so the fallback branch (only when the job is not running and no `.hunt.lock` exists) is not used as the main path. The design keeps its checks as extra pre-checks. No wording change is needed; recorded here.
-6. **R6 and R9.4 (who runs the read).** The reads need the token, which only the user holds, so the user runs the reader programs in a terminal and pastes the output. R6 and R9 say "the measurement" and "read once" without saying who runs it. Proposed: add "run by the user" to R6.1 and R9.4.
-7. **R9.2 (clone source).** The Clean_Clone can come from the working folder by a local `git clone <path>`, which needs a commit but not a push. No wording change; the clone URL form is used for the README path.
-
+1. **R8.4 and R12.4 (drive letter).** The Crew_CLI is shown by the path built from `$env:ProgramFiles`. Applied.
+2. **R12.21 and R12.24 (addresses).** "No dashboard URL" became: no `localhost`, no `127.0.0.1`, no `token=`, and every address begins with `https://github.com/UBayouski/` or `https://grimsheet.onrender.com`. Applied.
+3. **R8.2 and R14.5 (`.gitattributes`).** Both name the new file `.gitattributes` with the line `ui/dist/index.mjs -text`. Applied.
+4. **R7.1, R7.9 and R8.2 (where the freshness check lives).** The combined command holds it (new R7.9); the Manifest_Check only checks that the file exists and is not empty. Applied.
+5. **R6.1 and R9.4 (who runs the read).** The reader programs are run by the user, because only the user holds the token. Applied.
+6. **R6.12 (fallback not used).** No wording change; recorded.
+7. **R9.2 (clone source).** No wording change; recorded.
 ## Decisions to confirm
 
+- **Confirmed by the user:** D1 to D6 as written, with D6 settled in task 1.2.
 - **D1. Icon `Ghost`, fallback `Moon`, label equal to the display name.** (Q2)
 - **D2. Probe writer built on `withResultsLock`, not on `mergeTopKey`,** because the probe must be deleted.
 - **D3. The user runs the token-using programs.** The token is typed at a masked prompt. The alternative (the agent runs them with a token in an argument or a file) is rejected by R6.13.
 - **D4. Size ladder.** The six sizes of R6.4, then doubling to 1 MiB, then bisect to 1024 bytes.
 - **D5. Stale-bundle comparison.** Bytes of a Vite build into a temp folder against the committed file, run in `test:all` step 6; fallback only the CRLF-to-LF normalisation (see "Stale-bundle check").
-- **D6. Token form for an API request.** Open until task 1 reads `kirocrew token --help` and the Crew docs; the reader supports `bearer` and `query` behind one constant. If neither works, the conditional `--manual-read` branch is built.
+- **D6. Token form for an API request.** Confirmed as written; settled in task 1.2 of `tasks.md`, which reads `kirocrew token --help` and the Crew docs (after the user says yes); the reader supports `bearer` and `query` behind one constant. If neither works, the conditional `--manual-read` branch is built.
 - **D7. `.gitattributes`.** One line, `ui/dist/index.mjs -text`.
 - **D8. README lint uses an address allow-list** in place of the "no dashboard URL" check.
 - **D9. Open for the first install:** Q3 (`storage`), Q4 (build-tool warning, developer path only), Q6 (time formats), Q7 (cron timing), Q11 (files copied), Q14 (job registration).
