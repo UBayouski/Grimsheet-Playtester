@@ -476,7 +476,7 @@ How it works:
 
 1. `start` creates the state with both routes `pending`, subscribes to visibility, and sends `mount`. With `api === null` it sets both routes to `failed` with "Kiro Crew did not provide the app API" and never reads.
 2. After every `step`, the controller clears its single timer and carries out the effect: `start` begins a Read; `wait` sets one timer (`env.setTimeout`) that sends `tick`; `none` sets nothing.
-3. A Read increments a `generation` counter, calls `readRoute` twice (config path, then crons path) and updates each route as its request settles, if the generation is still current and the controller is not stopped. A success sets `status` `ok`, `good`, `goodAtMs` (from `env.nowMs()`), `error` null. A failure sets `status` `failed` and `error`, and keeps `good` (Requirement 8, criteria 10 and 11).
+3. A Read increments a `generation` counter, starts the two `readRoute` calls in parallel (the config path and the crons path, Decision 19) and updates each route as its request settles, if the generation is still current and the controller is not stopped. A success sets `status` `ok`, `good`, `goodAtMs` (from `env.nowMs()`), `error` null. A failure sets `status` `failed` and `error`, and keeps `good` (Requirement 8, criteria 10 and 11).
 4. When both requests have settled, the controller sends `complete` with `isRunning = readIsRunning(crons.good)` (from `core/crons.ts`; false without a good value).
 5. `stop` sets `closed`, bumps the generation so late answers are discarded, clears the timer and unsubscribes (Requirement 8, criterion 9). `start` after `stop` (React strict mode mounts twice in development) builds a fresh state, so it is safe to call again.
 6. Every snapshot carries `nowMs = env.nowMs()` taken when the snapshot is built. That is the Now_Input of the View_Model.
@@ -542,6 +542,8 @@ The page styles are one constant string in a `<style>` element rendered once by 
 ## Build configuration
 
 `ui/package.json` (versions are pinned at the task, exact, no ranges): `type: module`; scripts `build` (`vite build && node scripts/check-dist.mjs`), `typecheck` (`tsc --noEmit`), `test` (`vitest --run`). Dependencies: none. Dev dependencies: `typescript`, `vite`, `vitest`, `fast-check`, `react`, `react-dom`, `@types/react`, `@types/react-dom`. `react` and `react-dom` are dev dependencies only, for types and for server rendering in the tests; the host provides them at run time. `@kirocrew/app-sdk` is not listed and not installed (Requirement 9, criterion 3). `vitest`, `fast-check` and `typescript` use the same versions as the root `package.json`, so the project has one set of tools.
+
+**React version.** The version of React that the host provides is not recorded (Open question Q10). The page therefore uses only React APIs that exist in both React 18 and React 19: `useSyncExternalStore`, `useMemo`, `useRef`, `useEffect` and `useState`, plus the automatic JSX runtime. It does not use `use()`, Actions (`useActionState`, `useOptimistic`, `useFormStatus`, form actions), `ref` as a prop of a function component, `<Context>` as a provider, or any API added after React 18. The dev dependency on `react` and `react-dom` is pinned to one exact version chosen at the task (no range), and `@types/react` and `@types/react-dom` to the matching exact versions. A source scan fails on an import of `use`, `useActionState`, `useOptimistic` or `useFormStatus` from `react`.
 
 `vite.config.ts` (library mode, one ES module):
 

@@ -21,7 +21,7 @@ Source: `docs/CREW_NOTES.md` section f. "Not documented" items stay open until t
 - How the UI reads a file a cron or agent wrote: not documented. The app-dev skill suggests a bounded `_index.json` in the app data directory. Do not design the result format until the spike answers this. → answered in section h.3 (observed 2026-11-07); see "Data access, decided" below.
 
 ## Components
-`@kirocrew/app-sdk/ui` provides `Card`, `CardTitle`, `PageHeader`, `StatCard`.
+@kirocrew/app-sdk/ui is not used. The spike never loaded it, and a static import of a module the host does not resolve fails the whole page at link time (E09); the page renders with its own semantic elements (dashboard spec, Requirement 9, criterion 7).
 
 ## Planned content
 One card per level with its colour (green, amber, red), last result and trend over the last runs; a findings list with a copyable action list and the command that replays it; commit hash and time of the last replay and hunt.
