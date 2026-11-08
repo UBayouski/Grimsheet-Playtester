@@ -30,7 +30,7 @@ One card per level with its colour (green, amber, red), last result and trend ov
 Dashboard must be accessible: semantic markup, text labels alongside colour (colour is never the only signal), keyboard-operable copy buttons.
 
 ## Data access, decided (spike findings, 2026-11-07; section h.3)
-- The page reads run results through `GET /api/apps/<app>/config` (declare `"/api/apps/<app>/config"` in `permissions.api`; matching is exact, one entry covers GET and PUT). The replay cron writes a results key into `data\config.json` (E24 R3b, E26). Keep the value small: a pointer to the latest run (run id, counter, finished time) plus what the cards need, not a history.
+- The page reads run results through `GET /api/apps/<app>/config` (declare `"/api/apps/<app>/config"` in `permissions.api`; matching is exact, one entry covers GET and PUT). The replay cron writes a results key into `data\config.json` (E24 R3b, E26). The key holds the latest run, a trend of at most 30 runs and the findings, within a byte budget (65536 bytes; see the `replay-runner` spec).
 - The page **never PUTs** that route. A PUT replaces the whole object and wipes the cron's results (E24 R7, R3b). If a page setting is ever needed, read, merge and write all keys back, and accept that it can race with the cron; prefer none.
 - Settings such as the repo URL and branch live in the launcher's control file under `data\launcher\`, not in the config route.
 - No event marks a finished run (`useAppEvents` never fired, E24). The page re-reads on a timer and has a Refresh button. A Refresh updates every HTTP route; `import()` of a changed module needs a `?t=` cache-buster.

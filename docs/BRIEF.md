@@ -150,8 +150,10 @@ first in `exploit-hunt` (section 10, item 4).
   with JSDoc types and `// @ts-check` for the scripts, so a cron runs them with no build step. TypeScript strict for
   `ui/`. The one Python file is the cron launcher (standard library only), because a Windows gateway runs `script`
   crons in Python and rejects `command` crons.
-- The verifier is a pure function from (level id, action list, `play.mjs` output) to a verdict, so it is unit-tested
-  without Grimsheet.
+- The verifier is a pure module, `scripts/verifier.mjs`, with two functions: `replayVerdict(levelId, storedSolution,
+  exitCode, playResult)` and `checkCandidate(levelId, storedSolution, claimedClass, candidateActions, exitCode,
+  playResult)`. Signatures and result shapes are in `.kiro/specs/verifier/design.md`. It is unit-tested without
+  Grimsheet.
 - Tests: Vitest for the verifier, the result index and the replay script (with a fake play command); fast-check for
   the properties in section 10. No test depends on the network.
 - No paid APIs, no hosting. The app runs in the user's own Kiro Crew. MIT licence.

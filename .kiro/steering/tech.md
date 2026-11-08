@@ -4,11 +4,11 @@
 - Host needs Node 22.12+ and git; the README says so. Dev machine is Windows with PowerShell. **Only Windows was tested** (Crew 0.12.0, KiroCrew desktop app); the README says so unless a WSL check is done.
 - Scripts: plain ESM JavaScript with JSDoc types and `// @ts-check`, so a cron runs them with no build step. The only Python is the cron launcher (standard library only), because a Windows gateway rejects `command` crons and runs `script` crons in Python (spike E18, E20; Notes h.4).
 - `ui/`: TypeScript strict, React and Vite (as the Crew docs require). The host provides `@kirocrew/app-sdk`, React, ReactDOM and lucide-react, so they are build externals. Do not `npm install @kirocrew/app-sdk`; it is not published to npm.
-- Tests: Vitest for the verifier, the result index and the replay script (with a fake play command); fast-check for properties. No test depends on the network.
+- Tests: Vitest for the verifier, the result index and the replay script (with a fake play command); fast-check for properties. The Python launcher is tested with `unittest` from the standard library. No test depends on the network.
 - No paid APIs, no hosting. MIT licence. Written from scratch: it runs Grimsheet's command and does not copy Grimsheet code.
 
 ## Verifier
-A pure function from (level id, action list, `play.mjs` output) to a verdict, unit-tested without Grimsheet.
+A pure module, `scripts/verifier.mjs`, with two functions: `replayVerdict(levelId, storedSolution, exitCode, playResult)` and `checkCandidate(levelId, storedSolution, claimedClass, candidateActions, exitCode, playResult)`. Signatures and result shapes are in `.kiro/specs/verifier/design.md`. Unit-tested without Grimsheet.
 
 ## Properties to test
 - Same play output gives the same verdict.
