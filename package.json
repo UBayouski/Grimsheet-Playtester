@@ -7,6 +7,7 @@
   },
   "scripts": {
     "test": "vitest --run",
+    "test:all": "node scripts/test-all.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {

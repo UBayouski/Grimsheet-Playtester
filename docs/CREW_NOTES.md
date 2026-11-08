@@ -241,3 +241,15 @@ Checks for the `exploit-hunt` spec (Requirement 13), run on 2026-11-07 on Window
 - **Unattended cron (C2):** a message cron starts the app agent by name, but its first approval is rejected after about 3 minutes, and the job still reports OK. So no weekly `hunt` cron from these checks; the hunt is on request only.
 - **Cost:** a short supervised run cost 0.21 credits (3 tool calls), 0.39 (5 tool calls, three denials), 0.11 for the rejected cron run, and 7.86 for one run in which the agent failed to write a 1000-character argument. Question for the design: choose a cheaper model in the agent file (`model`).
 - Agent runs used: 4 of 5 (limit of 13.11); run 5 was skipped by the developer.
+
+## i. Packaging: how an API request carries the token
+Checked on 2026-11-09 for the `packaging` spec (task 1.2), on Windows 11, Crew 0.12.0. Read only: the help text of `kirocrew token --help` and Kiro's documentation power for the library `/kirodotdev/kirocrew`. No token was printed, read or stored, and `kirocrew token` itself was not run.
+
+- Question: which form does a request to the gateway's `/api/...` routes use for the dashboard access token, a header or a query parameter?
+- Answer from the help text: `kirocrew token` prints "a dashboard access URL with auth token" and takes `--port`, `--ttl` (default 20h) and `--embed-parent-port`. The help text does not say how an API request carries the token.
+- Answer from the documentation: the dashboard address built for a user has the form `http://<host>:<port>/?token=<token>` (module page `dashboard-token-auth`). The command `kirocrew pod api` makes one authenticated request to a pod's dashboard and "sends it via ?token= query parameter, never an Authorization header" (page `src/kiro_crew/pod/README.md`); that command refuses on Windows, so it is evidence of the form, not a way to run the request here. The header `Authorization: Bearer <token>` is documented for inbound webhooks, which is a different token and a different route family (page `inbound-webhooks`).
+- Not documented: whether the app config route `/api/apps/<name>/config` and the route `/api/crons` accept the dashboard token in a query parameter on this gateway, whether they accept it in a header, and whether the dashboard sets a cookie after the first request. None of these was tried.
+- Decision for the route reader of `packaging` (D6): the constant `TOKEN_FORM` is `query` by default (the form the documentation shows for the dashboard token) and `bearer` stays supported behind the same constant. The first real read (task 11.5) shows which one works. Every message the reader prints removes the token, because a token in a query parameter can appear in an error text.
+- The address that `kirocrew token` prints contains the token. The user runs the command in their own terminal and pastes the address into the masked prompt of the reader, which takes the gateway origin and the token from it. The address is never written anywhere and the agent never sees it.
+- Basis: Docs say (the help text and the three documentation pages above); nothing here was observed on the gateway.
+- Evidence: none (no gateway request was made).

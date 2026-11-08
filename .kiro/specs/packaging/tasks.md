@@ -19,149 +19,150 @@ Rules that apply to every task:
 
 ## Tasks
 
-- [ ] 1. Preparation (read only or temp folders only)
-  - [ ] 1.1 Check that the `ui/` build is reproducible (asks the user)
+- [x] 1. Preparation (read only or temp folders only)
+  - [x] 1.1 Check that the `ui/` build is reproducible (asks the user)
     - **STOP and ask the user** before the first command. Say which commands will run, that they write only two new folders under `%TEMP%` (`pkg-build-a`, `pkg-build-b`) and read `ui/dist/index.mjs`, and that nothing in `ui/` changes.
     - After a yes, from `ui/`: `Test-Path node_modules\vite\bin\vite.js`; then `node node_modules\vite\bin\vite.js build --outDir "$env:TEMP\pkg-build-a" --emptyOutDir`; then the same into `pkg-build-b`; then `Get-FileHash` of `pkg-build-a\index.mjs`, `pkg-build-b\index.mjs` and `ui\dist\index.mjs`. Ask before removing the two temp folders (the agent created them).
     - Acceptance: the three hashes are equal. Then the design's byte comparison stays. IF `pkg-build-a` and `pkg-build-b` are equal and `ui\dist\index.mjs` differs, the committed copy is stale: report, and rebuild with `npm run build` in `ui/` only after the user approves (it rewrites only `ui/dist`, which is build output). IF the two temp builds differ, compare after turning CRLF into LF; IF they still differ, STOP and report the first differing byte offset (design "Stale-bundle check").
     - Record the result as a line in the Notes list at the end of this file (no repo file is changed otherwise).
     - _Requirements: 8.2; design "Stale-bundle check", D5_
 
-  - [ ] 1.2 Settle D6: how an API request carries the token (asks the user)
+  - [x] 1.2 Settle D6: how an API request carries the token (asks the user)
     - **STOP and ask the user** before running anything. The command is `& "$env:ProgramFiles\KiroCrew\resources\backend-dist\kirocrew-backend\bin\kirocrew.cmd" token --help`, which prints help text only, and the agent does not run `kirocrew token` itself. Also query Kiro's documentation power for the Crew pages about the gateway API and tokens (read only).
     - Decide which of two forms the route reader uses: `bearer` (header) or `query`. Write the finding as a new section "i. Packaging: how an API request carries the token" in `docs/CREW_NOTES.md`, with "Observed" or "Docs say" as basis and "not documented" where the pages are silent. The section holds no token, no address with a token, and no user name.
     - IF neither form is documented or one cannot be chosen, keep both behind the constant `TOKEN_FORM` (default `bearer`), say so in the section, and mark the conditional task 6.3 (`--manual-read`) as needed.
     - Acceptance: the Notes_File section exists and names the chosen form (or "both, undecided"); the choice is reported to the user.
     - _Requirements: 6.13; design "Route access and the token", D6_
 
-- [ ] 2. Repo files for the committed bundle
-  - [ ] 2.1 Write the repo-file tests (expected to fail)
+- [x] 2. Repo files for the committed bundle
+  - [x] 2.1 Write the repo-file tests (expected to fail)
     - Create `tests/packaging.repo-files.test.mjs`. It runs `git check-ignore -v -- <path>` and `git check-attr text -- <path>` with `spawnSync` and fixed argument arrays (read only, no network) and expects: `ui/dist/index.mjs` is not ignored (exit code 1); `ui/dist/other.js` and `ui/dist/maps/a.map` are ignored by the rule `ui/dist/*` (exit 0); `ui/other/dist/x.js` and `dist/x.js` are ignored by the rule `dist/` (exit 0); `node_modules/x`, `data/x` and `coverage/x` stay ignored; `ui/dist/index.mjs` has `text: unset`. It also reads `.gitignore` and expects the four lines in the order `dist/`, `!ui/dist/`, `ui/dist/*`, `!ui/dist/index.mjs`.
     - Command: `npx vitest --run tests/packaging.repo-files.test.mjs`. Expected: failures, because `ui/dist/index.mjs` is ignored today and `.gitattributes` does not exist.
     - _Requirements: 8.2, 14.5; design ".gitignore", ".gitattributes"_
 
-  - [ ] 2.2 Change `.gitignore` and add `.gitattributes`
+  - [x] 2.2 Change `.gitignore` and add `.gitattributes`
     - In `.gitignore`, replace the line `dist/` with the four lines of the design, in order; leave every other line unchanged. Create `.gitattributes` with the single line `ui/dist/index.mjs -text`. Both files are written without a BOM.
-    - Command: `npx vitest --run tests/packaging.repo-files.test.mjs`. Expected: passes. Then the read-only commands of the design, shown to the user: `git check-ignore -v ui/dist/index.mjs` (no output, exit 1), `git check-ignore -v ui/dist/other.js`, `git check-attr text -- ui/dist/index.mjs`, `git status --porcelain ui/dist` (expected `?? ui/dist/index.mjs`). Then `npm run typecheck`.
+    - Command: `npx vitest --run tests/packaging.repo-files.test.mjs`. Expected: passes. Then the read-only commands of the design, shown to the user: `git check-ignore -q ui/dist/index.mjs` (no output, exit 1; with `-v` git prints the negated rule and exits 0), `git check-ignore -v ui/dist/other.js`, `git check-attr text -- ui/dist/index.mjs`, `git status --porcelain ui/dist` (expected `?? ui/dist/`). Then `npm run typecheck`.
     - Acceptance: all pass; the command output is reported. The user adds and commits the bundle later (task 10.3).
     - _Requirements: 8.2, 14.5_
 
-- [ ] 3. Manifest_Check and `app.json`
-  - [ ] 3.1 Write the Manifest_Check tests (expected to fail)
+- [x] 3. Manifest_Check and `app.json`
+  - [x] 3.1 Write the Manifest_Check tests (expected to fail)
     - Create `tests/packaging.manifest.test.mjs` with: a valid-manifest builder (design "The manifest"); Property 1 (valid manifests pass), Property 2 (`timeout` differs from the launcher constant), Property 3 (short `timeout_secs`), Property 4 (extra cron, including a cron named `hunt`), Property 5 (forbidden text and a BOM); example tests for each failing rule of R5.7 (a `timeout` that differs, a `timeout_secs` of `timeout` plus 4, an extra `hunt` cron) and for each row of the rule table (absent fields, agents and skills, permissions, `ui`, `bundle` missing or empty); and one test that reads the real `app.json`, `scripts/replay_cron.py`, `agents/playtester.json`, both skill folders and `ui/dist/index.mjs` and expects no problem.
     - Command: `npx vitest --run tests/packaging.manifest.test.mjs`. Expected: failures, because `scripts/packaging/manifest-check.mjs` does not exist (and `app.json` does not exist). Show the failing run (R5.6).
     - _Requirements: 1.1 to 1.7, 2.1 to 2.5, 3.1 to 3.5, 4.1 to 4.9, 5.1 to 5.8_
 
-  - [ ] 3.2 Implement `checkManifest`
+  - [x] 3.2 Implement `checkManifest`
     - Create `scripts/packaging/manifest-check.mjs` (`// @ts-check`, JSDoc types, no import except `node:` modules). Export `checkManifest({ manifestBytes, launcherText, agentText, skillDirs, bundleBytes })` returning a list of `{ rule, message }` with the rules `bom`, `json`, `identity`, `absent`, `agents-skills`, `crons`, `permissions`, `ui`, `timeout`, `timeout-secs`, `text`, `bundle` of the design.
     - Command: `npx vitest --run tests/packaging.manifest.test.mjs`. Expected: all pure tests and properties pass; the real-file test still fails only because `app.json` does not exist. Then `npm run typecheck`.
     - _Requirements: 5.1 to 5.5, 5.8; design "Manifest_Check"_
 
-  - [ ] 3.3 Write `app.json`
+  - [x] 3.3 Write `app.json`
     - Write `app.json` at the repo root with exactly the content of the design (UTF-8, no BOM, two-space indent, trailing newline). No `resources`, `setup`, `mcpServers`, `sops`, `storage`, `events`, `network`, `mountFunction` or `entryPoint`.
     - Command: `npx vitest --run tests/packaging.manifest.test.mjs`. Expected: passes, including the real-file test. Then `npm test` (one suite at a time) and `npm run typecheck`.
     - Acceptance: the file passes; the `timeout` equals `CRON_TIMEOUT` of the launcher (900) and `timeout_secs` is 905.
     - _Requirements: 1.1 to 1.7, 2.1, 2.2, 3.1 to 3.4, 4.1 to 4.9_
 
-- [ ] 4. Route reader and secret prompt
-  - [ ] 4.1 Write the fakes and the route-reader tests (expected to fail)
-    - Create `tests/helpers/packaging-fakes.mjs` (a fake `fetch` that records every call, with settable behaviours: 200 with a body, 401 whose body echoes the token, a thrown error whose message holds the token, a timeout, a truncated body, a non-JSON body; and a fake runner for `test:all`). Create `tests/packaging.route-reader.test.mjs` with: Property 9 for the reader (the token and its URL-encoded form never appear in a returned result, a message or any recorded write, for tokens of 8 to 64 printable characters including regular-expression characters, `%` and `+`); Property 12 (every path outside the two allowed paths is refused with no request made; every request is `GET`; `redirect` is `error`); example tests for both `TOKEN_FORM` values, the 15-second limit, and the masked prompt (typed characters are not echoed to the output stream; the answer is returned; an empty answer is refused).
+- [x] 4. Route reader and secret prompt
+  - [x] 4.1 Write the fakes and the route-reader tests (expected to fail)
+    - Create `tests/helpers/packaging-fakes.mjs` (a fake `fetch` that records every call, with settable behaviours: 200 with a body, 401 whose body echoes the token, a thrown error whose message holds the token, a timeout, a truncated body, a non-JSON body; and a fake runner for `test:all`). Create `tests/packaging.route-reader.test.mjs` with: Property 9 for the reader (the token and its URL-encoded form never appear in a returned result, a message or any recorded write, for tokens of 8 to 64 printable characters including regular-expression characters, `%` and `+`); Property 12 (every path outside the two allowed paths is refused with no request made; every request is `GET`; `redirect` is `error`); example tests for both `TOKEN_FORM` values, the 15-second limit, `parseAccessInput` (a printed address gives origin and token; a bare token gives only a token; an address with no `token=` is refused), and the prompts (the masked prompt echoes nothing to the output stream and returns the answer; an empty answer is refused; the visible origin prompt refuses an answer that contains `token=` and never echoes it).
     - Command: `npx vitest --run tests/packaging.route-reader.test.mjs`. Expected: failures, because the modules do not exist.
     - _Requirements: 6.2, 6.13, 9.4; design "Route access and the token"; Properties 9, 12_
 
-  - [ ] 4.2 Implement the reader and the prompt
-    - Create `scripts/packaging/route-reader.mjs` (`readRoute({ fetch, origin, token, path, timeoutMs, form })`, `scrub(text, token)`, the allow list of two paths, `TOKEN_FORM` as decided in task 1.2) and `scripts/packaging/secret-prompt.mjs` (`promptVisible`, `promptSecret` with a muted output stream). Neither writes a file; neither prints a body.
+  - [x] 4.2 Implement the reader and the prompt
+    - Create `scripts/packaging/route-reader.mjs` (`readRoute({ fetch, origin, token, path, timeoutMs, form })`, `scrub(text, token)`, the allow list of two paths, `TOKEN_FORM` with default `query` as decided in task 1.2) and `scripts/packaging/secret-prompt.mjs` (`parseAccessInput`, `promptVisible`, `promptSecret` with a muted output stream). Neither writes a file; neither prints a body.
     - Command: `npx vitest --run tests/packaging.route-reader.test.mjs`. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 6.13, 9.4; design "Route access and the token"_
 
-- [ ] 5. Probe writer
-  - [ ] 5.1 Write the probe tests (expected to fail)
-    - Create `tests/packaging.config-probe.test.mjs` using `makeMemFs`, `makeFakeClock`, `makeSleep`, `makeTokenSource` of `tests/helpers/fake-fs.mjs`. Property 6 (round trip: for all JSON-safe config objects without `packagingProbe` and all sizes from 9 to 200000, `writeProbe` then `removeProbe` restores the parsed file, leaves no lock file and no temp file, and no other key changes at any moment; also when an error is thrown between the two and the `finally` block runs), Property 7 (the UTF-8 length of `JSON.stringify(buildProbe(n))` equals `n` for `n` from 9 to 2 MiB), and an idempotence test (the same size written twice gives the same file). Example tests: a lock held by another owner makes the write wait and then end with `lock_timeout` and no write; a `config.json` that is not an object stops the run; the probe key is never `playtesterResults`.
+- [x] 5. Probe writer
+  - [x] 5.1 Write the probe tests (expected to fail)
+    - Create `tests/packaging.config-probe.test.mjs` using `makeMemFs`, `makeFakeClock`, `makeSleep`, `makeTokenSource` of `tests/helpers/fake-fs.mjs`. Property 6 (round trip: for all JSON-safe config objects without `packagingProbe` and all sizes from 10 to 200000, `writeProbe` then `removeProbe` restores the parsed file, leaves no lock file and no temp file, and no other key changes at any moment; also when an error is thrown between the two and the `finally` block runs), Property 7 (the UTF-8 length of `JSON.stringify(buildProbe(n))` equals `n` for `n` from 10 to 2 MiB), and an idempotence test (the same size written twice gives the same file). Example tests: a lock held by another owner makes the write wait and then end with `lock_timeout` and no write; a `config.json` that is not an object stops the run; the probe key is never `playtesterResults`.
     - Command: `npx vitest --run tests/packaging.config-probe.test.mjs`. Expected: failures, because the module does not exist.
     - _Requirements: 6.2, 6.4, 6.6, 6.12; design "Measurement program"; Properties 6, 7_
 
-  - [ ] 5.2 Implement the probe writer
+  - [x] 5.2 Implement the probe writer
     - Create `scripts/packaging/config-probe.mjs`: `PROBE_KEY`, `buildProbe(bytes)`, `writeProbe(deps, bytes)`, `removeProbe(deps)`, using `withResultsLock` of `scripts/results-store.mjs` (the lock `.results.lock`), a temp file `.config.<token>.tmp` in `data\` and a rename. The lock is taken once per call and never held across a request.
     - Command: `npx vitest --run tests/packaging.config-probe.test.mjs`. Expected: passes. Then `npm run typecheck`.
+    - Note for the usage log: the first run of this task failed Property 7 on the counterexample `[9]` (seed 102778929). The smallest probe `{"pad":""}` is 10 bytes, not 9, so `MIN_PROBE_BYTES` and the pad length were off by one: a slip in the design and in the first version of the tests, caught by the property. Fix: `MIN_PROBE_BYTES = 10`. The generators use the constant, so the ranges moved from 9 to 10 with it; the properties and the other tests are unchanged. The four literal 9s in the example tests (the constant, the smallest probe, the size below the minimum, the pad pattern) were corrected to 10, 10, 9 and 10 + 25.
     - _Requirements: 6.2, 6.4, 6.6, 6.12_
 
-- [ ] 6. Measurement
-  - [ ] 6.1 Write the measurement tests (expected to fail)
+- [x] 6. Measurement
+  - [x] 6.1 Write the measurement tests (expected to fail)
     - Create `tests/packaging.measure.test.mjs` and `tests/packaging.entry.test.mjs` (the measurement entry part). Property 8 (for all limits L from 0 to 2 MiB and the four failure modes of a fake route: `largestGood` is the greatest tested size at most L; below 1 MiB `firstBad` is above L and `firstBad - largestGood` is at most 1024; from 1 MiB `reachedCap` is true and `firstBad` is null; the probe is removed in every case), Property 9 end to end (the printed report and all fake-file writes hold no token), Property 11 (for all home-folder strings the report and every message hold none). Example tests: the ladder sizes are `16384, 32768, 49152, 65536, 98304, 131072, 262144, 524288, 1048576`; the first step failing bisects from 0; `--dry-run` writes nothing and reads only `/api/crons`; refusal when the `replay` job `is_running`, when `.run.lock` or `.hunt.lock` exists and is not stale, and when `config.json` is not an object; removal on a thrown error and on `SIGINT`; `configRestored` and `routeRestored` in the report; the report shows paths as `~\...`.
     - Command: `npx vitest --run tests/packaging.measure.test.mjs tests/packaging.entry.test.mjs`. Expected: failures, because the modules do not exist.
     - _Requirements: 6.1 to 6.6, 6.10, 6.11, 6.12, 6.13; Properties 8, 9, 11_
 
-  - [ ] 6.2 Implement the measurement and its entry
+  - [x] 6.2 Implement the measurement and its entry
     - Create `scripts/packaging/measure.mjs` (`SIZES`, `runMeasurement`, `renderReport`) and the thin entry `scripts/packaging/measure-config-route.mjs` (real `deps` with `dataFolder` built from the home folder, the two prompts, `--dry-run`). The entry prints the report to standard output only and writes no file.
     - Command: `npx vitest --run tests/packaging.measure.test.mjs tests/packaging.entry.test.mjs`. Expected: passes. Then `npm run typecheck`.
     - Acceptance: the program is not run against the real gateway in this task (that is task 13).
     - _Requirements: 6.1 to 6.6, 6.10, 6.11, 6.12, 6.13_
 
-  - [ ] 6.3 Conditional: `--manual-read` (only if task 1.2 found no usable token form)
+  - [x] 6.3 Conditional: `--manual-read` (only if task 1.2 found no usable token form)
     - Skip this task unless task 1.2 marked it as needed. Tests first in `tests/packaging.measure.test.mjs`: with `--manual-read` the program prints the size it just wrote, waits, and takes the status and byte length that the user types (and the first and last 16 characters of the body), and still removes the probe. Then implement it in `measure.mjs`. Command: `npx vitest --run tests/packaging.measure.test.mjs`, then `npm run typecheck`.
     - _Requirements: 6.3, 6.13; design "Route access and the token" (fallback)_
 
-- [ ] 7. `read-route`
-  - [ ] 7.1 Write the summary and entry tests (expected to fail)
+- [x] 7. `read-route`
+  - [x] 7.1 Write the summary and entry tests (expected to fail)
     - In `tests/packaging.route-reader.test.mjs` and `tests/packaging.entry.test.mjs` add: Property 10 (for all job objects with an arbitrary `script` value and arbitrary extra fields, `summariseCrons` never contains the `script` value and has only the allow-listed keys), example tests for the time-field format detection (`epoch-seconds` below 1e11, `epoch-milliseconds` from 1e11, `iso-string`, `unknown`), the Replay_Job rule boolean (name `replay`, name ending `/replay`, else `script` containing `replay_cron.py`), `summariseConfig` (byte size of the body, of `playtesterResults`, of `latest`, of `trend`, of `findings` when present, level count, trend count; numbers only), and the entry (`crons` and `config` subcommands with injected prompts and `fetch`; an unknown subcommand is refused with no request).
     - Command: `npx vitest --run tests/packaging.route-reader.test.mjs tests/packaging.entry.test.mjs`. Expected: failures, because the functions and the entry do not exist.
     - _Requirements: 9.4, 9.15, 10.3; Property 10_
 
-  - [ ] 7.2 Implement `read-route`
+  - [x] 7.2 Implement `read-route`
     - Create `scripts/packaging/read-route.mjs` with `summariseCrons`, `summariseConfig` and the entry `main` (the subcommands `crons` and `config`; prints a summary only; no file written).
     - Command: the same `npx vitest --run` as in 7.1. Expected: passes. Then `npm run typecheck`.
     - _Requirements: 9.4, 9.15, 10.3_
 
-- [ ] 8. `test:all`
-  - [ ] 8.1 Write the combined-command tests (expected to fail)
+- [x] 8. `test:all`
+  - [x] 8.1 Write the combined-command tests (expected to fail)
     - Create `tests/packaging.test-all.test.mjs` with the fake runner of `tests/helpers/packaging-fakes.mjs`. Property 13 (for all lists of six exit codes: the runner is called for the steps up to and including the first non-zero one, in list order, never with two calls in flight; the returned code equals that first non-zero code, or 0), Property 14 (equal bytes pass; any single changed, inserted or removed byte, or a missing file, fails with a one-line message that holds `npm run build`). Example tests: the six steps and their commands and folders as in the design table; a step that cannot start prints `[test:all] could not start: <label>` and returns 1; the root `package.json` script `test:all` equals `node scripts/test-all.mjs`; the temp-folder build uses `--outDir` and never writes `ui/dist`; the temp folder is removed in a `finally` block.
     - Command: `npx vitest --run tests/packaging.test-all.test.mjs`. Expected: failures, because the module and the script do not exist.
     - _Requirements: 7.1 to 7.6, 7.9, 8.2; Properties 13, 14_
 
-  - [ ] 8.2 Implement `scripts/test-all.mjs` and the npm script
+  - [x] 8.2 Implement `scripts/test-all.mjs` and the npm script
     - Create `scripts/test-all.mjs` (`STEPS`, `runSteps`, `compareBundle`, `main`; `main` runs only as the entry point; `npm` is started as a fixed command string with a shell on Windows as `scripts/replay/process.mjs` does, `python` and `node` with argument arrays and no shell). Add `"test:all": "node scripts/test-all.mjs"` to the root `package.json` scripts (the only change there; user approval is given in the spec).
     - Command: `npx vitest --run tests/packaging.test-all.test.mjs`. Expected: passes. Then `npm run typecheck`.
     - Acceptance: `test:all` is not run yet (task 10.2 runs it once).
     - _Requirements: 7.1 to 7.6, 7.9, 8.2_
 
-- [ ] 9. README lint and README
-  - [ ] 9.1 Write the README tests (expected to fail)
+- [x] 9. README lint and README
+  - [x] 9.1 Write the README tests (expected to fail)
     - Create `tests/packaging.readme.test.mjs`. Property 15 (a README built from the required phrases plus filler passes; removing any one required phrase gives a problem that names it; inserting a drive letter, `Users\`, `token=`, `localhost`, `127.0.0.1`, an address outside the two allowed prefixes, or a placeholder word gives a problem). Example tests: the required phrases `Windows`, `only Windows was tested`, `03:00`, `on request`, `bounded search`, `MIT`, the two links, `companion`, `Grimsheet entry`; the lint source holds no list of other tool or assistant names (a test reads `scripts/packaging/readme-lint.mjs` and checks that it holds no word list beyond the allowed phrases); and one test that reads the real `README.md` and expects no problem.
     - Command: `npx vitest --run tests/packaging.readme.test.mjs`. Expected: failures, because the lint and the README do not exist.
     - _Requirements: 12.21, 12.24, 12.25; Property 15_
 
-  - [ ] 9.2 Implement `lintReadme`
+  - [x] 9.2 Implement `lintReadme`
     - Create `scripts/packaging/readme-lint.mjs` (`lintReadme(text)` returning `{ rule, message }` items; the address allow-list `https://github.com/UBayouski/` and `https://grimsheet.onrender.com`).
     - Command: `npx vitest --run tests/packaging.readme.test.mjs`. Expected: the pure tests and properties pass; the real-file test fails only because `README.md` does not exist. Then `npm run typecheck`.
     - _Requirements: 12.24_
 
-  - [ ] 9.3 Write `README.md` (first version, before the measurements)
+  - [x] 9.3 Write `README.md` (first version, before the measurements)
     - Write `README.md` at the repo root with the ten sections of the design, in order. The Crew_CLI is shown by the path built from `$env:ProgramFiles`. Numbers that a hand step has not recorded are written as "not measured" (credits per hunt, the Approval_Count, the route size limit); a text that was not seen (the build-tool warning) is described without quotation marks or left out; no screenshots yet and no text about them.
     - Read the README against R12.21 (no tool or assistant other than Kiro, by reading) and against the criteria of R12 and R13; list any criterion that waits for a measurement.
     - Command: `npx vitest --run tests/packaging.readme.test.mjs`. Expected: passes.
     - _Requirements: 8.2 to 8.15, 12.1 to 12.25, 13.1 to 13.4_
 
 - [ ] 10. Checkpoint after the code tasks
-  - [ ] 10.1 Run the gates, one at a time
+  - [x] 10.1 Run the gates, one at a time
     - Run in this order, one command per call, and report each count: `npm test` (root); `npm run typecheck` (root); `python -m unittest tests.test_replay_cron`; `npm test` in `ui/`; `npm run typecheck` in `ui/`. If one fails, STOP and report; do not change a check.
     - Acceptance: all pass. Baselines before this spec: root 35 files and 1154 tests; Python 42 tests; `ui/` 27 files and 439 tests.
     - _Requirements: 7.1, 7.2, 7.5_
 
-  - [ ] 10.2 Run `npm run test:all` once
+  - [x] 10.2 Run `npm run test:all` once
     - Run it from the repo root (after the user says yes: it runs a `ui/` build into a temp folder). Expected: the six steps pass and it prints `all 6 steps passed`.
     - _Requirements: 7.1 to 7.6, 7.9_
 
   - [ ] 10.3 STOP: ask the user to commit
-    - **STOP and ask the user** to review `git status --porcelain` and to commit the new and changed files, including `ui/dist/index.mjs`, `.gitignore` and `.gitattributes` (the agent runs no git write command). The hand steps clone from that commit. Wait for the user to say it is done, then run `git status --porcelain` (read only) and report.
+    - **STOP and ask the user** to review `git status --porcelain`, to commit the new and changed files, including `ui/dist/index.mjs`, `.gitignore` and `.gitattributes`, and then to push the commit to `https://github.com/UBayouski/Grimsheet-Playtester.git` (the agent runs no git write command). The hand steps clone from the pushed repository. Wait for the user to say that the commit and the push are done, then run `git status --porcelain` and `git log -1 --oneline` (read only) and report.
     - _Requirements: 8.2, 9.2_
 
 - [ ] 11. First real install (Hand_Run_Step; Requirement 9)
   - [ ] 11.1 STOP: ask the user to approve the whole step (Gate A)
-    - Print the 17-step table of the design ("Requirement 9: first install") with the commands, the paths each touches, and the gates B to H. **STOP and ask the user** to approve the step and to say which clone source to use (the working folder path, or the repository address). Nothing runs before a yes. Commands run one at a time; the first unexpected output stops the step.
+    - Print the 17-step table of the design ("Requirement 9: first install") with the commands, the paths each touches, and the gates B to H. **STOP and ask the user** to approve the step. The clone source is fixed: the public repository `https://github.com/UBayouski/Grimsheet-Playtester.git`. Nothing runs before a yes. Commands run one at a time; the first unexpected output stops the step.
     - _Requirements: 9.1; design "Protocol for every Hand_Run_Step"_
 
   - [ ] 11.2 Clone and verify the Clean_Clone (Gate B)
-    - **STOP and ask the user** (Gate B), then `git clone <source> "$env:USERPROFILE\crew-install-src\grimsheet-playtester"`. Then `git -C <clone> status --porcelain` (expected empty), `Test-Path <clone>\data` (False), `Test-Path <clone>\ui\dist\index.mjs` (True), `Test-Path <clone>\spike` (False). Also `CREW app info grimsheet-playtester` before the install (expected: not installed).
+    - **STOP and ask the user** (Gate B), then `git clone https://github.com/UBayouski/Grimsheet-Playtester.git "$env:USERPROFILE\crew-install-src\grimsheet-playtester"`. The source is the public repository, so the install sees exactly what a judge clones (this needs the network and the user's push of task 10.3). Then `git -C <clone> status --porcelain` (expected empty), `Test-Path <clone>\data` (False), `Test-Path <clone>\ui\dist\index.mjs` (True), `Test-Path <clone>\spike` (False). Also `CREW app info grimsheet-playtester` before the install (expected: not installed).
     - Acceptance: the four checks match; the output is recorded with paths as `%USERPROFILE%`.
     - _Requirements: 9.2, 8.1_
 
@@ -306,10 +307,18 @@ Rules that apply to every task:
 
 - Hand steps need the user at the keyboard: they hold the gateway token and press the buttons of the dashboard. The agent runs only the commands that name no token.
 - The reproducibility result of task 1.1 and the token form of task 1.2 are recorded here once known:
-  - Build reproducibility (task 1.1): not yet run.
-  - Token form (task 1.2): not yet decided.
+  - Build reproducibility (task 1.1): done 2026-11-09. Two builds into temp folders and `ui/dist/index.mjs` have the same SHA-256 and the same size (43902 bytes). The byte comparison of the design stays. The temp folders were removed.
+  - Token form (task 1.2): done 2026-11-09. `kirocrew token --help` does not say how a request carries the token. The documentation shows the dashboard token as `?token=` (query); `Authorization: Bearer` is documented only for webhooks. `TOKEN_FORM` defaults to `query`, `bearer` stays supported; neither was tried on the gateway (notes, section i). Task 6.3 is not marked as needed yet; task 11.5 shows which form works.
 - Open for the first install and recorded by tasks 11 to 13: Q3 (`storage`), Q4 (build-tool warning), Q6 (time formats), Q7 (cron timing), Q11 (files copied at install), Q14 (job registration order). Q2 is settled in the design (`Ghost`, fallback `Moon`); task 11.4 confirms it.
 - The design's D1 to D6 are confirmed by the user; D6 is settled in task 1.2.
+- Task 6.3 (`--manual-read`) was not needed: task 1.2 found a documented token form (`query`), so the conditional task was skipped. Task 11.5 shows whether the gateway accepts it; if not, 6.3 is reopened.
+- Slips and deviations found while running tasks 1 to 10, for the usage log:
+  - Task 2.1: `git check-ignore -v` prints the negated rule and exits 0 for a re-included file, so the first test was wrong; the test now takes the verdict from `git check-ignore -q` and uses `-v` only for the matching rule.
+  - Task 5.2: Property 7 caught `MIN_PROBE_BYTES = 9` (the smallest probe `{"pad":""}` is 10 bytes), seed 102778929.
+  - Task 4.2: the reader also refuses any origin that is not on this machine and removes the token in its JSON-escaped form, not only the raw and URL-encoded forms.
+  - Task 9.1: the planned test that reads the lint source for a list of names was replaced by Property 15a (any filler text passes), because a test that listed such names would put them in a repo file.
+  - Task 9.2: the allowed address prefix `https://grimsheet.onrender.com` needs a boundary after it, so that a look-alike host such as that name followed by another domain is refused.
+  - Tests found and fixed three of their own slips (an assertion of `false` against `undefined`, a fake `close` event that turned `null` into 0, a path style mismatch); none loosened a check.
 - A commit is made by the user (task 10.3). Until then the Clean_Clone of task 11 has nothing to clone.
 
 ```json

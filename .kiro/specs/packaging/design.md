@@ -19,7 +19,7 @@ Read for this design (read only): `requirements.md` (as approved), the root `pac
 
 Not verified (nothing was built, installed, run or called):
 
-- **How the gateway accepts a token for an API call.** The notes record that a dashboard address is obtained with `kirocrew token` and that a session token lasts 30 minutes (E24), and nothing about the header or query form an API request needs. Task 1.2 reads `kirocrew token --help` and the Crew docs (read only, after the user says yes) and fixes one form (Decision D6). Until then the route reader supports two forms behind one constant, `bearer` (default) and `query`.
+- **How the gateway accepts a token for an API call.** The notes record that a dashboard address is obtained with `kirocrew token` and that a session token lasts 30 minutes (E24), and nothing about the header or query form an API request needs. Task 1.2 reads `kirocrew token --help` and the Crew docs (read only, after the user says yes) and fixes one form (Decision D6). Task 1.2 found that the documentation shows the dashboard token as a `?token=` query parameter (`bearer` is documented only for webhooks), so the route reader supports two forms behind one constant, `query` (default) and `bearer`; the first real read (task 11.5) shows which one the gateway accepts (notes, section i).
 - **The text that `kirocrew token` prints.** Not recorded. The reader asks for the gateway origin and the token as two separate prompts, so it does not depend on that text.
 - **Whether the Vite output is byte-for-byte reproducible.** Expected (pinned versions, no sourcemap, no hashed file names, no timestamps) and checked by task 2 (see "Stale-bundle check").
 - **Whether the host's `lucide-react` has the icon names chosen in Q2.** Settled by the first install (the sidebar shows a glyph or not).
@@ -176,11 +176,11 @@ Why each line: `dist/` keeps every other build folder ignored; `!ui/dist/` re-in
 **Check at task time (read only, after the edit):**
 
 ```
-git check-ignore -v ui/dist/index.mjs        expect: no output, exit code 1   (not ignored)
+git check-ignore -q ui/dist/index.mjs        expect: no output, exit code 1   (not ignored; with -v git also prints the negated rule and exits 0, so -q is the verdict)
 git check-ignore -v ui/dist/other.js         expect: one line naming the rule "ui/dist/*", exit code 0
 git check-ignore -v ui/dist/maps/a.map       expect: ignored (rule "ui/dist/*"), exit code 0
 git check-ignore -v ui/other/dist/x.js       expect: ignored (rule "dist/"), exit code 0
-git status --porcelain ui/dist               expect: "?? ui/dist/index.mjs" before the user adds it
+git status --porcelain ui/dist               expect: "?? ui/dist/" before the user adds it (the folder is untracked; the file is not ignored)
 ```
 
 `tests/packaging.repo-files.test.mjs` runs the same `git check-ignore` calls with `spawnSync` and fixed arguments, reads only, and compares the exit codes and the matched rule. It does not depend on the network.
@@ -232,12 +232,12 @@ If the builds differ, the only comparison that this design allows instead is **b
 
 Two programs read the gateway: the measurement (R6) and the route reads of R9 and R10. Both go through `scripts/packaging/route-reader.mjs`. They are run by the **user** in a terminal, because the user holds the token. The agent never runs `kirocrew token`, never sees the printed address, and never receives the token.
 
-**How the token enters (R6.13).** `secret-prompt.mjs` asks two questions on the terminal: the gateway origin (an ordinary visible prompt, for example the origin part of the address `kirocrew token` printed) and the token (a masked prompt: the typed characters are not echoed). Both answers live only in program variables. Not as an argument (it would be in the history), not in an environment variable, not in a file.
+**How the token enters (R6.13).** `secret-prompt.mjs` asks for the address that `kirocrew token` printed, at a masked prompt (the typed or pasted characters are not echoed). `parseAccessInput(text)` takes the gateway origin and the token from that address; a bare token is also accepted, and then the origin is asked at a visible prompt that refuses any answer containing `token=` (so the whole address cannot be pasted there by mistake) and echoes nothing back. Both values live only in program variables. Not as an argument (it would be in the history), not in an environment variable, not in a file.
 
 **What the reader does.**
 
 - It sends `GET` only, with `redirect: 'error'` and a 15-second limit per request. It refuses, before any request is made, every path that is not one of the two in its allow list, `/api/apps/grimsheet-playtester/config` and `/api/crons`; there is no PUT, no POST and no other path.
-- The token goes in the form fixed by Decision D6 (`bearer` header by default; `query` is the other supported form). Whatever the form, every message, error text and body that the program prints or returns first passes through `scrub(text, token)`, which replaces every occurrence of the token (and of its URL-encoded form) with `<token>`.
+- The token goes in the form fixed by Decision D6 (`query` by default, as the documentation shows for the dashboard token; `bearer` is the other supported form). Whatever the form, every message, error text and body that the program prints or returns first passes through `scrub(text, token)`, which replaces every occurrence of the token (and of its URL-encoded form) with `<token>`.
 - It prints no body. It returns `{ status, bytes, parsed, ms }` and, for the summaries below, a few numbers.
 - It never writes a file. The measurement program writes one file only: the installed app's `data\config.json` (see "Measurement program").
 
@@ -254,7 +254,7 @@ If the token form of D6 cannot be made to work (both forms answer 401 or 403), t
 
 - `config-probe.mjs`
   - `PROBE_KEY = 'packagingProbe'` (a key that is not `playtesterResults`).
-  - `buildProbe(bytes)`: returns `{ pad: <ASCII text> }` whose `JSON.stringify` is exactly `bytes` bytes long. The text repeats `abcdefghij`, so a cut or a changed byte shows in a comparison. The smallest size is 9 bytes (`{"pad":""}`).
+  - `buildProbe(bytes)`: returns `{ pad: <ASCII text> }` whose `JSON.stringify` is exactly `bytes` bytes long. The text repeats `abcdefghij`, so a cut or a changed byte shows in a comparison. The smallest size is 10 bytes (`{"pad":""}`).
   - `writeProbe(deps, bytes)`: under `withResultsLock` from `scripts/results-store.mjs`, reads `data\config.json`, sets only the key `PROBE_KEY`, writes a temp file `.config.<token>.tmp` in `data\` and renames it over `config.json` (the same steps as `mergeTopKey`). Every other key is copied as read.
   - `removeProbe(deps)`: under the same lock, reads the file, deletes only `PROBE_KEY`, writes and renames the same way.
   - Why not `mergeTopKey` itself: it can set a sub-key of a top-level key but cannot delete a top-level key, and the removal is a requirement (R6.6). The probe code reuses `withResultsLock` (the lock) and `acquireLock` through it, so it takes the same `.results.lock` file as the replay and the hunt (R6.12). The first branch of R6.12 (taking the config lock) is possible from a hand step, so the fallback branch is **not** used; the pre-checks below remain as extra safety.
@@ -400,8 +400,8 @@ Each property is a `fast-check` test with at least 100 runs (the library default
 - **P3. A short `timeout_secs` is found.** For all valid manifests and all `timeout_secs` from 0 to `timeout + 4`: the rule `timeout-secs` is reported. (R5.2)
 - **P4. An extra cron is found.** For all valid manifests with one additional cron entry of any name, any fields (including `message`, `agent`, `command`, `every`, `env`): a problem is reported; a cron named `hunt` is reported by name. (R3.2, R3.4, R3.5)
 - **P5. Forbidden text is found.** For all valid manifests with a drive letter, `Users\`, `token=`, a URL or a leading BOM inserted at any string position or at the front: a problem is reported. (R1.5, R1.6, R5.4)
-- **P6. The probe round trip restores the file.** For all JSON-safe config objects without `packagingProbe` and all sizes from 9 to 200000: after `writeProbe` then `removeProbe`, the parsed file deep-equals the original, the lock file and the temp file are gone, and at no moment in between was any other key changed or lost. Also when an error is thrown between the write and the removal and the `finally` block runs. (R6.2, R6.6, R6.12)
-- **P7. The probe has the exact size.** For all sizes from 9 to 2 MiB: the UTF-8 length of `JSON.stringify(buildProbe(n))` is exactly `n`. (R6.4)
+- **P6. The probe round trip restores the file.** For all JSON-safe config objects without `packagingProbe` and all sizes from 10 to 200000: after `writeProbe` then `removeProbe`, the parsed file deep-equals the original, the lock file and the temp file are gone, and at no moment in between was any other key changed or lost. Also when an error is thrown between the write and the removal and the `finally` block runs. (R6.2, R6.6, R6.12)
+- **P7. The probe has the exact size.** For all sizes from 10 to 2 MiB: the UTF-8 length of `JSON.stringify(buildProbe(n))` is exactly `n`. (R6.4)
 - **P8. The measurement finds the boundary.** For all limits L from 0 to 2 MiB and all failure modes of a fake route (a non-200 status, a truncated body, a body that does not parse, a timeout): `largestGood` is the greatest tested size at most L; if L is below 1 MiB, `firstBad` is above L, and `firstBad - largestGood` is at most 1024; if L is at least 1 MiB, `reachedCap` is true and `firstBad` is null. The probe is removed in every case. (R6.3 to R6.5, R6.6)
 - **P9. The token never leaves.** For all tokens (8 to 64 printable characters, including regular-expression characters, `%` and `+`) and all gateway behaviours (200; 401 whose body echoes the token; a thrown network error whose message holds the token; a body that holds the token): the printed report, every message and every write of the fake file system contain no occurrence of the token or of its URL-encoded form. (R6.13)
 - **P10. The cron summary leaks nothing.** For all job objects with an arbitrary `script` value and arbitrary extra fields: the summary text never contains the `script` value, and its keys are only the allow-listed ones. (R9.4)

@@ -1,0 +1,31 @@
+{
+  "name": "grimsheet-playtester",
+  "displayName": "Grimsheet Playtester",
+  "version": "1.0.0",
+  "description": "The night watch for a haunted spreadsheet: replays every Grimsheet level each night and sends an agent to break them.",
+  "author": "UBayouski",
+  "agents": ["agents/playtester.json"],
+  "skills": ["skills/play-level", "skills/find-exploits"],
+  "crons": [
+    {
+      "name": "replay",
+      "script": "scripts/replay_cron.py:run",
+      "cron_expr": "0 3 * * *",
+      "timezone": "America/Los_Angeles",
+      "strict_schedule": true,
+      "enabled": true,
+      "timeout": 900,
+      "timeout_secs": 905
+    }
+  ],
+  "permissions": {
+    "cron": true,
+    "api": ["/api/apps/grimsheet-playtester/config", "/api/crons"]
+  },
+  "ui": {
+    "entry": "dist/index.mjs",
+    "pages": [
+      { "route": "/apps/grimsheet-playtester", "label": "Grimsheet Playtester", "icon": "Ghost" }
+    ]
+  }
+}
