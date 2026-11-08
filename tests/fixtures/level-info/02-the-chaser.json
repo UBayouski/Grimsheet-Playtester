@@ -1,0 +1,775 @@
+{
+  "id": "02-the-chaser",
+  "title": "The Chaser",
+  "hint": "MOVE_M1 decides who gets chased. It is only text.",
+  "startingHp": 3,
+  "ink": 2,
+  "seed": 2,
+  "hero": {
+    "at": "B6"
+  },
+  "monsters": [
+    {
+      "id": "M1",
+      "at": "H6",
+      "move": "MOVE_M1",
+      "atk": "ATK_M1"
+    }
+  ],
+  "map": [
+    "############",
+    "############",
+    "############",
+    "#..........#",
+    "#..........#",
+    "#.........X#",
+    "#..........#",
+    "#..........#",
+    "############",
+    "############",
+    "############",
+    "############"
+  ],
+  "cells": [
+    {
+      "address": "A1",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "B1",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "C1",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "D1",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "E1",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "F1",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "G1",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "H1",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "I1",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "J1",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "K1",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "L1",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "A2",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "B2",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "C2",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "D2",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "E2",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "F2",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "G2",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "H2",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "I2",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "J2",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "K2",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "L2",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "A3",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "B3",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "C3",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "D3",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "E3",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "F3",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "G3",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "H3",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "I3",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "J3",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "K3",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "L3",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "A4",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "B4",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "C4",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "D4",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "E4",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "F4",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "G4",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "H4",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "I4",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "J4",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "K4",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "L4",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "A5",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "B5",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "C5",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "D5",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "E5",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "F5",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "G5",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "H5",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "I5",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "J5",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "K5",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "L5",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "A6",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "B6",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "C6",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "D6",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "E6",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "F6",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "G6",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "H6",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "I6",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "J6",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "K6",
+      "raw": "X",
+      "locked": true
+    },
+    {
+      "address": "L6",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "A7",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "B7",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "C7",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "D7",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "E7",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "F7",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "G7",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "H7",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "I7",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "J7",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "K7",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "L7",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "A8",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "B8",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "C8",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "D8",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "E8",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "F8",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "G8",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "H8",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "I8",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "J8",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "K8",
+      "raw": ".",
+      "locked": true
+    },
+    {
+      "address": "L8",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "A9",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "B9",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "C9",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "D9",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "E9",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "F9",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "G9",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "H9",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "I9",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "J9",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "K9",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "L9",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "A10",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "B10",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "C10",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "D10",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "E10",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "F10",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "G10",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "H10",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "I10",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "J10",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "K10",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "L10",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "A11",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "B11",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "C11",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "D11",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "E11",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "F11",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "G11",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "H11",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "I11",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "J11",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "K11",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "L11",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "A12",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "B12",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "C12",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "D12",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "E12",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "F12",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "G12",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "H12",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "I12",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "J12",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "K12",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "L12",
+      "raw": "#",
+      "locked": true
+    },
+    {
+      "address": "A14",
+      "raw": "Move rule of M1",
+      "locked": true
+    },
+    {
+      "address": "B14",
+      "raw": "=IF(DIST(HERO,SELF)<4,TOWARD(HERO),\"-\")",
+      "name": "MOVE_M1"
+    },
+    {
+      "address": "A15",
+      "raw": "Attack rule of M1",
+      "locked": true
+    },
+    {
+      "address": "B15",
+      "raw": "=IF(DIST(HERO,SELF)<2,2,0)",
+      "name": "ATK_M1"
+    }
+  ]
+}

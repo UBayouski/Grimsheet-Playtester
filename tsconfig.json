@@ -9,5 +9,5 @@
     "moduleResolution": "NodeNext",
     "types": ["node"]
   },
-  "include": ["scripts/**/*.mjs", "tests/**/*.mjs"]
+  "include": ["scripts/**/*.mjs", "tests/**/*.mjs", "skills/**/scripts/*.mjs"]
 }

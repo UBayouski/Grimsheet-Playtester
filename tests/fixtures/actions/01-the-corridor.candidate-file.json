@@ -1,0 +1,15 @@
+{
+  "levelId": "01-the-corridor",
+  "claimedClass": "cheaper_win",
+  "actions": [
+    { "kind": "move", "dir": "E" },
+    { "kind": "move", "dir": "E" },
+    { "kind": "move", "dir": "E" },
+    { "kind": "move", "dir": "E" },
+    { "kind": "move", "dir": "E" },
+    { "kind": "move", "dir": "E" },
+    { "kind": "move", "dir": "E" },
+    { "kind": "move", "dir": "E" },
+    { "kind": "move", "dir": "E" }
+  ]
+}
