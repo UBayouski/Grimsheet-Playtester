@@ -170,13 +170,18 @@ Private steps: `startRecord`, `runStages`, `replayLevels`, `finish`. It owns the
 export const ALLOWED_GIT = ['clone', 'fetch', 'reset', 'rev-parse', 'remote get-url'];
 /** Throws for any subcommand not on the list (used by every git call in this module). @param {string[]} args */
 export function assertAllowedGit(args)
-/** @returns {string|null} Checkout path under localAppData, or null when localAppData is empty */
-export function checkoutPath(localAppData, appName)
-/** Pure. @returns {{ok:true}|{ok:false, reasonCode:'checkout_inside_app'|'checkout_delete_failed'}} */
-export function checkDeletable(path, localAppData, appName, appFolder, dataFolder)
+/** Sub-folder name: one or more segments matching ^[a-z0-9][a-z0-9-]*$ joined by a backslash. Default 'grimsheet'.
+ *  The replay always uses the default; `exploit-hunt` may pass another one (its dependencies D-1 and D-2). */
+export function isValidSubPath(subPath)
+/** @returns {string|null} `<localAppData>\<appName>\<subPath>`, or null when localAppData is empty or subPath is invalid */
+export function checkoutPath(localAppData, appName, subPath = 'grimsheet')
+/** Pure. The delete rule is "absolute, under localAppData, ends with `<appName>\<subPath>`", and the checkout and the
+ *  app folder must not overlap in either direction. An invalid subPath gives checkout_delete_failed.
+ *  @returns {{ok:true}|{ok:false, reasonCode:'checkout_inside_app'|'checkout_delete_failed'}} */
+export function checkDeletable(path, localAppData, appName, appFolder, dataFolder, subPath = 'grimsheet')
 /**
  * @param {Pick<Deps,'fs'|'spawn'|'paths'|'appName'|'clock'|'platform'>} deps
- * @param {{repoUrl:string, branch:string, deadlineMs:number}} args
+ * @param {{repoUrl:string, branch:string, deadlineMs:number, subPath?:string}} args   subPath defaults to 'grimsheet'; an invalid one fails with invalid_sub_path
  * @returns {Promise<{ok:true, dir:string, commit:string}|{ok:false, failure:Failure}>}
  */
 export async function ensureCheckout(deps, args)
@@ -286,7 +291,7 @@ export function makeStartProcess(opts)   // opts: { platform, setTimeoutFn, clea
 
 Tree kill on Windows: `taskkill /PID <pid> /T /F` through a second `spawn` with `shell: false`. On other hosts the child is started `detached` and killed with `process.kill(-pid, 'SIGKILL')`. Only Windows was tested; the other branch is untested code and the README says so. The collected stdout is capped at 16 MiB; a larger output is cut and the caller sees non-JSON.
 
-Start rules (4.8, 3.11): `git` and `node` with `shell: false` and an argument array. `npm` with `shell: true` on Windows and fixed arguments only (`ci`, `run`, `build:play`). A level id or path is never placed in a shell command line. The play command is `node scripts/play.mjs <level-id> --actions-file <abs path>` with `cwd` set to the Checkout, `shell: false`.
+Start rules (4.8, 3.11): `git` and `node` with `shell: false` and an argument array. `npm` on Windows (`win32`) is started with `shell: true` as one fixed command string and no argument array (Node 24 prints DEP0190 when `shell: true` is combined with an argument array). The string comes only from an allow-list of exact argument sets: `['ci']` gives `npm ci` and `['run', 'build:play']` gives `npm run build:play`. Any other npm argument set is rejected before anything is started (the result has `startError` set, nothing is spawned), on every platform. On other hosts the allowed sets are started with an argument array and `shell: false`. A level id or path is never placed in a shell command line. The play command is `node scripts/play.mjs <level-id> --actions-file <abs path>` with `cwd` set to the Checkout, `shell: false`.
 
 ### scripts/file-lock.mjs
 
@@ -655,6 +660,7 @@ Runner reason codes (written to `failure.reasonCode` or to a Level_Entry `reason
 | `no_local_app_data` | Run failure | `checkout` | `ensureCheckout` | The LOCALAPPDATA setting is missing, so there is no place for the Grimsheet checkout. |
 | `checkout_inside_app` | Run failure | `checkout` | `checkDeletable` / `ensureCheckout` | The checkout folder would be inside the app folder, which is not allowed. |
 | `checkout_delete_failed` | Run failure | `checkout` | `ensureCheckout` | The old checkout could not be removed safely. |
+| `invalid_sub_path` | Run failure | `checkout` | `ensureCheckout` (never with the replay's default) | The checkout sub-folder name is not allowed. |
 | `git_not_found` | Run failure | `checkout` | `ensureCheckout` (git cannot be started) | git could not be started. Install git and make sure it is on the PATH. |
 | `git_failed` | Run failure | `checkout` | `ensureCheckout` (clone, fetch, reset or rev-parse exits non-zero) | A git step failed with exit code N. |
 | `install_failed` | Run failure | `install` | `run.mjs` (`npm ci` non-zero) | npm ci failed with exit code N. |
