@@ -22,7 +22,6 @@ Not verified (nothing was built, installed, run or called):
 - **How the gateway accepts a token for an API call.** The notes record that a dashboard address is obtained with `kirocrew token` and that a session token lasts 30 minutes (E24), and nothing about the header or query form an API request needs. Task 1.2 reads `kirocrew token --help` and the Crew docs (read only, after the user says yes) and fixes one form (Decision D6). Task 1.2 found that the documentation shows the dashboard token as a `?token=` query parameter (`bearer` is documented only for webhooks), so the route reader supports two forms behind one constant, `query` (default) and `bearer`; the first real read (task 11.5) shows which one the gateway accepts (notes, section i).
 - **The text that `kirocrew token` prints.** Not recorded. The reader asks for the gateway origin and the token as two separate prompts, so it does not depend on that text.
 - **Whether the Vite output is byte-for-byte reproducible.** Expected (pinned versions, no sourcemap, no hashed file names, no timestamps) and checked by task 2 (see "Stale-bundle check").
-- **Whether the host's `lucide-react` has the icon names chosen in Q2.** Settled by the first install (the sidebar shows a glyph or not).
 - **Whether `permissions.storage` is needed (Q3), the exact build-tool warning (Q4), the time field formats (Q6), the cron timing (Q7), the files copied at install (Q11) and the job registration order (Q14).** They stay open and are answered by the first install.
 
 ## Architecture
@@ -93,6 +92,7 @@ Written in a task after its tests fail (R5.6). UTF-8, no BOM, two-space indent, 
   "version": "1.0.0",
   "description": "The night watch for a haunted spreadsheet: replays every Grimsheet level each night and sends an agent to break them.",
   "author": "UBayouski",
+  "iconPath": "ui/icon.svg",
   "agents": ["agents/playtester.json"],
   "skills": ["skills/play-level", "skills/find-exploits"],
   "crons": [
@@ -114,7 +114,7 @@ Written in a task after its tests fail (R5.6). UTF-8, no BOM, two-space indent, 
   "ui": {
     "entry": "dist/index.mjs",
     "pages": [
-      { "route": "/apps/grimsheet-playtester", "label": "Grimsheet Playtester", "icon": "Ghost" }
+      { "route": "/apps/grimsheet-playtester", "label": "Grimsheet Playtester" }
     ]
   }
 }
@@ -122,24 +122,25 @@ Written in a task after its tests fail (R5.6). UTF-8, no BOM, two-space indent, 
 
 Points that follow from the requirements: no `resources`, no `setup`, no `mcpServers`, no `sops`, no `storage` (Q3: omit until the first install shows it is needed), no `events`, no `network`, no `mountFunction`, no `entryPoint`. The `timeout` 900 and `timeout_secs` 905 repeat `CRON_TIMEOUT = 900` of `scripts/replay_cron.py`; the Manifest_Check reads the constant from that file, so a change of the constant fails the check until the manifest follows (R5.8).
 
-### Page icon and label (Open question Q2, settled here)
+### App icon and label (Open question Q2, settled)
 
-- **Icon: `Ghost`.** It is a long-standing Lucide name, it fits "haunted spreadsheet" and the Kiroween theme, and the spike's sidebar showed a Lucide name by its string (E08).
-- **Fallback: `Moon`** (the night watch). It is among the oldest names in the set. The first install (R9) shows the sidebar entry; if no glyph appears, the manifest changes to `Moon`, and the finding goes in the Notes_File.
+- **Icon: the image `ui/icon.svg`, named by the top-level `"iconPath": "ui/icon.svg"` (R4.10).** The Crew 0.12.0 dashboard uses a page `icon` name only for built-in or adopted apps, and then only 16 names; for an installed app the sidebar and the Details card use `iconPath` / `iconUrl` (and the dark variants), then the first page's `iconUrl`, then a default glyph (notes section o, E43). `iconPath` is read from the app's install folder (`/apps/<name>/art/<path>` reads `<install folder>/<path>`), so the value is `ui/icon.svg`, not `icon.svg`. The first install showed a default cube for the earlier page `icon` `Ghost`.
+- **The page has no `icon` field** and no `iconUrl`; the manifest has no `iconUrl`, `iconUrlDark` or `iconPathDark`.
+- **The drawing.** A hand-drawn ghost, 24 by 24 units, about 450 bytes, in four colours of Grimsheet's `src/styles/chrome.css` tokens: body `--white` `#ffffff`, outline `--dark` `#000000` (1.5 units), eyes `--title-a` `#000080`. On a light background the black outline draws the shape; on a dark one the white body does, so one file serves both themes and there is no `iconPathDark`. It holds no script, no event attribute, no link and no external reference; the dashboard serves it as `image/svg+xml` with `Content-Security-Policy: default-src 'none'; sandbox`. A grey grid line across the body was tried in the proposal and dropped, because at 20 px it reads as a mouth.
+- **`.gitattributes`:** `ui/icon.svg -text`, so its bytes stay the same in every checkout.
 - **Label: `Grimsheet Playtester`**, the same as `displayName`, as R4.2 says. If the sidebar clips it, the label changes to `Playtester` only after the user approves.
-
 ## Manifest_Check
 
 `scripts/packaging/manifest-check.mjs` exports one pure function:
 
 ```
-checkManifest({ manifestBytes, launcherText, agentText, skillDirs, bundleBytes }) -> Problem[]
+checkManifest({ manifestBytes, launcherText, agentText, skillDirs, bundleBytes, iconFiles }) -> Problem[]
 Problem = { rule: string, message: string }      // empty list = fine
 ```
 
-`manifestBytes` is a `Uint8Array`, so a BOM is seen. `skillDirs` is a list of `{ path, hasSkillMd }`; the test builds it with `fs`. `bundleBytes` is the byte length of `ui/dist/index.mjs`, or `null` when the file is missing.
+`manifestBytes` is a `Uint8Array`, so a BOM is seen. `skillDirs` is a list of `{ path, hasSkillMd }`; the test builds it with `fs`. `bundleBytes` is the byte length of `ui/dist/index.mjs`, or `null` when the file is missing. `iconFiles` maps each repo path the manifest names in `iconPath` or `iconPathDark` to the bytes of that file (a `Uint8Array`), or to `null` when it is missing; the test builds it with `fs`.
 
-The test file `tests/packaging.manifest.test.mjs` has two parts: the pure function against generated and example inputs, and one test that reads the real `app.json`, `scripts/replay_cron.py`, `agents/playtester.json`, the two skill folders and `ui/dist/index.mjs` and expects no problems.
+The test file `tests/packaging.manifest.test.mjs` has two parts: the pure function against generated and example inputs, and one test that reads the real `app.json`, `scripts/replay_cron.py`, `agents/playtester.json`, the two skill folders, `ui/dist/index.mjs` and `ui/icon.svg` and expects no problems.
 
 | Rule | Checks | Requirement |
 |---|---|---|
@@ -150,7 +151,8 @@ The test file `tests/packaging.manifest.test.mjs` has two parts: the pure functi
 | `agents-skills` | `agents` equals `["agents/playtester.json"]`; `skills` equals the two paths; each skill folder has `SKILL.md`; the agent parses with `tools` equal to `["execute_bash"]`, no `allowedTools`, and the single `skill://` resource whose app segment equals the manifest `name` | R2.1 to R2.4 |
 | `crons` | exactly one cron; its fields equal those of R3.1; no cron named `hunt` | R3.1, R3.4, R3.5 |
 | `permissions` | `cron` is true; `api` equals the two paths built from `name` | R3.3, R4.3, R4.5, R4.9 |
-| `ui` | `ui.entry` is `dist/index.mjs`; one page with route `/apps/<name>`, label equal to `displayName`, and an `icon` string | R4.1, R4.2 |
+| `ui` | `ui.entry` is `dist/index.mjs`; one page with route `/apps/<name>` and label equal to `displayName`; the page has no `icon` and no `iconUrl` | R4.1, R4.2 |
+| `icon` | `iconPath` matches `^ui/[A-Za-z0-9_.-]+\.svg$` (relative, under `ui/`, no `..`, no backslash, no scheme); the file exists and is 1 to 4095 bytes; its text is UTF-8 with no BOM, starts with `<svg` (an `<?xml ...?>` before it is allowed) and holds `xmlns="http://www.w3.org/2000/svg"`; it holds no `<script`, no `<foreignObject`, no `on...=` attribute and no `href`; the manifest holds no `iconUrl` or `iconUrlDark`; an `iconPathDark`, if present, follows the same rule | R4.10 |
 | `timeout` | `crons[0].timeout` equals the integer after `CRON_TIMEOUT =` in the launcher text; both are integers | R5.1, R5.3 |
 | `timeout-secs` | `timeout_secs` is an integer and at least `timeout + 5` | R5.2, R5.3 |
 | `text` | the manifest text holds no drive letter (`[A-Za-z]:\`), no `Users\`, no `token=`, no URL | R1.6, R5.4 |
@@ -308,7 +310,7 @@ The order of the whole spec's hand steps: build the repo files and tests, the us
 | 4 | `CREW app install REPO` | creates `APP` (copies `REPO`, drops `.git` and `node_modules`) | **Gate C:** approve the install. |
 | 5 | The user runs `CREW token` in their own terminal and opens the printed address. The agent does not run it. | opens a dashboard session | |
 | 6 | The user trusts the app (Settings, Security, Third-party apps) and enables it. | changes the app's trust state | **Gate D:** the user says when done. |
-| 7 | The user looks at: Library (Enabled), the sidebar entry and its icon (Q2), the Schedule page (`replay` job; the time it appeared, Q14), Details, Resources (one agent, two skills). | none | |
+| 7 | The user looks at: Library (Enabled), the sidebar entry and its image icon (Q2, R4.10), the Schedule page (`replay` job; the time it appeared, Q14), Details, Resources (one agent, two skills). | none | |
 | 8 | In the page: reload; check that the page renders from the default export (R9.5, dashboard Q9); in the browser console read `React.version` once (R9.6, dashboard Q10); press each copy button once (R9.7). | none | |
 | 9 | The user runs, in their own terminal in the working folder: `node scripts/packaging/read-route.mjs crons` (prompts for origin and token) | reads `/api/crons`; prints the summary | **Gate E:** the user runs it and pastes the printed summary. |
 | 10 | The user presses **Run** on the Schedule page for `replay` and waits until it stops. | starts the replay: writes `APP\data` (Grimsheet checkout in `%LOCALAPPDATA%\grimsheet-playtester`) | **Gate F:** approve the first real run (network to the Grimsheet repository, a build). |
@@ -451,7 +453,7 @@ The design found seven points. The user approved the first five; they have been 
 ## Decisions to confirm
 
 - **Confirmed by the user:** D1 to D6 as written, with D6 settled in task 1.2.
-- **D1. Icon `Ghost`, fallback `Moon`, label equal to the display name.** (Q2)
+- **D1. Icon: the image `ui/icon.svg` by the top-level `iconPath`, no page `icon`; label equal to the display name.** (Q2; this replaces the first choice, `Ghost` with the fallback `Moon`, which can never render for an installed app.)
 - **D2. Probe writer built on `withResultsLock`, not on `mergeTopKey`,** because the probe must be deleted.
 - **D3. The user runs the token-using programs.** The token is typed at a masked prompt. The alternative (the agent runs them with a token in an argument or a file) is rejected by R6.13.
 - **D4. Size ladder.** The six sizes of R6.4, then doubling to 1 MiB, then bisect to 1024 bytes.

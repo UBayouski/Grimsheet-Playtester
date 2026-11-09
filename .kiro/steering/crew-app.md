@@ -13,7 +13,7 @@ Source: `docs/CREW_NOTES.md` (Context7 library `/kirodotdev/kirocrew`). "Not doc
 - `agents`: array of file paths, e.g. `["agents/sample-agent.json"]`.
 - `skills`: array of string paths to skill directories, e.g. `["skills/my-skill"]` (legacy object entries are normalized).
 - `crons`: array. A manifest with crons must also set `"cron": true` in `permissions`.
-- `ui`: `{"entry": "dist/index.mjs", "pages": [{"route": "/apps/<name>", "label": "...", "icon" or "iconUrl"}]}`, optional `sidebar`. `entry` is relative to `ui/`.
+- `ui`: `{"entry": "dist/index.mjs", "pages": [{"route": "/apps/<name>", "label": "..."}]}`, optional `sidebar`. `entry` is relative to `ui/`. App icon: for an installed app Crew 0.12.0 ignores a page `icon` name (it is used only for built-in or adopted apps, and only 16 names); set the top-level `iconPath` to an image file, a path relative to the app folder (this app: `"iconPath": "ui/icon.svg"`). A page `iconUrl` is served from `ui/`. Basis: CREW_NOTES section o, E43.
 - `permissions` must be an object (a non-object parses to empty). Keys: `api`, `events`, `mcpTools`, `storage`, `network`, `memory`, `cron`, `sessionApproval`, `spawn`, `jobs`, `exposeToApps`.
 - `setup`: `onInstall`, `onUninstall`, `onEnable`, `onDisable`. Local installs skip `setup.onInstall`.
 

@@ -103,7 +103,7 @@ Any change to the verifier, replay, hunt scripts or page logic; a `hunt` cron (d
 #### Acceptance Criteria
 
 1. THE Manifest SHALL set `ui.entry` to `dist/index.mjs`, relative to `ui/`. [dashboard R9.1; notes a, f]
-2. THE Manifest SHALL set `ui.pages` to one page whose `route` is `/apps/grimsheet-playtester` and whose `label` is the display name of the app, with an `icon` that is a Lucide icon name (see Open question Q2). [notes a (`ui.pages` fields), A-08]
+2. THE Manifest SHALL set `ui.pages` to one page whose `route` is `/apps/grimsheet-playtester` and whose `label` is the display name of the app, with no `icon` field: the app icon is the image of criterion 10 (Open question Q2, closed). [notes a (`ui.pages` fields), A-08 (refuted for installed apps), section o, E43]
 3. THE Manifest SHALL set `permissions.api` to exactly `["/api/apps/grimsheet-playtester/config", "/api/crons"]`. [dashboard R1.6; notes h.3 (exact match, one entry covers GET and PUT)]
 4. THE Manifest SHALL contain no `permissions.events` entry. [dashboard R1.4, R1.6; notes h.3 (no event marks a finished run)]
 5. THE Manifest SHALL contain no `permissions.api` entry for `/api/crons/*` or any other path. [dashboard R1.3; notes h.3 (`GET /api/crons/<id>` answers 405)]
@@ -111,6 +111,7 @@ Any change to the verifier, replay, hunt scripts or page logic; a `hunt` cron (d
 7. THE `permissions.storage` value SHALL follow Open question Q3.
 8. THE Manifest SHALL contain no `mountFunction` and no per-page `entryPoint`, WHILE the first install (Requirement 9) shows that the default export of `dist/index.mjs` renders as the page. [dashboard Q9, A-11; notes A-11]
 9. THE Manifest_Check SHALL verify that the `permissions.api` list equals the two paths of criterion 3 with the App_Name taken from the Manifest `name`.
+10. THE Manifest SHALL set the top-level field `iconPath` to `ui/icon.svg`, a relative path under `ui/` to an SVG file that is committed to the repo and is smaller than 4096 bytes, and SHALL NOT set `iconUrl`, `iconUrlDark` or a page `iconUrl`; THE Manifest SHALL set `iconPathDark` only WHEN one image cannot serve both the light and the dark theme. Reason: in Crew 0.12.0 a page `icon` name is used only for built-in or adopted apps (16 names), and an installed app's icon comes from `iconPath` (or `iconUrl`), served from the app's install folder. [Open question Q2; notes section o; E43]
 
 ### Requirement 5: Manifest check (timeout rules and the rest)
 
@@ -121,7 +122,7 @@ Any change to the verifier, replay, hunt scripts or page logic; a `hunt` cron (d
 1. THE Manifest_Check SHALL read the integer after `CRON_TIMEOUT =` in `scripts/replay_cron.py` and SHALL fail IF the Replay_Cron `timeout` is not equal to it. [replay-runner R12.6; replay-runner design "CRON_TIMEOUT = 900 ... packaging checks this"; replay-runner tasks 12.3 and Notes]
 2. THE Manifest_Check SHALL fail IF the Replay_Cron `timeout_secs` is less than `timeout` plus 5. [replay-runner R12.6, R11.2; notes h.4, A-05; E21]
 3. THE Manifest_Check SHALL fail IF `timeout` or `timeout_secs` is missing or is not an integer, because a script cron without `timeout` is killed at 30 seconds. [notes h.4; E21]
-4. THE Manifest_Check SHALL verify the structural rules of Requirements 1 to 4 that a program can read: required fields, absent fields, exact `crons`, exact `permissions.api`, absent `events`, and the absence of a drive letter, `Users\` and `token=` in the file text.
+4. THE Manifest_Check SHALL verify the structural rules of Requirements 1 to 4 that a program can read: required fields, absent fields, exact `crons`, exact `permissions.api`, absent `events`, the absence of a drive letter, `Users\` and `token=` in the file text, and the icon rules of Requirement 4, criterion 10 (the path, the file, its size, and SVG text with no script, no event attribute, no `foreignObject` and no link).
 5. THE Manifest_Check SHALL need no network, no Crew gateway and no Grimsheet checkout, and SHALL be part of the root `npm test`. [replay-runner R13.1; exploit-hunt R16.1]
 6. THE Manifest_Check SHALL be written test-first, with a failing run shown before the Manifest exists. [project practice in earlier specs' tasks]
 7. THE Manifest_Check SHALL include an example test for each failing rule (a `timeout` that differs from the constant, a `timeout_secs` of `timeout` plus 4, an extra `hunt` cron).
@@ -295,7 +296,7 @@ Any change to the verifier, replay, hunt scripts or page logic; a `hunt` cron (d
 2. THE files SHALL name no tool or assistant other than Kiro. [project rule]
 3. THE work SHALL run no git write command (no add, commit, push, branch or tag). [project rule]
 4. THE work SHALL edit `docs/BRIEF.md` and the steering files only to correct statements that a measurement of Requirements 6, 9 or 10 shows to be wrong, and SHALL list each such change in the Usage_Entry. [crew-spike R8.3; brief §6 table]
-5. THE `ui/` and root source files SHALL stay unchanged by this spec except by an explicit user approval under Requirement 9, criterion 6 (React pins), Requirement 7 (the new `scripts/test-all.mjs` and the `test:all` entry of the root `package.json`), Requirement 8, criterion 2 (the `.gitignore` change, the new `.gitattributes` and the committed `ui/dist/index.mjs`) and Requirement 11, criterion 3 (the `model` value). [dashboard tasks "Rules that apply to every task"]
+5. THE `ui/` and root source files SHALL stay unchanged by this spec except by an explicit user approval under Requirement 9, criterion 6 (React pins), Requirement 7 (the new `scripts/test-all.mjs` and the `test:all` entry of the root `package.json`), Requirement 8, criterion 2 (the `.gitignore` change, the new `.gitattributes` and the committed `ui/dist/index.mjs`), Requirement 4, criterion 10 (the new `ui/icon.svg` and its `.gitattributes` line) and Requirement 11, criterion 3 (the `model` value). [dashboard tasks "Rules that apply to every task"]
 
 ### Requirement 15: KIRO_USAGE.md entry as the last task
 
@@ -336,6 +337,7 @@ Observed behaviour wins [notes h.2]. "Docs" is the library `/kirodotdev/kirocrew
 | 20 | The Library offers an Update action for installed apps. | No Update button for a locally installed app; Sync is in Details or the Library menu. | notes h.1; E12 |
 | 21 | An uninstall preserves `data/` by default. | Agrees; the app folder with `data\` stayed after every uninstall, and so did `cron-history\<job id>.jsonl`. | notes h.1, A-22; E12, E17, E34 |
 | 22 | Docs state no size limit for the config route. | Not tested yet; Requirement 6 measures it. | notes h.8 |
+| 23 | `ui.pages[].icon` takes a lucide icon name (manifest reference; crew-app steering). | For an installed app the page `icon` is ignored: the dashboard uses it only for built-in or adopted apps, and only 16 names. The sidebar and Details show `iconPath` / `iconUrl` (served from the install folder), then a page `iconUrl`, then a default cube. | notes section o; E43 |
 
 ## Hand-off trace (source criterion to covering requirement)
 
@@ -386,7 +388,7 @@ Hand-offs from the request list with no source found: none missing in the specs.
 Each item names what would settle it.
 
 - **Q1. `author` value. Closed.** The developer decided: `UBayouski` (R1.7).
-- **Q2. Page `icon` and `label`.** The spike used a Lucide name (`FlaskConical`, E08) and the sidebar showed it; the name for this app is not chosen. Settled by the design choosing a name and the first install (R9) showing the sidebar entry.
+- **Q2. Page `icon` and `label`. Closed.** A lucide name never renders for an installed app: the Crew 0.12.0 dashboard uses a page `icon` name only for built-in or adopted apps, and only 16 names (notes section o, E43); the first install showed a default cube for `Ghost`. The icon is the hand-drawn `ui/icon.svg`, named by the top-level `iconPath` (R4.10). The fallback `Moon` is dropped. The label is the display name (R4.2).
 - **Q3. `permissions.storage`.** The spike manifests set `storage: true`; it exposed no SDK call (E24) and whether the config route works without it was not tested. Settled by the first install: try without `storage`, and if the Config_Route fails, set `storage: true` and record it. Assumption until then: omit it.
 - **Q4. The esbuild install-script warning.** No text is recorded in `docs/` or the specs. Settled by running `npm ci` in `ui/` on the Clean_Clone at the first install (the developer path, since a judge no longer builds) and copying the exact text, or recording that no warning appeared.
 - **Q5. Commit `ui/dist/` or build it. Closed.** The developer decided: commit the built `ui/dist/index.mjs` (R8.2). The developer rebuilds before each commit that touches `ui/`; the Manifest_Check or the combined command fails on a missing or stale bundle; the `.gitignore` change is a task of this spec.

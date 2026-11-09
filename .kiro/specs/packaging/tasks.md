@@ -171,7 +171,7 @@ Rules that apply to every task:
     - _Requirements: 8.4, 8.5, 9.3_
 
   - [x] 11.4 Trust, enable and observe (Gate D)
-    - Tell the user to run `kirocrew token` in their own terminal, open the printed address, trust the app (Settings, Security, Third-party apps) and enable it. The agent does not run `kirocrew token` and does not ask for the address. **STOP** until the user says it is done (Gate D). Then ask the user what they see: Library (Enabled), the sidebar entry and whether the icon `Ghost` shows a glyph (Q2; if not, the manifest changes to `Moon`, only after the user approves, as a new small change of `app.json` with the Manifest_Check run again), the Schedule page (the `replay` job, and the point when it appeared: Q14), Details, Resources (one agent, two skills), whether `permissions.storage` was needed (Q3: the page's read of the Config_Route works without it).
+    - Tell the user to run `kirocrew token` in their own terminal, open the printed address, trust the app (Settings, Security, Third-party apps) and enable it. The agent does not run `kirocrew token` and does not ask for the address. **STOP** until the user says it is done (Gate D). Then ask the user what they see: Library (Enabled), the sidebar entry and whether the icon `Ghost` shows a glyph (Q2; superseded: a page `icon` name never renders for an installed app, so Q2 is settled by an image icon in task 17.0 and the fallback `Moon` is dropped), the Schedule page (the `replay` job, and the point when it appeared: Q14), Details, Resources (one agent, two skills), whether `permissions.storage` was needed (Q3: the page's read of the Config_Route works without it).
     - _Requirements: 8.6, 8.8, 9.3, 9.10, 9.12; Open questions Q2, Q3, Q14_
 
   - [x] 11.5 Page checks and the crons read (Gate E)
@@ -253,32 +253,38 @@ Rules that apply to every task:
     - After the hunt: `Get-Content "$env:USERPROFILE\.kiro\crew\apps\grimsheet-playtester\data\hunts\<Hunt_Id>.json"`, and the user runs `node scripts/packaging/read-route.mjs config` (the numbers include `findings`). List every file the hunt created and delete none. Compare the Approval_Count with the "roughly 30" and the 3 to 12 of the spike, and say whether the 1800-second Time_Budget suits a run that waits for approvals. Record what the dashboard shows for the Hunt_Record and the Findings. **STOP and ask the user** to approve the Notes_File section and the evidence files, then write them.
     - _Requirements: 10.3, 10.4, 10.9, 10.10, 10.12_
 
-- [ ] 16. Optional: model field plan (Hand_Run_Step; Requirement 11)
-  - [ ] 16.1 STOP: ask whether to measure at all (Gate A)
+- [x] 16. Optional: model field plan (Hand_Run_Step; Requirement 11) (skipped by the user: 16.1 answered no; 16.2 to 16.6 skipped; the default model was used)
+  - [x] 16.1 STOP: ask whether to measure at all (Gate A) (answered no by the user, 2026-11-08; no measurement)
     - **STOP and ask the user.** IF no: record the skip in the Notes_File (the agent file keeps no `model`) and go to task 17. IF yes: continue.
     - _Requirements: 11.2, 11.5_
 
-  - [ ] 16.2 Read the accepted `model` form (read only)
+  - [x] 16.2 Read the accepted `model` form (read only)
     - With Kiro's documentation power, read the Crew page on agent spec fields. Record the accepted form of `model` and write "not documented" for anything the page does not say.
     - _Requirements: 11.1_
 
-  - [ ] 16.3 Run 1, no `model`
+  - [x] 16.3 Run 1, no `model`
     - The user runs, in a chat with `playtester`, the four calls in this order: `hunt-begin.mjs`; `hunt-info.mjs --level 02-the-chaser`; `hunt-submit.mjs --level 02-the-chaser --class cheaper_win --actions E E E E N N E E E E E S S` (the list of the skill's first example; the same in both runs); `hunt-end.mjs`. The user reports the credits on the usage line.
     - _Requirements: 11.2_
 
-  - [ ] 16.4 Add the candidate `model` (only after the user approves)
+  - [x] 16.4 Add the candidate `model` (only after the user approves)
     - **STOP and ask the user** (Gate B) before editing. Only after a yes: add the candidate `model` value to `agents/playtester.json`, and update `tests/hunt.texts.test.mjs` in the same task so that its lint allows the field. Run `npx vitest --run tests/hunt.texts.test.mjs` (expected: passes) and `npm run typecheck`. The user then runs **Sync** in the dashboard, not while a run or a hunt is active.
     - _Requirements: 11.3; exploit-hunt R1.10_
 
-  - [ ] 16.5 Read the generated agent file and run 2
+  - [x] 16.5 Read the generated agent file and run 2
     - Run `Get-Content "$env:USERPROFILE\.kiro\agents\grimsheet-playtester--playtester.json"` and look for `model`. Then the user repeats the four calls of task 16.3 and reports the credits and the model on the usage line. Compare. One pair of runs is a rough signal only (0.1 to 0.4 credits is the scale of such runs); the record says so.
     - _Requirements: 11.2, 11.3_
 
-  - [ ] 16.6 Keep or revert (only after the user approves)
+  - [x] 16.6 Keep or revert (only after the user approves)
     - IF the field did not survive the Sync, revert the edit of task 16.4 (agent file and test) and record that the cost question stays open. IF it survived, ask the user whether to keep it. Either way, record the result in the Notes_File. Run `npx vitest --run tests/hunt.texts.test.mjs` after a revert or a keep.
     - _Requirements: 11.3, 11.4_
 
 - [ ] 17. README with the measured facts and the screenshots
+  - [ ] 17.0 The app icon as an image (Q2), before the README and the screenshots
+    - Spec first: R4.2 (no page `icon`), new R4.10 (`iconPath` `ui/icon.svg`), R5.4, R14.5, Q2 closed, difference row 23; the design's icon section, the manifest JSON, the rule table (`ui`, new `icon`), D1; this task's Gate D text in 11.4; the crew-app steering line on `ui.pages[].icon` (corrected after approval, listed for the Usage_Entry); `docs/CREW_NOTES.md` (A-08 refuted for installed apps, section o, the line for the model-field skip of R11.5); E43 and its INDEX row.
+    - Tests first, in `tests/packaging.manifest.test.mjs`: the valid builder gets `iconPath` and loses the page `icon`, the input gets `iconFiles`; one example per rule of `icon`; the two expectations of the page `icon` follow R4.2 (a missing page `icon` is fine; a page `icon` is a problem); the real-file test reads `ui/icon.svg`. Command: `npx vitest --run tests/packaging.manifest.test.mjs`. Expected: failures, because the rule does not exist and the files are not there yet.
+    - Then the code in `scripts/packaging/manifest-check.mjs`, `ui/icon.svg` (the approved drawing, without the grid line), `app.json` (`"iconPath": "ui/icon.svg"`, no page `icon`) and `.gitattributes` (`ui/icon.svg -text`). Command: the same test file, then `npm run typecheck`, then `npm run test:all`.
+    - Then STOP: the user commits and pushes, the clone is pulled (after the user's yes), the user runs Sync and reports the sidebar and the Details card; `kirocrew app info` (read only) shows whether `iconPath` is in the stored manifest.
+    - _Requirements: 4.2, 4.10, 5.4, 14.4, 14.5; Open question Q2_
   - [ ] 17.1 Update the README text
     - Replace the "not measured" statements with the recorded numbers and their dates: the Approval_Count (R12.8) and the credits (R12.12) from task 15, the route size limit (R12.18) from task 13, the **Trust** result (R12.9), and the build-tool warning text if task 11.7 saw one (R8.9). Where a number was not measured, the README says so. Command: `npx vitest --run tests/packaging.readme.test.mjs`. Expected: passes.
     - _Requirements: 8.9, 10.12, 12.8, 12.9, 12.12, 12.18_
@@ -335,6 +341,7 @@ Rules that apply to every task:
   - Hunt result (task 15, 2026-11-08): Hunt_Record `hunt-20261108T235753Z` complete, 17 approvals (1 skill load, begin, 5 info, 9 submit, end; no play-level load, no refusal, no denial, no added command), 9 of 20 attempts in 81 s (the agent stopped by choice), 3 findings (a cheaper win on 03-the-locked-crypt, 1 ink against 2; unexpected routes on 02 and 05), 6 rejected as `not_won`; findings 1475 bytes and Results_Key 2715 bytes, read from `config.json` (no route read). Records: E42, section n of `docs/CREW_NOTES.md`; the agent's final summary is in E42 verbatim, with one inexact line noted (for 03 it says three edits were more than the 2 ink allowed; the record shows `not_won`). Not reported by the user and therefore recorded as "not recorded", still open: the options on the approval card (Open question 11), the usage line (credits, elapsed time, model), what the dashboard shows for the hunt, and the clipboard check on the three copy buttons (the buttons exist now). The README therefore keeps saying that credits per hunt are not measured, and that **Trust** is untested; the approval count it quotes can now say that one hunt of 9 attempts needed 17 approvals and a full hunt about 28 to 29.
   - Open question for the Grimsheet repository, not to act on: 03-the-locked-crypt has a confirmed cheaper win (one edit of B14, `=1337/RUNE_SALT`, wins with 1 ink against the stored minimum of 2). Fixing the level or accepting a new minimum is a separate decision in the Grimsheet repository; this app writes nothing there.
   - For the usage log (task 19): the first real hunt needed 17 approvals, none refused or denied, no command with anything added, and found a cheaper win that the stored minimum did not allow; the privacy rule about the approval prompts (the full path with the Windows user name) was kept.
+  - Model field plan (task 16): 16.1 answered no by the user on 2026-11-08; 16.2 to 16.6 skipped. `agents/playtester.json` keeps no `model` field and the default model was used. Requirement 11 criterion 5 asks the Notes_File to record the skip; the user asked to change no other file for now, so that one line waits for the records of task 17 (it is part of the proposal shown at its STOP).
   - For the usage log (task 19), the one edit in another spec's design (R9.15, task 14.2): `.kiro/specs/exploit-hunt/design.md`, lines 812 to 815 only (4 lines changed, nothing else in the file). `latest` 778 to 828 bytes (replay-runner task 16.1 added `endHp`, +10 bytes for each of 5 levels), about 75 to 85 bytes per level in `latest`, full replay value 10576 to 10626 bytes (now computed from the measured parts, not rebuilt), total with `findings` at its cap 26972 to 27022 with 38514 bytes to spare, about 837 to 847 bytes per level, level limit 51 to 50; the fixed part of that estimate is written as 6391 and the earlier 6394 is noted as a 3-byte slip with the same result. Records: section m of `docs/CREW_NOTES.md`, E41.
   - For the usage log (task 19): three blocked attempts (the first real run, the retry after the fix, and the last retry) before learning that a token address should be used by one command only; the pre-check stopped every blocked run before any write that was kept, and one slip (a refusal counted as a size limit) was caught by the first real run and fixed test first.
 - A commit is made by the user (task 10.3). Until then the Clean_Clone of task 11 has nothing to clone.

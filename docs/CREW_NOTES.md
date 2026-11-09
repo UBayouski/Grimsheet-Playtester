@@ -160,7 +160,7 @@ Status: confirmed, refuted, or still not documented.
 | A-05 | `timeout_secs` honoured in seconds | refuted as stated | the limit is `timeout` in seconds; `timeout_secs` is a wake budget, at least `timeout + 5` (E21) |
 | A-06 | `name`, `description`, `author` accepted | confirmed | E08 |
 | A-07 | shapes of `permissions.api`, `events`, `storage` | confirmed | arrays of exact path strings, array of event names, boolean (E08, E24) |
-| A-08 | `icon` is a lucide icon name | confirmed | sidebar entry with an icon; which glyph not checked (E15) |
+| A-08 | `icon` is a lucide icon name | refuted for installed apps | the spike's sidebar showed an icon, but which glyph was not checked (E15); the Crew 0.12.0 dashboard uses a page `icon` name only for built-in or adopted apps, and only 16 names; an installed app shows `iconPath` / `iconUrl` or a default glyph (section o, E43) |
 | A-09 | cron `env` reaches the script | refuted | no `SPIKE_*` name reached it; `enabled: false` does not hide a cron (E18, E20) |
 | A-10 | `network` has no runtime effect | still not documented | key never set; no network block seen for the agent or cron (E29, E20) |
 | A-11 | entry default export is the page | confirmed | E14 |
@@ -280,7 +280,7 @@ Run on 2026-11-08, Windows 11, Kiro Crew 0.12.0 (KiroCrew desktop app), for the 
 - The page renders from the default export of `dist/index.mjs` with no `mountFunction` and no `entryPoint` in the manifest (Q9 closed). Its empty state reads "No results yet. The nightly replay has not written any results." and it shows a Replay job card. Both routes answered.
 - The host serves React through small shims at `/vendor/react.mjs` and `/vendor/react-jsx-runtime.mjs`. `React.version` read in the page console is 18.3.1, equal to the `ui/` pins (Q10 closed, no change).
 - Response headers on host files include `Permissions-Policy: clipboard-write=(self), clipboard-read=(self)`. The clipboard check itself is not done: the page has no copy button until there are findings (moved to the first hunt, task 15).
-- Icon (Q2): the icon name `Ghost` did not render. The sidebar and the Details card show a default cube glyph. The fallback `Moon` was not tried. The spike never confirmed that any icon name renders, and a built-in app uses `Radio`, so the host may support only some names.
+- Icon (Q2): the icon name `Ghost` did not render. The sidebar and the Details card show a default cube glyph. The fallback `Moon` was not tried. The spike never confirmed that any icon name renders, and a built-in app uses `Radio`, so the host may support only some names. Settled in section o: a page `icon` name never renders for an installed app; the app icon is the image `ui/icon.svg`.
 - After the first run the markers, card borders, trend squares and the runs table render. Headings render at body-text size and weight, probably because the host's CSS resets them.
 - Basis: Observed (user report). Evidence: E38.
 
@@ -345,3 +345,16 @@ Run on 2026-11-08 (started 15:57 in Los Angeles) by the user in a Crew chat with
 - Open question for the Grimsheet repository, not acted on: 03-the-locked-crypt has a confirmed cheaper win, 1 ink against the stored minimum of 2. Fixing the level or accepting a new minimum is a separate decision in the Grimsheet repository. This app never writes there.
 - Files created, none deleted: `data\hunts\hunt-20261108T235753Z.json`; the `findings` key in `data\config.json`; and under `%LOCALAPPDATA%\grimsheet-playtester\hunt\` the hunt checkout `grimsheet\` (7014 files, with `.git` and `node_modules`) and `candidates\hunt-20261108T235753Z\` (nine candidate files). The lock files and `active.json` were gone at the end.
 - Basis: Observed (the data folder, read only) and the user's report of the chat. Evidence: E42.
+
+## o. Packaging: how Crew 0.12.0 shows an installed app's icon
+Read on 2026-11-08 from the installed Crew 0.12.0 files, read only (packaging task 17.0, Open question Q2). Evidence: E43.
+
+- Question: why does the sidebar show a default cube for the page `icon` `Ghost`, and what does show an icon?
+- Answer: the dashboard's navigation code (`static/dist/assets/appNav-S3ohAyzl.js`) uses a page's `icon` name only when the app is a built-in app or an adopted legacy app, and then only for 16 names (Users, Inbox, Gamepad2, MessageSquareDot, ClipboardCheck, BookOpen, BookOpenText, Brain, FolderTree, FlaskConical, ScanSearch, ScrollText, Contact, ShoppingBag, Activity, FolderPlus). For an installed app the sidebar uses, in order: the manifest's `iconPath` or `iconUrl` (and `iconPathDark` or `iconUrlDark` for the dark theme), then the first page's `iconUrl`, then a default glyph. So no lucide name renders for this app, `Ghost` and `Moon` included. This fits the default cube seen after the first install (j.5).
+- How `iconPath` is served (`apps/routes_art.py`, `apps/registry_pipeline/store_art.py`): as `/apps/<name>/art/<path>`, read from the app's install folder (`<install folder>/<path>`, not from `ui/`), only when the manifest declares that path, only for `.svg`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp` and `.ico`, up to 8 MiB, with no `..` and no leading `/`. An `.svg` is sent as `image/svg+xml` with `Content-Security-Policy: default-src 'none'; sandbox` and `Cache-Control: no-cache`. A page `iconUrl` is served from `/apps/<name>/ui/<path>`.
+- Consequence for this app: the manifest sets `"iconPath": "ui/icon.svg"` (a hand-drawn ghost in Grimsheet's colours; one file for light and dark), and the page carries no `icon`. Assumption A-08 ("`icon` is a lucide icon name") is refuted for installed apps.
+- Not seen yet: whether the gateway keeps `iconPath` in the stored manifest and shows the image after a Sync. The Sync after this change shows it.
+- Basis: Read from the installed files (read only). Evidence: E43.
+
+## p. Packaging: the model field of the agent was not measured
+Packaging task 16, 2026-11-08: the user chose not to measure (requirement 11, criterion 5). `agents/playtester.json` has no `model` field, and the agent ran on the default model. The cost of other models was not measured.

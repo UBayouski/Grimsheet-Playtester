@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "The night watch for a haunted spreadsheet: replays every Grimsheet level each night and sends an agent to break them.",
   "author": "UBayouski",
+  "iconPath": "ui/icon.svg",
   "agents": ["agents/playtester.json"],
   "skills": ["skills/play-level", "skills/find-exploits"],
   "crons": [
@@ -25,7 +26,7 @@
   "ui": {
     "entry": "dist/index.mjs",
     "pages": [
-      { "route": "/apps/grimsheet-playtester", "label": "Grimsheet Playtester", "icon": "Ghost" }
+      { "route": "/apps/grimsheet-playtester", "label": "Grimsheet Playtester" }
     ]
   }
 }
