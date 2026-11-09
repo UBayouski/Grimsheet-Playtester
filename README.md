@@ -27,6 +27,8 @@ The dashboard also shows a fourth state, "Not judged", for a level that the veri
 - free win: won with zero edits on a level whose `minimalInk` is above 0
 - unexpected route: a win that edits a cell the stored solution never touches
 
+Findings stay listed after the levels change, each stamped with the Grimsheet commit it was found on, so the page keeps the history; the level cards above show the current commit.
+
 The hunt is a bounded search and not a proof that no cheaper win exists. It runs on request only, started by you from chat. There is no schedule for it. A scheduled job that starts the agent was tried: its first approval was rejected after about three minutes while the job still reported OK, and `allowedTools` has no effect on an app agent. So the hunt has no cron, and nothing here claims that a hunt can run unattended.
 
 ## Install (from a clone)
@@ -109,8 +111,10 @@ On 2026-11-08, on the Windows 11 machine described above:
 
 - The first replay found all five levels green: every stored solution still wins with its intended ink.
 - The first hunt made 9 of its 20 attempts in 81 seconds. The verifier confirmed 3 and rejected 6. One confirmed finding is a cheaper win on level 03 (1 ink, where the stored solution needs 2); the other two are unexpected routes on levels 02 and 05, each at the intended ink.
+- A second hunt, run with the selector option **Trust**, made 3 of its 20 attempts in 39.6 seconds after it was ready. The verifier confirmed 1 and rejected 2. The confirmed finding is a second cheaper win on level 03.
+- The three copy buttons were checked on three findings: each paste matched the text on the page.
 
-This is one bounded search, not a proof that the other levels have no cheaper win. Whether level 03 should change, or keep a new minimum, is a decision for the Grimsheet repository; this app writes nothing there.
+This is one bounded search, not a proof that the other levels have no cheaper win. Grimsheet made the trick the official solution of level 03 after the hunts found it, and the next replay was green; this app writes nothing there.
 
 ## Screenshots
 
@@ -138,15 +142,20 @@ Taken on 2026-11-08 on the Windows 11 machine described above, after the app's o
 
 ## The hunt: approvals, budgets and cost
 
-The agent runs under approvals. The default approval mode is **Normal**: each command the agent runs is shown to you first, and you approve it. Expect one approval per hunt command. The first real hunt used 9 of its 20 attempts and needed 17 approvals: 1 skill load, 1 to begin, 5 level reads, 9 submissions and 1 to end. A full hunt of 20 attempts would need about 28 or 29. Charged refusals add more, at most 10. With each approval answered within seconds, the 15 steps after the start took 81.6 seconds; slower answers use up the 1800-second budget (not tested).
+The agent runs under approvals. The default approval mode is **Normal**: each command the agent runs is shown to you first, and you approve it. Expect one approval per hunt command. The first real hunt (in Normal mode) used 9 of its 20 attempts and needed 17 approvals: 1 skill load, 1 to begin, 5 level reads, 9 submissions and 1 to end. A full hunt of 20 attempts would need about 28 or 29. Charged refusals add more, at most 10. With each approval answered within seconds, the 15 steps after the start took 81.6 seconds; slower answers use up the 1800-second budget (not tested).
 
-- You may switch the chat session of a hunt to the selector option **Trust** at your own choice. It approves every tool in that session. That option has not been tested here.
+- You may switch the chat session of a hunt to the selector option **Trust** at your own choice. It approves every tool in that session. It was tested once: in that chat no approval prompt appeared for the skill load or for any of the 10 hunt commands (0 approvals). A refused or failing command under **Trust** was not tried.
 - This README does not recommend **YOLO**: it auto-approves every tool in every chat.
 - **Reads** is not a way to skip the prompts of the hunt. It approves read-only shell commands only, and the hunt commands are `node` commands that write files. That is expected from the documentation and was not tested.
 
 Budgets: 4 attempts per level, 20 attempts per hunt, 1800 seconds, and 10 refusals. In the default mode every submission is one approval and one agent turn, and credits are limited, so the budgets are small.
 
-Credits per full hunt are not measured. What was seen: a short supervised run cost 0.1 to 0.4 credits, and one run in which a long tool call failed cost 7.86 credits. The agent runs on the default model: no `model` field is set, and the cost of other models was not measured.
+A hunt cost about 1 to 2 credits on the default model (auto). Two hunts were measured from Crew's session log:
+
+- In **Normal** mode: 1.6508 credits for 9 attempts, 17 approvals, 13 model calls and 103.7 seconds. A background memory consolidation after it cost 0.1979 credits more.
+- With **Trust**: 0.9989 credits for 3 attempts, 0 approvals, 9 model calls and 60.8 seconds. This hunt was smaller, so the two figures do not show what **Trust** saves.
+
+The credits of a full hunt of 20 attempts were not measured. Earlier, a short supervised run cost 0.1 to 0.4 credits, and one run in which a long tool call failed cost 7.86 credits. The agent runs on the default model: no `model` field is set, and the cost of other models was not measured.
 
 ## Limits
 
