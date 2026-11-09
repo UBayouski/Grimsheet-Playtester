@@ -2,7 +2,7 @@
 // Feature: packaging. The README lint (scripts/packaging/readme-lint.mjs) and the real README.md.
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { ALLOWED_PREFIXES, REQUIRED_LINKS, REQUIRED_PHRASES, lintReadme } from '../scripts/packaging/readme-lint.mjs';
 
@@ -160,5 +160,77 @@ describe('the real README.md', () => {
   it('gives no problem', () => {
     const text = readFileSync(`${ROOT}README.md`, 'utf8');
     expect(lintReadme(text)).toEqual([]);
+  });
+});
+
+// Image links of the README (packaging task 17, R12.20): every image is a relative PNG under docs/screenshots/ that exists
+// and is at most 500 KB. The helper lives here because only this test uses it.
+const SHOT_RE = /^docs\/screenshots\/[A-Za-z0-9_.-]+\.png$/;
+const MAX_IMAGE_BYTES = 512000;
+
+/**
+ * The image targets of a Markdown text: inline images `![alt](target "title")` and HTML `<img src="target">`.
+ * @param {string} text
+ * @returns {string[]}
+ */
+function imageLinks(text) {
+  /** @type {string[]} */
+  const out = [];
+  for (const m of text.matchAll(/!\[[^\]]*\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g)) out.push(m[1] ?? '');
+  for (const m of text.matchAll(/<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/gi)) out.push(m[1] ?? '');
+  return out;
+}
+
+/**
+ * @param {string} text
+ * @param {(path: string) => number|null} sizeOf  the size of a repo path, or null when it is missing
+ * @returns {string[]} the problems found
+ */
+function imageLinkProblems(text, sizeOf) {
+  /** @type {string[]} */
+  const problems = [];
+  if (/!\[[^\]]*\]\[[^\]]*\]/.test(text)) problems.push('a reference-style image is not allowed; use an inline link');
+  for (const link of imageLinks(text)) {
+    if (!SHOT_RE.test(link)) {
+      problems.push(`${link}: an image must be a relative .png under docs/screenshots/`);
+      continue;
+    }
+    const size = sizeOf(link);
+    if (size === null) problems.push(`${link}: the file does not exist`);
+    else if (size > MAX_IMAGE_BYTES) problems.push(`${link}: ${size} bytes is more than ${MAX_IMAGE_BYTES}`);
+  }
+  return problems;
+}
+
+describe('README image links (R12.20)', () => {
+  const sizes = /** @type {Record<string, number>} */ ({ 'docs/screenshots/a.png': 1000, 'docs/screenshots/edge.png': MAX_IMAGE_BYTES, 'docs/screenshots/big.png': MAX_IMAGE_BYTES + 1 });
+  const sizeOf = (/** @type {string} */ p) => (p in sizes ? /** @type {number} */ (sizes[p]) : null);
+
+  it('finds inline Markdown images, with or without a title, and HTML img tags', () => {
+    const text = 'x ![one](docs/screenshots/a.png) y ![two](<docs/screenshots/b.png> "t") <img alt="z" src="docs/screenshots/c.png"> [not an image](docs/screenshots/d.png)';
+    expect(imageLinks(text)).toEqual(['docs/screenshots/a.png', 'docs/screenshots/b.png', 'docs/screenshots/c.png']);
+  });
+
+  it('accepts an existing PNG under docs/screenshots/ up to 512000 bytes', () => {
+    expect(imageLinkProblems('![a](docs/screenshots/a.png) ![e](docs/screenshots/edge.png)', sizeOf)).toEqual([]);
+  });
+
+  it('reports a missing file, a file over 512000 bytes, and a link outside the rule', () => {
+    expect(imageLinkProblems('![m](docs/screenshots/missing.png)', sizeOf)).toEqual(['docs/screenshots/missing.png: the file does not exist']);
+    expect(imageLinkProblems('![b](docs/screenshots/big.png)', sizeOf)).toEqual([`docs/screenshots/big.png: ${MAX_IMAGE_BYTES + 1} bytes is more than ${MAX_IMAGE_BYTES}`]);
+    for (const bad of ['https://example.test/a.png', '/docs/screenshots/a.png', './docs/screenshots/a.png', 'docs/screenshots/a.jpg', 'docs/other/a.png', 'docs/screenshots/sub/a.png', '../a.png', 'docs\\screenshots\\a.png']) {
+      expect(imageLinkProblems(`![x](${bad})`, sizeOf)).toHaveLength(1);
+    }
+    expect(imageLinkProblems('<img src="docs/other/a.png">', sizeOf)).toHaveLength(1);
+  });
+
+  it('reports a reference-style image', () => {
+    expect(imageLinkProblems('![a][shot]\n\n[shot]: docs/screenshots/a.png', sizeOf)).toContain('a reference-style image is not allowed; use an inline link');
+  });
+
+  it('the real README: every image link follows the rule (zero links until the screenshots exist)', () => {
+    const text = readFileSync(`${ROOT}README.md`, 'utf8');
+    const real = (/** @type {string} */ p) => (existsSync(`${ROOT}${p}`) ? statSync(`${ROOT}${p}`).size : null);
+    expect(imageLinkProblems(text, real)).toEqual([]);
   });
 });
