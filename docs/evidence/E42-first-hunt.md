@@ -45,7 +45,10 @@ date: 2026-11-08. Crew 0.12.0, app grimsheet-playtester 1.0.0, Grimsheet commit 
 - Attempts by order: 001 05 cheaper_win rejected; 002 02 cheaper_win rejected; 003 03 cheaper_win confirmed; 004 02 cheaper_win rejected; 005 04 unexpected_route rejected; 006 05 unexpected_route confirmed; 007 02 unexpected_route rejected; 008 02 unexpected_route confirmed; 009 03 unexpected_route rejected.
 
 ## Clipboard check on the findings
-- Not recorded: the user reported no result for Copy action list, Copy replay command or Copy actions file. The copy buttons now exist (the hunt recorded three findings), so the check can still be done; it stays open.
+- Not done (user, 2026-11-08): no result for Copy action list, Copy replay command or Copy actions file. The copy buttons exist (the hunt recorded three findings); the check stays open and is recorded as "not recorded".
+
+## What the dashboard shows for the hunt (screenshot `docs/screenshots/dashboard-findings.png`, 2026-11-08)
+- The Findings section shows the bounded-search sentence, "Last hunt: 2026-11-08 23:59 UTC, commit bea7a52, hunt hunt-20261108T235753Z", the counts (attempts 9, confirmed 3, rejected 6, error 0, duplicate 0, notRecorded 0), and the first finding: 02-the-chaser, Unexpected route, found 2026-11-08 23:59 UTC on commit bea7a52, "Result: won, ink spent 1 of minimal 1, edit count 1, new edit cells B15", the action list, the replay command `node scripts/play.mjs 02-the-chaser --actions-file <actions-file>` and its help text. The other two findings and the copy buttons are left out of the screenshot on purpose, so that the winning edit of level 03 stays unspoiled.
 
 ## Open question for the Grimsheet repository (not acted on)
 - 03-the-locked-crypt has a confirmed cheaper win: one edit of B14 wins with 1 ink, against a stored minimum of 2. Whether to fix the level or accept a new minimum is a decision in the Grimsheet repository; this app writes nothing there.

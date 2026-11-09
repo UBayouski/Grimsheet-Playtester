@@ -105,12 +105,36 @@ To update an installed copy, use the **Sync** button in the app's Details. The c
 
 ## What the first real runs found
 
-On 2026-11-08, on the machine named above:
+On 2026-11-08, on the Windows 11 machine described above:
 
 - The first replay found all five levels green: every stored solution still wins with its intended ink.
 - The first hunt made 9 of its 20 attempts in 81 seconds. The verifier confirmed 3 and rejected 6. One confirmed finding is a cheaper win on level 03 (1 ink, where the stored solution needs 2); the other two are unexpected routes on levels 02 and 05, each at the intended ink.
 
 This is one bounded search, not a proof that the other levels have no cheaper win. Whether level 03 should change, or keep a new minimum, is a decision for the Grimsheet repository; this app writes nothing there.
+
+## Screenshots
+
+Taken on 2026-11-08 on the Windows 11 machine described above, after the app's own icon was installed.
+
+![The Kiro Crew sidebar with the Grimsheet Playtester entry selected and its ghost icon](docs/screenshots/sidebar-entry.png)
+
+*The app in the Crew sidebar, with its own ghost icon.*
+
+![The app's Details page: the ghost icon, Enabled, UBayouski v1.0.0, the Disable, Sync and Uninstall buttons, the Permissions card with the two API routes and the Resources card with the playtester agent, the two skills and the replay job](docs/screenshots/library-details.png)
+
+*The app's Details page. The Details card (author, install date, origin) is left out for width.*
+
+![The Library with three enabled apps: Command Bar, Grimsheet Playtester with the ghost icon, and Task Runner](docs/screenshots/library-enabled.png)
+
+*The ghost among the enabled apps in the Library.*
+
+![The dashboard after the first replay: the last replay, the replay job, and five green level cards with ink spent and end HP](docs/screenshots/dashboard-levels.png)
+
+*The dashboard after the first replay: every level green.*
+
+![The findings of the first hunt: the counts and the unexpected route on level 02 with its action list and replay command](docs/screenshots/dashboard-findings.png)
+
+*The first hunt's findings, with the level 02 finding. The other two findings are not shown, so that the winning edit of level 03 stays unspoiled.*
 
 ## The hunt: approvals, budgets and cost
 
@@ -129,7 +153,7 @@ Credits per full hunt are not measured. What was seen: a short supervised run co
 - Findings from an earlier Grimsheet commit are labelled as such and are not retired.
 - A Sync while a run is active can fail and leave `.grimsheet-playtester-data-tmp` behind.
 - No size limit of the config route was found up to 1 MiB, the largest probe tried. The project keeps the results within 65536 bytes by its own budget. Sizes above 1 MiB were not tried.
-- Crew shows an installed app's icon from an image file (iconPath in app.json), not from a lucide name; the app ships its own ghost at ui/icon.svg.
+- Crew shows an installed app's icon from an image file (`iconPath` in `app.json`), not from a lucide name; the app ships its own ghost at `ui/icon.svg`.
 - The code has a branch for ending a process on other systems (`process.kill(-pid, 'SIGKILL')`). It exists and has not been run.
 - The Crew bonus claim of this project rests on the `playtester` agent, its two skills, the nightly replay job and the dashboard. A hunt job is not part of it.
 
