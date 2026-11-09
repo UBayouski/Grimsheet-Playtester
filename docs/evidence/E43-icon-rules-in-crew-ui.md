@@ -24,7 +24,7 @@ date: 2026-11-08. Crew 0.12.0 (`kirocrew --version`). Read only, from the files 
 - An `.svg` is sent as `image/svg+xml` with `Content-Security-Policy: default-src 'none'; sandbox` and `Cache-Control: no-cache`.
 - The path is relative to the app's install folder, so a file at `ui/icon.svg` needs `"iconPath": "ui/icon.svg"`; `"icon.svg"` would read `<install folder>/icon.svg`.
 
-## Seen after the Sync (2026-11-09, install source at commit 341deee)
+## Seen after the Sync (2026-11-08, install source at commit 341deee)
 - `kirocrew app info grimsheet-playtester` (read only, exit 0): version 1.0.0, enabled true, updatedAt 2026-11-09T00:27:28Z, source the install clone. The stored manifest keeps `"iconPath": "ui/icon.svg"` (its keys: name, version, displayName, description, author, agents, skills, crons, ui, permissions, iconPath); there is no `iconUrl`, and the page is stored as `{route, label}` with no `icon`.
 - The installed `ui\icon.svg` exists (376 bytes) and has the same SHA-256 as the repo file. The data folder was kept by the Sync (hunts, launcher, runs, config.json, _index.json).
 - User report: the sidebar entry "Grimsheet Playtester" shows the ghost instead of the default cube. The Details card and the dark theme were not reported.

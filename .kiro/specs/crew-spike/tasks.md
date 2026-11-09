@@ -240,7 +240,7 @@ Rules that apply to every task:
   - Done 2026-11-07: all three questions answered (Notes h.3 to h.6), the rest recorded as not documented (h.8); A-01 to A-26 marked in h.9 (A-21 and A-22 pending deletion); the Brief (sections 4 to 7, 10) and the steering files match the Notes; `INDEX.md` has E01 to E29 with files on disk; no user name or token in docs/, .kiro/ or KIRO_USAGE.md. Waiting for the user before task 10.
   - Ensure every question is answered or recorded as not documented, the Brief and steering match the Notes, and no evidence row is missing. Ask the user if questions arise.
 
-- [ ] 10. P7: Delete the spike
+- [x] 10. P7: Delete the spike
   - [x] 10.1 Ask the user to confirm before any deletion (you)
     - (you) Review the Notes and Brief changes. Show the list of what will be deleted: the installed app, `<dataDir>` with the clones, and `spike/`. Wait for an explicit yes. Do not delete anything before it.
     - _Requirements: 10.2_
@@ -252,8 +252,8 @@ Rules that apply to every task:
     - Closes A-21 (the uninstall command) and A-22 (uninstall may leave the data directory).
     - _Requirements: 10.1, 9.2_
 
-  - [ ] 10.3 Delete `spike/` and list what remains
-    - Status 2026-11-08: only an empty, untracked `spike\ui` remains, locked by another process; to be removed after a restart.
+  - [x] 10.3 Delete `spike/` and list what remains
+    - Status 2026-11-08: Done 2026-11-08: the last empty folder was held by the editor; removed after closing it.
     - Status 2026-11-07: everything under `spike/` is deleted except an empty folder `spike\ui`, which another process holds ("being used by another process"; `rmdir` fails the same way). The user needs to close the editor or window that holds it, then `Remove-Item -LiteralPath <repo>\spike -Recurse -Force` finishes the task. The remaining files are listed in the session report: `.gitignore`, `LICENSE`, `KIRO_USAGE.md`, `docs/` (with `docs/evidence/`), `.kiro/` (settings, specs, steering).
     - Copy any remaining Notes updates first, since `spike/evidence/` is deleted with the folder. Delete `spike/` whole with `Remove-Item -LiteralPath d:\Projects\Kiroween\grimsheet-playtester\spike -Recurse -Force`, including `node_modules`, `ui/dist` and screenshots. Confirm it is gone.
     - List the remaining files with `Get-ChildItem -Recurse -File` excluding `.git`. Show the user that only `.gitignore`, `LICENSE`, `KIRO_USAGE.md`, `docs/` and `.kiro/` remain, and that `.kiro/specs/crew-spike/` is still there.
