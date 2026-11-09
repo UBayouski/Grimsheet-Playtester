@@ -27,6 +27,11 @@ const agentText = () =>
     prompt: 'p',
   });
 
+/** A small valid icon, the shape of ui/icon.svg. */
+const VALID_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M5 21V10a7 7 0 0 1 14 0v11z" fill="#ffffff" stroke="#000000"/></svg>\n';
+
+/** @param {string} svg @returns {Record<string, Uint8Array|null>} */
+const iconFilesWith = (svg) => ({ 'ui/icon.svg': enc.encode(svg) });
 const SKILLS = [
   { path: 'skills/play-level', hasSkillMd: true },
   { path: 'skills/find-exploits', hasSkillMd: true },
@@ -46,6 +51,7 @@ function validManifest(o = {}) {
     version: o.version ?? '1.0.0',
     description: o.description ?? 'The night watch for a haunted spreadsheet: replays every Grimsheet level each night and sends an agent to break them.',
     author: 'UBayouski',
+    iconPath: 'ui/icon.svg',
     agents: ['agents/playtester.json'],
     skills: ['skills/play-level', 'skills/find-exploits'],
     crons: [
@@ -63,7 +69,7 @@ function validManifest(o = {}) {
     permissions: { cron: true, api: ['/api/apps/grimsheet-playtester/config', '/api/crons'] },
     ui: {
       entry: 'dist/index.mjs',
-      pages: [{ route: '/apps/grimsheet-playtester', label: displayName, icon: 'Ghost' }],
+      pages: [{ route: '/apps/grimsheet-playtester', label: displayName }],
     },
   };
 }
@@ -82,6 +88,7 @@ function input(manifest, over = {}) {
     agentText: agentText(),
     skillDirs: SKILLS,
     bundleBytes: 43902,
+    iconFiles: iconFilesWith(VALID_SVG),
     ...over,
   };
 }
@@ -262,18 +269,83 @@ describe('checkManifest: permissions (R3.3, R4.3, R4.5, R4.9)', () => {
 });
 
 describe('checkManifest: ui (R4.1, R4.2)', () => {
-  it('reports a changed entry, page count, route, label or icon', () => {
+  it('reports a changed entry, page count, route or label, and a page icon or iconUrl (R4.2)', () => {
     expect(rules(checkEdited((m) => (m.ui.entry = 'index.mjs')))).toContain('ui');
     expect(rules(checkEdited((m) => (m.ui.pages = [])))).toContain('ui');
     expect(rules(checkEdited((m) => m.ui.pages.push({ ...m.ui.pages[0] })))).toContain('ui');
     expect(rules(checkEdited((m) => (m.ui.pages[0].route = '/apps/other')))).toContain('ui');
     expect(rules(checkEdited((m) => (m.ui.pages[0].label = 'Other')))).toContain('ui');
-    expect(rules(checkEdited((m) => delete m.ui.pages[0].icon))).toContain('ui');
+    // R4.2 as amended (Q2): the page has no icon field; a page icon name never renders for an installed app.
+    expect(rules(checkEdited((m) => delete m.ui.pages[0].icon))).not.toContain('ui');
+    expect(rules(checkEdited((m) => (m.ui.pages[0].icon = 'Ghost')))).toContain('ui');
     expect(rules(checkEdited((m) => (m.ui.pages[0].icon = 7)))).toContain('ui');
+    expect(rules(checkEdited((m) => (m.ui.pages[0].iconUrl = 'icon.svg')))).toContain('ui');
     expect(rules(checkEdited((m) => delete m.ui))).toContain('ui');
   });
 });
 
+describe('checkManifest: the app icon (R4.10)', () => {
+  it('accepts iconPath ui/icon.svg with a valid SVG, also with an XML declaration first', () => {
+    expect(checkManifest(input(validManifest()))).toEqual([]);
+    const withDecl = `<?xml version="1.0" encoding="UTF-8"?>\n${VALID_SVG}`;
+    expect(checkManifest(input(validManifest(), { iconFiles: iconFilesWith(withDecl) }))).toEqual([]);
+  });
+
+  it('reports a missing iconPath, and a path that is not a relative .svg under ui/', () => {
+    expect(rules(checkEdited((m) => delete m.iconPath))).toContain('icon');
+    for (const bad of ['icon.svg', '/ui/icon.svg', 'ui/../icon.svg', 'ui\\icon.svg', 'ui/icon.png', 'ui/sub/icon.svg', 'ui/ icon.svg', 'https://x.test/icon.svg', '', 7]) {
+      const m = validManifest();
+      m.iconPath = bad;
+      const files = typeof bad === 'string' ? { [bad]: enc.encode(VALID_SVG) } : {};
+      expect(rules(checkManifest(input(m, { iconFiles: files })))).toContain('icon');
+    }
+  });
+
+  it('reports a missing, empty or too large icon file', () => {
+    expect(rules(checkManifest(input(validManifest(), { iconFiles: { 'ui/icon.svg': null } })))).toContain('icon');
+    expect(rules(checkManifest(input(validManifest(), { iconFiles: {} })))).toContain('icon');
+    expect(rules(checkManifest(input(validManifest(), { iconFiles: iconFilesWith('') })))).toContain('icon');
+    const big = VALID_SVG.replace('</svg>', `<!--${'x'.repeat(4096)}--></svg>`);
+    expect(rules(checkManifest(input(validManifest(), { iconFiles: iconFilesWith(big) })))).toContain('icon');
+    const justUnder = VALID_SVG.replace('</svg>', `<!--${'x'.repeat(4095 - enc.encode(VALID_SVG).length - 7)}--></svg>`);
+    expect(enc.encode(justUnder).length).toBe(4095);
+    expect(checkManifest(input(validManifest(), { iconFiles: iconFilesWith(justUnder) }))).toEqual([]);
+  });
+
+  it('reports a file that is not an SVG, has a BOM, or lacks the SVG namespace', () => {
+    for (const bad of ['<html></html>', 'not svg', '<svg width="1"></svg>', '\uFEFF' + VALID_SVG, '<!-- c -->' + VALID_SVG]) {
+      expect(rules(checkManifest(input(validManifest(), { iconFiles: iconFilesWith(bad) })))).toContain('icon');
+    }
+    const bytes = new Uint8Array([0xff, 0xfe, 0x3c]);
+    expect(rules(checkManifest(input(validManifest(), { iconFiles: { 'ui/icon.svg': bytes } })))).toContain('icon');
+  });
+
+  it('reports script, foreignObject, an event attribute and any href in the SVG', () => {
+    const inject = (/** @type {string} */ s) => VALID_SVG.replace('</svg>', `${s}</svg>`);
+    for (const bad of [
+      '<script>alert(1)</script>',
+      '<SCRIPT/>',
+      '<foreignObject></foreignObject>',
+      '<rect onload="x()"/>',
+      '<rect ONCLICK=x/>',
+      '<a href="x"><rect/></a>',
+      '<use xlink:href="#a"/>',
+      '<image href="https://x.test/a.png"/>',
+    ]) {
+      expect(rules(checkManifest(input(validManifest(), { iconFiles: iconFilesWith(inject(bad)) })))).toContain('icon');
+    }
+  });
+
+  it('reports iconUrl and iconUrlDark, and holds an iconPathDark to the same rules', () => {
+    expect(rules(checkEdited((m) => (m.iconUrl = 'ui/icon.svg')))).toContain('icon');
+    expect(rules(checkEdited((m) => (m.iconUrlDark = 'ui/icon.svg')))).toContain('icon');
+    const dark = validManifest();
+    dark.iconPathDark = 'ui/icon-dark.svg';
+    expect(rules(checkManifest(input(dark)))).toContain('icon');
+    expect(checkManifest(input(dark, { iconFiles: { ...iconFilesWith(VALID_SVG), 'ui/icon-dark.svg': enc.encode(VALID_SVG) } }))).toEqual([]);
+    expect(rules(checkManifest(input(dark, { iconFiles: { ...iconFilesWith(VALID_SVG), 'ui/icon-dark.svg': enc.encode('<script/>') } })))).toContain('icon');
+  });
+});
 describe('checkManifest: the timeout rules (R5.1 to R5.3, R5.7, R5.8)', () => {
   it('reports a timeout that differs from the launcher constant', () => {
     const m = validManifest({ timeout: 899, timeoutSecs: 905 });
@@ -406,13 +478,20 @@ describe('checkManifest properties', () => {
 });
 
 describe('the real files (R5.4 and the rules above, applied to the repo)', () => {
-  it('app.json, the launcher, the agent file, the skills and the bundle give no problem', () => {
+  it('app.json, the launcher, the agent file, the skills, the bundle and the icon give no problem', () => {
     const manifestBytes = new Uint8Array(readFileSync(`${ROOT}app.json`));
     const launcherText = readFileSync(`${ROOT}scripts/replay_cron.py`, 'utf8');
     const agent = readFileSync(`${ROOT}agents/playtester.json`, 'utf8');
     const skillDirs = ['skills/play-level', 'skills/find-exploits'].map((path) => ({ path, hasSkillMd: existsSync(`${ROOT}${path}/SKILL.md`) }));
     const bundlePath = `${ROOT}ui/dist/index.mjs`;
     const bundleBytes = existsSync(bundlePath) ? statSync(bundlePath).size : null;
-    expect(checkManifest({ manifestBytes, launcherText, agentText: agent, skillDirs, bundleBytes })).toEqual([]);
+    const manifest = JSON.parse(new TextDecoder().decode(manifestBytes));
+    /** @type {Record<string, Uint8Array|null>} */
+    const iconFiles = {};
+    for (const key of ['iconPath', 'iconPathDark']) {
+      const rel = manifest[key];
+      if (typeof rel === 'string') iconFiles[rel] = existsSync(`${ROOT}${rel}`) ? new Uint8Array(readFileSync(`${ROOT}${rel}`)) : null;
+    }
+    expect(checkManifest({ manifestBytes, launcherText, agentText: agent, skillDirs, bundleBytes, iconFiles })).toEqual([]);
   });
 });

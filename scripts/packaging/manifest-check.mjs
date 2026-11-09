@@ -11,6 +11,7 @@
  * @property {string} agentText          the text of agents/playtester.json
  * @property {Array<{path: string, hasSkillMd: boolean}>} skillDirs  the skill folders found in the repo
  * @property {number|null} bundleBytes   the size of ui/dist/index.mjs, or null when the file is missing
+ * @property {Record<string, Uint8Array|null>} [iconFiles]  the bytes of each file that iconPath or iconPathDark names (null when missing)
  */
 
 export const APP_NAME = 'grimsheet-playtester';
@@ -24,6 +25,38 @@ const FORBIDDEN_SETUP = ['onInstall', 'onUninstall', 'onEnable', 'onDisable'];
 const FORBIDDEN_PERMISSIONS = ['events', 'network', 'mcpTools', 'memory', 'sessionApproval', 'spawn', 'jobs', 'exposeToApps'];
 const FORBIDDEN_CRON_FIELDS = ['command', 'message', 'agent', 'every', 'env'];
 const REPLAY_CRON_KEYS = ['name', 'script', 'cron_expr', 'timezone', 'strict_schedule', 'enabled', 'timeout', 'timeout_secs'];
+export const ICON_PATH = 'ui/icon.svg';
+/** A relative .svg file directly under ui/: no `..`, no backslash, no scheme, no subfolder. */
+const ICON_PATH_RE = /^ui\/[A-Za-z0-9_.-]+\.svg$/;
+const ICON_MAX_BYTES = 4096;
+
+/**
+ * The problems of one icon file: it exists, is 1 to 4095 bytes, is UTF-8 SVG text with the SVG namespace, and holds no
+ * script, no foreignObject, no event attribute and no link.
+ * @param {Uint8Array|null} bytes
+ * @returns {string[]}
+ */
+function checkIconFile(bytes) {
+  if (bytes === null) return ['the file is missing'];
+  if (bytes.length === 0) return ['the file is empty'];
+  if (bytes.length >= ICON_MAX_BYTES) return [`the file must be smaller than ${ICON_MAX_BYTES} bytes`];
+  if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) return ['the file starts with a byte order mark'];
+  let text;
+  try {
+    text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+  } catch {
+    return ['the file is not valid UTF-8'];
+  }
+  /** @type {string[]} */
+  const problems = [];
+  if (!/^(?:<\?xml[^>]*\?>\s*)?<svg[\s>]/.test(text)) problems.push('the file must start with <svg (an XML declaration first is allowed)');
+  if (!text.includes('xmlns="http://www.w3.org/2000/svg"')) problems.push('the svg element must hold xmlns="http://www.w3.org/2000/svg"');
+  if (/<script/i.test(text)) problems.push('the file must not hold a script');
+  if (/<foreignObject/i.test(text)) problems.push('the file must not hold a foreignObject');
+  if (/\son[a-z]+\s*=/i.test(text)) problems.push('the file must not hold an event attribute');
+  if (/\bhref\s*=/i.test(text)) problems.push('the file must not hold a link (href)');
+  return problems;
+}
 
 /**
  * @param {unknown} v
@@ -42,7 +75,7 @@ const sameJson = (a, b) => JSON.stringify(a) === JSON.stringify(b);
  * @param {ManifestCheckInput} input
  * @returns {Problem[]}
  */
-export function checkManifest({ manifestBytes, launcherText, agentText, skillDirs, bundleBytes }) {
+export function checkManifest({ manifestBytes, launcherText, agentText, skillDirs, bundleBytes, iconFiles = {} }) {
   /** @type {Problem[]} */
   const problems = [];
   /** @param {string} rule @param {string} message */
@@ -192,11 +225,25 @@ export function checkManifest({ manifestBytes, launcherText, agentText, skillDir
       } else {
         if (page.route !== `/apps/${name}`) add('ui', `the page route must be /apps/${name}`);
         if (page.label !== m.displayName) add('ui', 'the page label must equal displayName');
-        if (typeof page.icon !== 'string' || page.icon.trim() === '') add('ui', 'the page icon must be a non-empty string');
+        if ('icon' in page) add('ui', 'the page must not hold an icon: a page icon name never renders for an installed app; use iconPath (R4.10)');
+        if ('iconUrl' in page) add('ui', 'the page must not hold an iconUrl; the app icon is iconPath (R4.10)');
       }
     }
   }
 
+  // icon (R4.10): the app icon is an SVG under ui/, named by iconPath (and iconPathDark, only when needed)
+  if (typeof m.iconPath !== 'string') add('icon', `iconPath must be ${ICON_PATH}`);
+  else if (m.iconPath !== ICON_PATH) add('icon', `iconPath must be ${ICON_PATH}, a path relative to the app folder`);
+  for (const key of ['iconUrl', 'iconUrlDark']) if (key in m) add('icon', `app.json must not hold ${key}; the app icon is iconPath`);
+  for (const key of ['iconPath', 'iconPathDark']) {
+    if (!(key in m)) continue;
+    const rel = m[key];
+    if (typeof rel !== 'string' || !ICON_PATH_RE.test(rel)) {
+      if (key === 'iconPathDark') add('icon', 'iconPathDark must be a relative .svg path under ui/');
+      continue;
+    }
+    for (const message of checkIconFile(iconFiles[rel] ?? null)) add('icon', `${rel}: ${message}`);
+  }
   // timeout, timeout-secs
   const constant = /^CRON_TIMEOUT\s*=\s*(\d+)/m.exec(launcherText);
   const launcherTimeout = constant ? Number(constant[1]) : null;

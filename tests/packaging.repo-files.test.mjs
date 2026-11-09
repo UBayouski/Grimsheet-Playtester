@@ -72,8 +72,13 @@ describe('.gitattributes', () => {
     expect(r.stdout.trim()).toBe('ui/dist/index.mjs: text: unset');
   });
 
-  it('holds the one line for the bundle', () => {
+  it('turns line-ending conversion off for the icon', () => {
+    const r = git(['check-attr', 'text', '--', 'ui/icon.svg']);
+    expect(r.status).toBe(0);
+    expect(r.stdout.trim()).toBe('ui/icon.svg: text: unset');
+  });
+  it('holds the lines for the bundle and the icon', () => {
     const text = readFileSync(`${ROOT}.gitattributes`, 'utf8');
-    expect(text.split(/\r?\n/).filter((l) => l.trim() !== '')).toEqual(['ui/dist/index.mjs -text']);
+    expect(text.split(/\r?\n/).filter((l) => l.trim() !== '')).toEqual(['ui/dist/index.mjs -text', 'ui/icon.svg -text']);
   });
 });
