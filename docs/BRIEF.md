@@ -138,12 +138,12 @@ Brief statements changed by the spike, with the Notes section and evidence that 
 | 7 Technical choices | Python launcher; Windows only tested | h.4; E18, E20 |
 | 10 Spec plan | `replay-runner`, `exploit-hunt`, `dashboard`, `packaging` scopes changed | this section |
 
-Still open (Notes h.8): the config route's size limit (the results key must stay compact; test it in `replay-runner`);
+Still open (Notes h.8): the config route's size limit: none found up to 1 MiB (packaging task 13, E40); the results key keeps its 65536-byte budget;
 `allowedTools` and `network` effects (not set; for `allowedTools` this is gap G1); the gateway warning that `node`,
 `npm` and `git` "do not resolve under the trusted system directories" (watch item; the commands still ran); behaviour
-on macOS, Linux and WSL; a judge install from a git URL. Two gaps bear on the weekly hunt: G1, unattended
-approvals (`allowedTools` was never set), and G2, a cron that starts an agent run (never tested). Both are checked
-first in `exploit-hunt` (section 10, item 4).
+on macOS, Linux and WSL; a judge install from a git URL. Two gaps bore on a weekly hunt, G1 (unattended
+approvals) and G2 (a cron that starts an agent run); both were answered by the `exploit-hunt` checks (notes h.10): an
+unattended hunt is not possible, so the hunt is on request only.
 ## 7. Technical choices
 
 - Node 22.12+ and git on the host; the README says so, and says that only Windows was tested. Plain ESM JavaScript
@@ -199,10 +199,10 @@ first in `exploit-hunt` (section 10, item 4).
      rests on the agent, its two skills, the nightly replay cron and the `ui/` dashboard.
 5. `dashboard`: the `ui/` page over the results key (`GET` only), a timer and a Refresh button, run state from
    `/api/crons`. Changed: no PUT, no event.
-6. `packaging`: `app.json` final, install and trust steps for a judge (clone, build `ui/` first because the install
-   skips `setup.onInstall` and drops `node_modules`, `kirocrew app install`, trust in the dashboard, enable), README
-   (says only Windows was tested, and which gateway warning to expect). Changed: build `ui/` before install, and the
-   README states the platform limit.
+6. `packaging`: `app.json` final, install and trust steps for a judge (clone, `kirocrew app install`, trust in the
+   dashboard, enable), README (says only Windows was tested, and which gateway warning to expect). Changed: the built
+   page is committed, so a judge does not build `ui/` (packaging R8.2; the first install from a clean clone confirmed it,
+   E35), and the README states the platform limit.
 ## 11. Kiro plan (what to use and why)
 
 - **Steering** (always): `product.md`, `tech.md`, `structure.md`. Conditional: `crew-app.md` on `app.json`,
@@ -214,7 +214,7 @@ first in `exploit-hunt` (section 10, item 4).
   than 30 runs and keeps the newest; a candidate is recorded only if replaying it reproduces its claimed class.
 - **Powers**: Context7 for the Crew and app-sdk docs (already used for `docs/CREW_NOTES.md`). The `play-level` skill
   starts from the Grimsheet repo's `grimsheet-playtest` power.
-- **MCP**: Playwright MCP to screenshot the dashboard for the README.
+- **Screenshots**: taken with the operating system's own tool and cropped by Kiro; no capture holds the token or a path.
 - **Surfaces**: the Kiro IDE and CLI to build it; Kiro Crew to run it. Record differences in `KIRO_USAGE.md`.
 
 ## 12. First Kiro session (suggested prompt sequence)

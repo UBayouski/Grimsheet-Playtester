@@ -253,6 +253,7 @@ Rules that apply to every task:
     - _Requirements: 10.1, 9.2_
 
   - [ ] 10.3 Delete `spike/` and list what remains
+    - Status 2026-11-09: only an empty, untracked `spike\ui` remains, locked by another process; to be removed after a restart.
     - Status 2026-11-07: everything under `spike/` is deleted except an empty folder `spike\ui`, which another process holds ("being used by another process"; `rmdir` fails the same way). The user needs to close the editor or window that holds it, then `Remove-Item -LiteralPath <repo>\spike -Recurse -Force` finishes the task. The remaining files are listed in the session report: `.gitignore`, `LICENSE`, `KIRO_USAGE.md`, `docs/` (with `docs/evidence/`), `.kiro/` (settings, specs, steering).
     - Copy any remaining Notes updates first, since `spike/evidence/` is deleted with the folder. Delete `spike/` whole with `Remove-Item -LiteralPath d:\Projects\Kiroween\grimsheet-playtester\spike -Recurse -Force`, including `node_modules`, `ui/dist` and screenshots. Confirm it is gone.
     - List the remaining files with `Get-ChildItem -Recurse -File` excluding `.git`. Show the user that only `.gitignore`, `LICENSE`, `KIRO_USAGE.md`, `docs/` and `.kiro/` remain, and that `.kiro/specs/crew-spike/` is still there.

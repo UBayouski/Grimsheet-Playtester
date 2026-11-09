@@ -44,7 +44,7 @@ Source: `docs/CREW_NOTES.md` (Context7 library `/kirodotdev/kirocrew`). "Not doc
 - App code runs in the gateway with the same privileges as Kiro Crew; third-party apps are denied until trusted.
 
 ## CLI
-`kirocrew app init <name>`, `kirocrew app install /absolute/path/to/app`, `kirocrew app enable <name>`, `kirocrew app info <name>`, `kirocrew app dev <name>`, `kirocrew token`. Direct `kirocrew app install <git-url>`: not documented; fallback is `git clone`, build `ui/`, then local install. Third-party apps must be trusted before enable (Settings, Security, Third-party apps).
+`kirocrew app init <name>`, `kirocrew app install /absolute/path/to/app`, `kirocrew app enable <name>`, `kirocrew app info <name>`, `kirocrew app dev <name>`, `kirocrew token`. Direct `kirocrew app install <git-url>`: not documented; fallback is `git clone`, then local install; the built page is committed. Third-party apps must be trusted before enable; Crew 0.12.0's install warning points to the App Store's install, update and enable prompts (E35); the spike used Settings, Security, Third-party apps.
 
 ## Decisions from the spike (Windows, Crew 0.12.0; sections h.1 to h.8)
 Only Windows was tested. Nothing was checked on macOS, Linux or WSL; the README says so.
@@ -67,5 +67,5 @@ Only Windows was tested. Nothing was checked on macOS, Linux or WSL; the README 
 ## Evidence ids
 Evidence ids (E01 to E29) refer to `docs/evidence/INDEX.md`; the files are in `docs/evidence/`.
 
-## Open before exploit-hunt
-Two hunt gaps are untested: G1 (unattended approvals; `allowedTools` was never set) and G2 (a cron that starts an agent run). See Notes h.8. The checks C1 and C2 and the decision rule are in Brief section 10, item 4.
+## Hunt gaps G1 and G2 (answered)
+Answered (notes h.10): an unattended hunt is not possible (approvals, C1 and C2), so the hunt is on request only.

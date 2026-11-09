@@ -12,7 +12,7 @@ Source: `docs/CREW_NOTES.md` section f. "Not documented" items stay open until t
 - Do not `npm install @kirocrew/app-sdk`. The host provides it, plus React, ReactDOM and lucide-react, via an import map. Mark them as build externals.
 - An RFC page lists a `kirocrewApp()` Vite plugin; the getting-started page does not use it. Treat it as unconfirmed.
 - The dashboard dynamically `import()`s `/apps/<app>/ui/<entry>` as an ESM module (no iframe). HTML is not served; only `.mjs`/`.js` and similar.
-- Local installs skip `setup.onInstall`, so build `ui/` before `kirocrew app install`.
+- Local installs skip `setup.onInstall`, so `ui/dist/index.mjs` is committed and checked fresh by `npm run test:all`; an install from a clean clone needs no build (packaging task 11, E35).
 - Current SDK version: not documented. → partly answered in section h.3 (observed 2026-11-07): the runtime exports `APP_SDK_LEVEL` 1; no version string.
 
 ## Data access
