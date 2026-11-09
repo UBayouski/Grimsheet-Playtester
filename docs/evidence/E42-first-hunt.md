@@ -4,8 +4,8 @@ date: 2026-11-08. Crew 0.12.0, app grimsheet-playtester 1.0.0, Grimsheet commit 
 
 ## Chat (user report)
 - Approval mode Normal, one-time approve only. Steps in the chat, one approval each: Load skill find-exploits (1), Start the exploit hunt (1), Read level info 01 to 05 (5), Try ... (9 submits), End the hunt (1): 17 in all. No play-level skill load, no refused call, no denial, no command with anything added to it. The 1800 s budget did not end the hunt (81 s); the agent stopped by choice after 9 of 20 attempts.
-- Approval card options seen: not recorded (the user did not report them). Open question 11 of the exploit-hunt spec stays open.
-- Usage line (credits, elapsed time, model): not recorded (the user did not report it). The credits per hunt stay unmeasured.
+- Approval card options seen: not known. The Crew session log records only `approved` in each approval/decided event, so the card options stay unknown. Open question 11 of the exploit-hunt spec stays open.
+- Usage (added 2026-11-08 from Crew's own session log for the chat, read only; the log is under `~\.kiro\crew\crew-log\sessions\`): opening message "Run the exploit hunt on all five Grimsheet levels." (message/received, source dashboard). turn/completed: model "auto", duration_ms 103733 (103.7 s for the whole turn, against 81 s from hunt ready to finished), credits 1.6508 (1.6507972...), end_turn, context 33272 used of a 1000000 window. context/measured: 13 model calls. A background memory_consolidation after the turn cost 0.1979 credits (8000 ms), so the chat cost about 1.8487 credits with it and 1.6508 without it. approval/requested events: 17 (ids 2 to 18: one `disclose_context` skill load, one run_command each for begin, five info, nine submit and end), each followed by one `approved`; none denied or refused. The commands in the log are the four hunt scripts only, with no addition. The credits per hunt in Normal mode are therefore measured: 1.6508 for 9 attempts and 17 approvals.
 - What the dashboard shows for the hunt: not recorded (the user did not report it).
 
 ## Final summary of the agent, verbatim (the user's paste; it holds no path)
